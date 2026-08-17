@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lisboa · Porto · Madrid · Barcelona — Roteiro 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#182430;
+    --paper:#F5F0E3;
+    --paper-2:#EDE6D3;
+    --line:#D8CEB8;
+    --lisboa:#2E5C87;
+    --porto:#6B2737;
+    --madrid:#B4842A;
+    --barcelona:#A63D28;
+    --muted:#5C6A78;
+    --white:#FFFDF8;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    margin:0;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+  a{color:inherit;}
+  img{max-width:100%;}
+
+  /* ---------- Airmail stripe ---------- */
+  .airmail{
+    height:10px;
+    background:repeating-linear-gradient(
+      -45deg,
+      var(--barcelona) 0 14px,
+      var(--white) 14px 20px,
+      var(--lisboa) 20px 34px,
+      var(--white) 34px 40px
+    );
+  }
+
+  /* ---------- Sticky nav ---------- */
+  nav{
+    position:sticky; top:0; z-index:50;
+    background:rgba(245,240,227,0.94);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+    display:flex; gap:6px; padding:10px 20px;
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
+  nav::-webkit-scrollbar{display:none;}
+  nav a{
+    flex:0 0 auto;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    padding:8px 14px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    text-decoration:none;
+    white-space:nowrap;
+    color:var(--muted);
+    transition:all .15s ease;
+  }
+  nav a:hover{border-color:var(--ink); color:var(--ink);}
+  nav a.tag-lisboa{border-color:var(--lisboa); color:var(--lisboa);}
+  nav a.tag-porto{border-color:var(--porto); color:var(--porto);}
+  nav a.tag-madrid{border-color:var(--madrid); color:var(--madrid);}
+  nav a.tag-barcelona{border-color:var(--barcelona); color:var(--barcelona);}
+
+  /* ---------- Hero ---------- */
+  header.hero{
+    padding:64px 20px 40px;
+    max-width:1080px;
+    margin:0 auto;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:18px;
+  }
+  h1.title{
+    font-size:clamp(38px,7vw,74px);
+    line-height:0.98;
+    font-weight:700;
+  }
+  h1.title .sep{color:var(--barcelona); font-style:italic; font-weight:500;}
+  .hero-meta{
+    display:flex; flex-wrap:wrap; gap:28px;
+    margin-top:32px;
+    padding-top:24px;
+    border-top:1px dashed var(--line);
+  }
+  .hero-meta div{min-width:140px;}
+  .hero-meta .num{font-family:'JetBrains Mono',monospace; font-size:26px; font-weight:700;}
+  .hero-meta .lbl{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em;}
+
+  /* ---------- Departure board (alerts) ---------- */
+  .board{
+    max-width:1080px; margin:0 auto 56px; padding:0 20px;
+  }
+  .board-inner{
+    background:var(--ink);
+    color:#EFE6C8;
+    border-radius:var(--radius);
+    padding:22px 24px;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .board-row{
+    display:flex; gap:16px; align-items:baseline;
+    padding:12px 0;
+    border-bottom:1px solid rgba(239,230,200,0.18);
+    flex-wrap:wrap;
+  }
+  .board-row:last-child{border-bottom:none;}
+  .board-tag{
+    font-size:11px; padding:3px 8px; border-radius:4px; letter-spacing:.06em;
+    background:#EFE6C8; color:var(--ink); font-weight:700; flex:0 0 auto;
+  }
+  .board-tag.warn{background:var(--madrid); color:var(--ink);}
+  .board-row p{margin:0; font-size:13.5px; color:#EFE6C8; flex:1 1 300px;}
+  .board-row .status{font-size:11px; color:#9FB0A8; text-transform:uppercase;}
+
+  /* ---------- City sections ---------- */
+  section.city{
+    max-width:1080px; margin:0 auto; padding:64px 20px 20px;
+    scroll-margin-top:70px;
+  }
+  .city-head{
+    display:flex; align-items:baseline; gap:16px; margin-bottom:22px;
+    padding-bottom:16px; border-bottom:2px solid currentColor;
+  }
+  .city-head h2{font-size:clamp(30px,5vw,46px);}
+  .city-head .range{font-family:'JetBrains Mono',monospace; font-size:13px; opacity:.75;}
+  section.lisboa{color:var(--lisboa);}
+  section.porto{color:var(--porto);}
+  section.madrid{color:var(--madrid);}
+  section.barcelona{color:var(--barcelona);}
+
+  /* ---------- Itinerary tables ---------- */
+  .itin-wrap{overflow-x:auto; border-radius:12px; border:1px solid var(--line);}
+  table.itin{width:100%; border-collapse:collapse; background:var(--white); font-size:13.5px; min-width:640px;}
+  table.itin th{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase;
+    letter-spacing:.05em; color:var(--muted); background:var(--paper-2);
+    padding:10px 14px; text-align:left; white-space:nowrap;
+  }
+  table.itin td{padding:14px; vertical-align:top; border-bottom:1px solid var(--line); border-right:1px solid var(--line);}
+  table.itin td:last-child{border-right:none;}
+  table.itin tr:last-child td{border-bottom:none;}
+  table.itin td.day-cell{
+    font-family:'Fraunces',serif; font-weight:700; font-size:15px; white-space:nowrap;
+    border-left:5px solid currentColor; background:var(--paper-2); color:var(--ink);
+  }
+  table.itin td.day-cell .wd{display:block; font-family:'JetBrains Mono',monospace; font-weight:400; font-size:10.5px; text-transform:uppercase; color:var(--muted); margin-top:2px;}
+  table.itin tr.highlight td{background:#FBF3E4;}
+  table.itin tr.highlight td.day-cell{background:currentColor; color:var(--white);}
+  table.itin tr.highlight td.day-cell .wd{color:rgba(255,255,255,.75);}
+  .buy-sm{
+    display:inline-flex; align-items:center; gap:4px; margin-top:8px; margin-right:4px;
+    font-family:'JetBrains Mono',monospace; font-size:10px;
+    padding:4px 8px; border-radius:999px;
+    background:var(--ink); color:var(--white) !important; text-decoration:none; white-space:nowrap;
+  }
+  .buy-sm::before{content:"🎟";}
+  .mininote{display:block; margin-top:8px; font-size:11.5px; color:var(--muted); font-style:italic; line-height:1.4;}
+
+  /* ---------- Buy links (compras section) ---------- */
+  .buylinks{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+  .buy{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:'JetBrains Mono',monospace; font-size:11.5px;
+    padding:6px 10px; border-radius:999px;
+    background:var(--ink); color:var(--white) !important;
+    text-decoration:none; white-space:nowrap;
+  }
+  .buy::before{content:"🎟";}
+  .buy:hover{opacity:.85;}
+
+  /* ---------- Airport logistics ---------- */
+  .airport-grid{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+  @media (max-width:760px){.airport-grid{grid-template-columns:1fr;}}
+  .airport-box{background:var(--white); border:1px solid var(--line); border-radius:var(--radius); padding:24px; color:var(--ink);}
+  .airport-box h3{font-size:19px; margin-bottom:4px;}
+  .airport-box .sub{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:18px; display:block;}
+  .steps{counter-reset:step; list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:14px;}
+  .steps li{position:relative; padding-left:36px; font-size:14px;}
+  .steps li::before{
+    counter-increment:step; content:counter(step);
+    position:absolute; left:0; top:0; width:24px; height:24px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700;
+  }
+  .airport-box.lis .steps li::before{background:var(--lisboa); color:var(--white);}
+  .airport-box.mad .steps li::before{background:var(--madrid); color:var(--white);}
+  .airport-box .tip{
+    margin-top:16px; padding:12px 14px; border-radius:8px; background:var(--paper-2); font-size:13px;
+  }
+
+  /* ---------- Generic info sections ---------- */
+  section.info{max-width:1080px; margin:0 auto; padding:48px 20px; scroll-margin-top:70px;}
+  section.info h2{font-size:clamp(26px,4vw,36px); margin-bottom:22px;}
+  .cards-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px;}
+  .mini-card{
+    background:var(--white); border:1px solid var(--line); border-radius:12px; padding:18px;
+  }
+  .mini-card .k{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; color:var(--muted); letter-spacing:.05em;}
+  .mini-card .v{font-family:'Fraunces',serif; font-size:24px; font-weight:600; margin-top:4px;}
+  .mini-card p{font-size:13px; color:var(--muted); margin-top:8px;}
+
+  table{width:100%; border-collapse:collapse; background:var(--white); border-radius:12px; overflow:hidden; font-size:14px;}
+  th,td{padding:10px 12px; text-align:left; border-bottom:1px solid var(--line);}
+  th{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); background:var(--paper-2);}
+  tr:last-child td{border-bottom:none;}
+  .table-wrap{overflow-x:auto; border-radius:12px; border:1px solid var(--line);}
+  .table-wrap table{border-radius:0;}
+
+  .checklist{list-style:none; margin:0; padding:0; display:grid; gap:8px;}
+  .checklist li{
+    background:var(--white); border:1px solid var(--line); border-radius:8px;
+    padding:10px 14px; font-size:14px; display:flex; gap:10px; align-items:flex-start;
+  }
+  .checklist li::before{content:"—"; color:var(--barcelona); font-weight:700;}
+
+  .tag-50best{
+    display:inline-block; margin-left:6px; font-family:'JetBrains Mono',monospace; font-size:10px;
+    padding:2px 6px; border-radius:4px; background:var(--madrid); color:var(--white); font-weight:700;
+  }
+
+  footer{
+    max-width:1080px; margin:40px auto 0; padding:32px 20px 60px;
+    border-top:1px dashed var(--line);
+    font-size:13px; color:var(--muted);
+  }
+  footer .pending{background:var(--white); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:16px;}
+  footer .pending h3{font-family:'Fraunces',serif; font-size:16px; margin-bottom:8px; color:var(--ink);}
+  footer .pending ol{margin:0; padding-left:18px;}
+  footer .pending li{margin-bottom:4px;}
+
+  ::selection{background:var(--barcelona); color:var(--white);}
+</style>
+</head>
+<body>
+
+<div class="airmail"></div>
+
+<nav>
+  <a href="#topo">Início</a>
+  <a href="#aeroportos">Aeroportos</a>
+  <a href="#transporte">Transporte local</a>
+  <a href="#lisboa" class="tag-lisboa">Lisboa</a>
+  <a href="#porto" class="tag-porto">Porto</a>
+  <a href="#madrid" class="tag-madrid">Madrid</a>
+  <a href="#barcelona" class="tag-barcelona">Barcelona</a>
+  <a href="#bares">Bares</a>
+  <a href="#compras">Compras</a>
+  <a href="#custos">Custos</a>
+  <a href="#documentos">Documentos</a>
+  <a href="#esim">eSIM</a>
+</nav>
+
+<header class="hero" id="topo">
+  <div class="eyebrow">Roteiro de viagem · 29 set – 13 out 2026</div>
+  <h1 class="title">Lisboa <span class="sep">·</span> Porto <span class="sep">·</span> Madrid <span class="sep">·</span> Barcelona</h1>
+  <div class="hero-meta">
+    <div><div class="num">13</div><div class="lbl">Dias</div></div>
+    <div><div class="num">4</div><div class="lbl">Cidades</div></div>
+    <div><div class="num">2→3</div><div class="lbl">Rodrigo &amp; Fabiana, +Diego em Barcelona</div></div>
+    <div><div class="num">€150–300</div><div class="lbl">Orçamento diário / casal</div></div>
+  </div>
+</header>
+
+<div class="board">
+  <div class="board-inner">
+    <div class="board-row">
+      <span class="board-tag warn">⚽ 11 OUT</span>
+      <p>FC Barcelona x Getafe — Spotify Camp Nou — La Liga, Jornada 8. Cai bem no meio da estadia em Barcelona.</p>
+      <span class="status">Horário: a confirmar (15–20 dias antes)</span>
+    </div>
+    <div class="board-row">
+      <span class="board-tag">🐂 TOUROS</span>
+      <p>Sem corrida disponível em Madrid entre 05–09/10 — a Feria de Otoño acontece em 2–4/10 e 11–12/10, fora da janela de vocês lá.</p>
+      <span class="status">Plano B: Museu Taurino de Las Ventas</span>
+    </div>
+    <div class="board-row">
+      <span class="board-tag">🛂 EES / ETIAS</span>
+      <p>EES (biometria) já ativo desde out/2025 — a entrada em Madrid, 1º contato com o Schengen, é onde isso acontece. ETIAS ainda sem data confirmada.</p>
+      <span class="status">Ver guia de aeroportos abaixo</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ AEROPORTOS ============ -->
+<section class="info" id="aeroportos">
+  <h2>Logística de aeroportos</h2>
+  <p style="font-size:14px; color:var(--muted); margin-bottom:24px; max-width:700px;">Os dois momentos que exigem atenção: a conexão em Madrid na ida (imigração + trocar de terminal com pouco tempo) e a chegada em Madrid no dia 05/10 (como ir do aeroporto até o apartamento).</p>
+  <div class="airport-grid">
+    <div class="airport-box lis">
+      <h3>29–30/09 — Conexão em Madrid (GRU→MAD→LIS)</h3>
+      <span class="sub">1h30 de conexão · aqui é onde vocês entram no Schengen</span>
+      <ol class="steps">
+        <li>Ao desembarcar, sigam direto as placas <b>"Immigration / Control de Pasaportes"</b> — mesmo estando de conexão, é aqui que a entrada na Europa é registrada (voo GRU→MAD chega no Terminal 1, fora do Schengen).</li>
+        <li>Fila de imigração: usem a fila <b>"All Passports"</b> (não são elegíveis para os e-gates automáticos, exclusivos de passaporte UE/EEE). Com o EES em vigor, é a primeira vez que tiram foto e digitais de vocês no sistema — contem alguns minutos a mais que uma imigração comum.</li>
+        <li>Depois da imigração, sigam a sinalização para o <b>Terminal 2</b> — T1 e T2 são ligados por um corredor interno coberto, dá pra ir a pé sem sair do prédio, uns 10–15 min de caminhada.</li>
+        <li>Confirmem o portão do voo MAD→LIS nos painéis do T2 (embarque, 2º andar) assim que possível.</li>
+        <li>Bagagem despachada até Lisboa (destino final) não precisa ser retirada em Madrid — só a de mão vem com vocês.</li>
+      </ol>
+      <div class="tip"><b>Dica de ouro:</b> tenham passaporte, cartão de embarque e comprovante de hospedagem à mão antes mesmo de desembarcar — cada segundo conta com 1h30. Se a fila da imigração estiver muito longa, procurem um funcionário da Air Europa (ponto de apoio a conexões fica no T3) para orientação.</div>
+    </div>
+    <div class="airport-box mad">
+      <h3>05/10 — Chegada em Madrid (OPO→MAD) e ida ao apartamento</h3>
+      <span class="sub">Pouso 22:20 · voo intra-Schengen, sem imigração</span>
+      <ol class="steps">
+        <li>Como é voo Porto→Madrid (Schengen–Schengen), não há imigração — pousam direto no Terminal 2 e seguem para a retirada de bagagem, se despacharam.</li>
+        <li>A estação de metrô "Aeropuerto T1-T2-T3" fica dentro do próprio T2 (1º andar) — sigam a sinalização do metrô (M).</li>
+        <li>Comprem a <b>Tarjeta Multi</b> (cartão recarregável, €2,50, nas máquinas automáticas, aceitam cartão internacional) + carreguem um <b>Billete Sencillo</b> (~€1,50–2) + o <b>Suplemento Aeroporto</b> obrigatório (€3) — total ~€6,50–7,50/pessoa nesse primeiro trajeto.</li>
+        <li><b>Linha 8</b> (rosa) até <b>Nuevos Ministerios</b> (~15–20 min).</li>
+        <li>Em Nuevos Ministerios, baldeiem para a <b>Linha 10</b> rumo ao centro (mais ~10–15 min) até a região de Chamberí, perto da Calle de Vallehermoso (estações Bilbao / San Bernardo / Quevedo, dependendo da rota exata do momento).</li>
+        <li>Dali, são uns 5–10 min a pé até o número 7 — a rua é comprida, então confiram no mapa do celular ao sair do metrô.</li>
+      </ol>
+      <div class="tip"><b>Alternativa mais prática:</b> o metrô funciona até 1h30 da manhã, então dá tempo tranquilo — mas pousando 22:20, depois de um dia inteiro de viagem e com malas, um <b>táxi por tarifa fixa de €33</b> (qualquer ponto dentro da M-30, sem taxímetro, 24h) pego direto na fila do aeroporto pode valer mais a pena que 2 baldeações de metrô.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TRANSPORTE LOCAL ============ -->
+<section class="info" id="transporte">
+  <h2>Transporte local — metrô e ônibus em cada cidade</h2>
+  <p style="font-size:14px; color:var(--muted); margin-bottom:20px; max-width:700px;">Como o deslocamento dentro de cada cidade vai ser todo em metrô/ônibus (nada de táxi/Uber no dia a dia), aqui vai o horário de funcionamento e a distância a pé de cada hotel até a estação mais próxima.</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Cidade</th><th>Horário do metrô</th><th>Estação mais próxima do hotel</th><th>Distância a pé</th><th>Bilhete</th></tr>
+      <tr>
+        <td style="color:var(--lisboa); font-weight:600;">Lisboa</td>
+        <td>06h30 – 01h00, todos os dias</td>
+        <td>Baixa-Chiado (Linhas Azul/Verde) — fica literalmente na Rua do Crucifixo, esquina do hotel. Rossio é a alternativa, ~3–4 min.</td>
+        <td>~1–2 min</td>
+        <td>Cartão viva viagem (€0,50, reutilizável) + carregar "zapping" (~€1,61/viagem) ou passe diário 24h (~€6,60, ilimitado metrô+ônibus+elétrico)</td>
+      </tr>
+      <tr>
+        <td style="color:var(--porto); font-weight:600;">Porto</td>
+        <td>06h00 – 01h00, todos os dias</td>
+        <td>Aliados (Linhas A/B/C/E/F) — fica na própria Av. dos Aliados. São Bento é a alternativa, ~5–9 min.</td>
+        <td>~1–2 min</td>
+        <td>Cartão Andante (~€0,60) + bilhete por zona (Z2/Z3, ~€1,30–2,00/viagem)</td>
+      </tr>
+      <tr>
+        <td style="color:var(--madrid); font-weight:600;">Madrid</td>
+        <td>06h00 – 01h30, todos os dias</td>
+        <td>Área de Chamberí — Bilbao, San Bernardo ou Quevedo, dependendo do lado exato da Calle de Vallehermoso (rua comprida)</td>
+        <td>~5–10 min <span class="mono" style="font-size:11px;">[confirmar exata ao chegar]</span></td>
+        <td>Tarjeta Multi (€2,50, reutilizável) + Billete Sencillo Zona A (~€1,50–2,00/viagem) ou Metrobus 10 viagens (~€12,20)</td>
+      </tr>
+      <tr>
+        <td style="color:var(--barcelona); font-weight:600;">Barcelona</td>
+        <td>Seg–qui e dom: 05h–00h · Sex e vésperas de feriado: 05h–02h · Sáb: 24h contínuo</td>
+        <td>Santa Coloma (Linha 1, vermelha) — a estação mais próxima do Gallery Apartments</td>
+        <td>~5–10 min <span class="mono" style="font-size:11px;">[confirmar exata ao chegar]</span></td>
+        <td>T-casual, 10 viagens (~€12,15) ou Hola BCN! Travel Card por dias (melhor custo-benefício ficando 3+ dias)</td>
+      </tr>
+    </table>
+  </div>
+  <div class="cards-grid" style="margin-top:20px;">
+    <div class="mini-card"><div class="k">Lisboa</div><div class="v" style="font-size:15px;">Páteo Saudade Lofts</div><p><a href="https://www.google.com/maps/search/?api=1&query=Rua+do+Crucifixo+31%2C+Lisboa" target="_blank" rel="noopener" style="text-decoration:underline;">Abrir no Google Maps →</a></p></div>
+    <div class="mini-card"><div class="k">Porto</div><div class="v" style="font-size:15px;">Hotel Universal</div><p><a href="https://www.google.com/maps/search/?api=1&query=Av.+dos+Aliados+38%2C+Porto" target="_blank" rel="noopener" style="text-decoration:underline;">Abrir no Google Maps →</a></p></div>
+    <div class="mini-card"><div class="k">Madrid</div><div class="v" style="font-size:15px;">Apartamentos de Jorge</div><p><a href="https://www.google.com/maps/search/?api=1&query=Calle+de+Vallehermoso+7%2C+Madrid" target="_blank" rel="noopener" style="text-decoration:underline;">Abrir no Google Maps →</a></p></div>
+    <div class="mini-card"><div class="k">Barcelona</div><div class="v" style="font-size:15px;">Gallery Apartments</div><p><a href="https://www.google.com/maps/search/?api=1&query=Carrer+Sant+Pere+25%2C+Santa+Coloma+de+Gramenet" target="_blank" rel="noopener" style="text-decoration:underline;">Abrir no Google Maps →</a></p></div>
+  </div>
+  <p style="font-size:13px; color:var(--muted); margin-top:16px;">Assumi que isso é sobre deslocamento dentro de cada cidade — o carro alugado continua valendo só para o trecho Lisboa→Óbidos→Coimbra→Porto e a ida à Quinta da Aveleda (04/10), onde não tem alternativa prática de metrô/ônibus. Avisem se a ideia era outra.</p>
+</section>
+
+<!-- ============ LISBOA ============ -->
+<section class="city lisboa" id="lisboa">
+  <div class="city-head">
+    <h2>Lisboa</h2>
+    <span class="range">30/09 – 02/10 · Páteo Saudade Lofts, Rua do Crucifixo 31</span>
+  </div>
+  <div class="itin-wrap">
+    <table class="itin">
+      <tr><th>Data</th><th>Manhã</th><th>Tarde</th><th>Noite</th></tr>
+      <tr>
+        <td class="day-cell">30/09<span class="wd">Qua</span></td>
+        <td>Pouso 06:50 após voo noturno. Recepção só abre 9h30 — deixem a bagagem com eles (ligar 24h antes) ou usem um bagageiro perto da Rua do Crucifixo.</td>
+        <td>Belém a pé: Mosteiro dos Jerónimos (claustro + túmulo de Vasco da Gama), Padrão dos Descobrimentos (exterior livre) e Torre de Belém. Pastel de nata original na Pastéis de Belém.
+          <span class="buylinks"><a class="buy-sm" href="https://mj.museusemonumentospt.pt/prepare_visita_cat/bilheteira/" target="_blank" rel="noopener">Jerónimos €12</a><a class="buy-sm" href="https://mj.museusemonumentospt.pt/prepare_visita_cat/bilheteira/" target="_blank" rel="noopener">Torre Belém €8</a></span>
+          <span class="mininote">Fecham só às segundas — tranquilo, 30/09 é quarta. Cansados do voo? Cortem a Torre de Belém (mais fila) e façam só Jerónimos + Padrão + pastel.</span>
+        </td>
+        <td>Voltem para o check-in (avisem o hotel se passar das 18h) e jantar leve na Baixa/Chiado.</td>
+      </tr>
+      <tr>
+        <td class="day-cell">01/10<span class="wd">Qui</span></td>
+        <td>Trem do Rossio até Sintra (~40 min, ~€5 ida/volta). Cheguem antes das 9h.</td>
+        <td>Palácio da Pena + jardins. Se sobrar tempo: Quinta da Regaleira ou Castelo dos Mouros.</td>
+        <td>Voltem a Lisboa e subam ao Castelo de São Jorge — em outubro funciona até 21h (última entrada 20h30), dá pra pegar o pôr do sol. No caminho, Praça do Comércio. Jantar no Time Out Market.
+          <span class="buylinks"><a class="buy-sm" href="https://castelodesaojorge.pt/en/tickets/" target="_blank" rel="noopener">Castelo ~€15</a></span>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div class="board" style="margin:24px 0 0; padding:0;">
+    <div class="board-inner">
+      <div class="board-row">
+        <span class="board-tag">📍 FICOU DE FORA</span>
+        <p>Com só 2 dias fixos em Lisboa, Panteão Nacional, Basílica da Estrela e Cristo Rei/Ponte 25 de Abril não couberam sem cortar Sintra. Avisem se quiserem trocar algo.</p>
+        <span class="status">Cristo Rei dá pra ver de longe de Belém</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PORTO ============ -->
+<section class="city porto" id="porto">
+  <div class="city-head">
+    <h2>Porto</h2>
+    <span class="range">02/10 – 05/10 · Hotel Universal, Av. dos Aliados 38</span>
+  </div>
+  <div class="itin-wrap">
+    <table class="itin">
+      <tr><th>Data</th><th>Manhã</th><th>Tarde</th><th>Noite</th></tr>
+      <tr>
+        <td class="day-cell">02/10<span class="wd">Sex</span></td>
+        <td>Check-out, retirada do carro (~9h). Óbidos (~1h, 80km): muralha, ginjinha em copo de chocolate, Livraria de Santiago (livre), pátio do Castelo, Igreja de Santa Maria (azulejos, entrada livre) e as ruazinhas de artesanato dentro da vila.</td>
+        <td>Coimbra (~1h10 de Óbidos, 100km): Universidade + Biblioteca Joanina (horário marcado) + Sé Velha (livre). Se sobrar tempo, a Sé Nova ou o Jardim Botânico da Universidade (grátis) ficam a poucos minutos.
+          <span class="buylinks"><a class="buy-sm" href="https://visit.uc.pt/pt/program-list/4" target="_blank" rel="noopener">Joanina €13,50</a></span>
+        </td>
+        <td>Almoço em Mealhada (~20 min de Coimbra, no caminho) — leitão à Bairrada. Depois, direto ao Porto (~1h), check-in, jantar no Bacalhoeiro (Av. Diogo Leite 74, Gaia, à beira do rio, bacalhau ~€15–25) ou na Taberninha do Manel (Ribeira, prato do dia tradicional).
+          <span class="buylinks"><a class="buy-sm" href="https://www.thefork.pt/restaurante/pedro-dos-leitoes-r67530" target="_blank" rel="noopener">Reservar Pedro dos Leitões</a></span>
+          <span class="mininote">Bacalhoeiro e Taberninha do Manel não têm reserva online — ligar direto (Bacalhoeiro: 223 759 408). Carro: confirmar taxa one-way e o serviço Via Verde para pedágios eletrônicos na retirada.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="day-cell">03/10<span class="wd">Sáb</span></td>
+        <td>Livraria Lello (horário marcado, ingresso abate em livro) + Torre dos Clérigos + Igreja das Carmelitas/Igreja do Carmo (as duas igrejas "coladas", com a Casa Escondida entre elas — tudo a 5 min a pé da Lello).
+          <span class="buylinks"><a class="buy-sm" href="https://livrarialello.pt/en/" target="_blank" rel="noopener">Lello €15,95</a></span>
+        </td>
+        <td>Ribeira, Ponte D. Luís I, cave de vinho do Porto em Gaia — Graham's/Sandeman (~€15–25) ou Caves Ferreira (tour + museu + degustação, construída sobre um antigo convento).
+          <span class="buylinks"><a class="buy-sm" href="https://winetourism.sogrape.com/en/visit/ferreira" target="_blank" rel="noopener">Caves Ferreira</a></span>
+        </td>
+        <td>Francesinha no Restaurante Santiago (o clássico) ou Café Santiago/Lado B.</td>
+      </tr>
+      <tr>
+        <td class="day-cell">04/10<span class="wd">Dom</span></td>
+        <td>Quinta da Aveleda, em Penafiel (~30 min de carro do Porto) — vinícola de verdade, não é dia inteiro: tour guiado de 45–75 min pelos jardins históricos (300 anos, lagos, sequoias), adega antiga de 1850 e degustação de 3 vinhos verdes (Alvarinho, Loureiro). Horários fixos: 10h, 11h30, 15h, 16h30 — peguem o das 10h ou 11h30 pra sobrar o dia.
+          <span class="buylinks"><a class="buy-sm" href="https://company.aveleda.com/pt/enoturismo/aveleda" target="_blank" rel="noopener">Aveleda ~€31,50</a></span>
+        </td>
+        <td>De volta ao Porto (~meio-dia) — Palácio da Bolsa (Salão Árabe, visita guiada obrigatória ~30–45 min) e Igreja de São Francisco (interior em talha dourada), lado a lado a 5 min da Ribeira. De caminho, Capela das Almas (azulejos, grátis).
+          <span class="buylinks"><a class="buy-sm" href="https://porto.travel/palacio-da-bolsa/" target="_blank" rel="noopener">Palácio da Bolsa ~€14</a></span>
+          <span class="mininote">Igreja de São Francisco ~€9, ingresso à parte, mas é ao lado — vale muito a pena.</span>
+        </td>
+        <td>Jardim do Morro, do lado de Gaia (em cima da Ponte D. Luís I, junto ao Mosteiro da Serra do Pilar) — a melhor vista da Ribeira ao pôr do sol, e sem precisar sair da cidade. Jantar por ali mesmo ou de volta ao centro.</td>
+      </tr>
+      <tr>
+        <td class="day-cell">05/10<span class="wd">Seg</span></td>
+        <td>Últimas horas livres — Mercado do Bolhão e, ali pertinho, Casa Guedes para o sanduíche de pernil com queijo da Serra (clássico local, fila é normal). Jardins do Palácio de Cristal, se sobrar tempo.</td>
+        <td>Devolução do carro no aeroporto OPO (folga de 1h30–2h). Voo 20:10 → 22:20 MAD.</td>
+        <td>Traslado ao apartamento em Madrid — ver seção "Aeroportos" no topo da página para o passo a passo.</td>
+      </tr>
+    </table>
+  </div>
+  <div style="margin-top:16px;">
+    <a class="buy" href="https://www.google.com/maps/dir/?api=1&origin=Lisboa,+Portugal&destination=Porto,+Portugal&waypoints=%C3%93bidos,+Portugal%7CCoimbra,+Portugal&travelmode=driving" target="_blank" rel="noopener">🗺️ Ver rota completa Lisboa → Óbidos → Coimbra → Porto no Google Maps</a>
+  </div>
+</section>
+
+<!-- ============ MADRID ============ -->
+<section class="city madrid" id="madrid">
+  <div class="city-head">
+    <h2>Madrid</h2>
+    <span class="range">05/10 – 09/10 · Apartamentos de Jorge, Calle de Vallehermoso 7 (já pago)</span>
+  </div>
+  <div class="itin-wrap">
+    <table class="itin">
+      <tr><th>Data</th><th>Manhã</th><th>Tarde</th><th>Noite</th></tr>
+      <tr>
+        <td class="day-cell">06/10<span class="wd">Ter</span></td>
+        <td>Museo del Prado (~€15, reservar online).</td>
+        <td>Palácio Real de Madrid + Catedral de la Almudena (grátis).
+          <span class="buylinks"><a class="buy-sm" href="https://tickets.patrimonionacional.es/es/tickets/palacio-real-de-madrid" target="_blank" rel="noopener">Palácio €18</a></span>
+        </td>
+        <td>Rota de tapas na Cava Baja (La Latina): Casa Lucas (nº30, croquetas) → Txakolina (pintxos bascos) → Taberna La Concha (nº7, peçam o "Manuela", coquetel de vermute da casa) → Casa Curro (nº9, ambiente andaluz) → Casa Lucio se quiserem sentar para os huevos rotos.</td>
+      </tr>
+      <tr>
+        <td class="day-cell">07/10<span class="wd">Qua</span></td>
+        <td>Museo Reina Sofía (~€12) — Guernica de Picasso.</td>
+        <td>Parque do Retiro (grátis), Templo de Debod ao pôr do sol.</td>
+        <td>Mercado de San Miguel (o mercado municipal mais famoso de Madrid) e depois jantar de paella na La Barraca (bairro de Chueca) — reservar com alguns dias de antecedência.</td>
+      </tr>
+      <tr>
+        <td class="day-cell">08/10<span class="wd">Qui</span></td>
+        <td>Tour do Santiago Bernabéu — sem jogo na janela de vocês, é a forma de "sentir" o estádio.
+          <span class="buylinks"><a class="buy-sm" href="https://www.realmadrid.com/pt-PT/tour-bernabeu/individual" target="_blank" rel="noopener">Tour €25</a></span>
+        </td>
+        <td>Livre — Gran Vía ou Mercado de San Antón.</td>
+        <td>Rabo de toro (rabada) — Casa Toribio (perto de Las Ventas, considerado por muitos o melhor da cidade) ou Casa Alberto (taberna desde 1827, Barrio de las Letras).</td>
+      </tr>
+      <tr>
+        <td class="day-cell">09/10<span class="wd">Sex</span></td>
+        <td>Check-out, café da manhã tranquilo.</td>
+        <td>Trem Madrid → Barcelona (~2h30) — reservar com bastante antecedência, 12/10 é feriado e a demanda sobe. 4 opções no mesmo trajeto Atocha → Sants: Renfe AVE (clássico, mais frequente, ~€41–152), Avlo (o low-cost do próprio Renfe, ~€10–60, sem classe preferente/cafeteria, precisa criar conta), Ouigo (~€9–80, operadora francesa) ou comparar tudo de uma vez no Omio.
+          <span class="buylinks">
+            <a class="buy-sm" href="https://www.renfe.com/es/es" target="_blank" rel="noopener">Renfe AVE/Avlo</a>
+            <a class="buy-sm" href="https://www.ouigo.com/es/tren-madrid-barcelona" target="_blank" rel="noopener">Ouigo</a>
+            <a class="buy-sm" href="https://www.omio.es/companias/trenes/renfe-avlo" target="_blank" rel="noopener">Comparar no Omio</a>
+          </span>
+        </td>
+        <td>Check-in no Gallery Apartments, Santa Coloma de Gramenet — Metrô L1 (vermelha), estação Santa Coloma, direto até Plaça Catalunya/Urquinaona em ~20–25 min, sem baldeação.</td>
+      </tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============ BARCELONA ============ -->
+<section class="city barcelona" id="barcelona">
+  <div class="city-head">
+    <h2>Barcelona</h2>
+    <span class="range">09/10 – 12/10 · Gallery Apartments, Carrer Sant Pere 25 — Rodrigo, Fabiana e Diego</span>
+  </div>
+  <div class="itin-wrap">
+    <table class="itin">
+      <tr><th>Data</th><th>Manhã</th><th>Tarde</th><th>Noite</th></tr>
+      <tr>
+        <td class="day-cell">10/10<span class="wd">Sáb</span></td>
+        <td>Sagrada Família — reservar com semanas de antecedência.
+          <span class="buylinks"><a class="buy-sm" href="https://sagradafamilia.org/en/tickets-individuals" target="_blank" rel="noopener">€26–36</a></span>
+        </td>
+        <td>Park Güell — entrada com horário marcado.
+          <span class="buylinks"><a class="buy-sm" href="https://parkguell.barcelona/en/buy-tickets" target="_blank" rel="noopener">~€22</a></span>
+          <span class="mininote">De volta ao centro, La Rambla + Mercat de la Boqueria (fecha ~20h30) — passem por ali antes de ir para o jantar.</span>
+        </td>
+        <td>El Born — a hora do vermute é tradição por lá (meio-dia, mas dá pra beber à noite também), com Quimet Quimet (Poble Sec, tapas em pé, sem reserva, ~€25–35) ou Cervecería Vaso de Ouro (Barceloneta, cerveja artesanal + solomillo com foie, sem reserva) como jantar. Deixem a Pâtisserie Hoffmann (croissants premiados, El Born) pro café da manhã de amanhã.</td>
+      </tr>
+      <tr class="highlight">
+        <td class="day-cell">11/10<span class="wd">Dom</span></td>
+        <td>Café da manhã na Pâtisserie Hoffmann (Carrer dels Flassaders 44, El Born) — o croissant de mascarpone é o mais premiado da Espanha, só balcão, sem reserva. Depois, Casa Batlló ou La Pedrera (escolham um dos dois — El Born até lá é ~15 min de metrô).</td>
+        <td>Bairro Gótico, ou já reservem a tarde como pré-jogo dependendo do horário.</td>
+        <td>⚽ <b>FC Barcelona x Getafe</b>, Spotify Camp Nou. Cheguem 1h30–2h antes. Horário confirma 15–20 dias antes.
+          <span class="buylinks"><a class="buy-sm" href="https://www.fcbarcelona.com/en/tickets/football" target="_blank" rel="noopener">Ingressos</a></span>
+          <span class="mininote">Só no site oficial fcbarcelona.com ou LaLiga. Setores altos ~€40–70/pessoa · lateral/tribuna ~€90–150/pessoa.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="day-cell">12/10<span class="wd">Seg</span></td>
+        <td>Check-out 11h. Feriado nacional — checar horário reduzido de transporte/atrações.</td>
+        <td>Trem Barcelona → Madrid (chegada estimada ~18h) — mesmas 4 opções da ida (Renfe AVE, Avlo, Ouigo, Omio para comparar).
+          <span class="buylinks">
+            <a class="buy-sm" href="https://www.renfe.com/es/es" target="_blank" rel="noopener">Renfe AVE/Avlo</a>
+            <a class="buy-sm" href="https://www.ouigo.com/es/tren-barcelona-madrid" target="_blank" rel="noopener">Ouigo</a>
+          </span>
+        </td>
+        <td>Aeroporto de Madrid-Barajas com 3h de folga (feriado + movimento). Voo 23:55 MAD → GRU.</td>
+      </tr>
+    </table>
+  </div>
+  <div class="board" style="margin:20px 0 0; padding:0;">
+    <div class="board-inner">
+      <div class="board-row">
+        <span class="board-tag">📍 TODOS NO MESMO HOTEL</span>
+        <p>Rodrigo, Fabiana e Diego ficam juntos no Gallery Apartments (Santa Coloma de Gramenet) — já ajustado. <b>Restaurante Animar</b> (paella premiada, Consell de Cent 352, no Eixample — onde ficam Sagrada Família e Casa Batlló) é uma boa opção de almoço se passarem por ali no dia 11/10.</p>
+        <span class="status">Animar: <a href="https://www.thefork.es/restaurante/animar-r824419" target="_blank" rel="noopener" style="text-decoration:underline; color:#EFE6C8;">reservar no TheFork</a></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============ BARES / COQUETELARIA ============ -->
+<section class="info" id="bares">
+  <h2>Bares de coquetelaria — um Dry Martini e um Boulevardier por cidade</h2>
+  <p style="font-size:14px; color:var(--muted); margin-bottom:20px; max-width:700px;">Cruzando com a lista <a href="https://www.theworlds50best.com/bars/best-in-the-world/list/1-50" target="_blank" rel="noopener" style="text-decoration:underline;">The World's 50 Best Bars</a>: Lisboa e Porto não têm nenhum bar no ranking (top 100), mas têm ótimas casas clássicas locais. Madrid e Barcelona, sim.</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Cidade</th><th>Bar</th><th>Por quê</th><th>Ticket médio</th><th>50 Best?</th></tr>
+      <tr>
+        <td rowspan="3">Lisboa</td>
+        <td>Cinco Lounge<br><span style="font-size:12px; color:var(--muted);">Príncipe Real · cincolounge.com</span></td>
+        <td>Pioneiro da coquetelaria em Lisboa desde 2004, mais de 100 cocktails na carta. Reservas só das 20h–22h, mas aceita passantes.</td>
+        <td>~€10–13/drink</td>
+        <td>Não está na lista</td>
+      </tr>
+      <tr>
+        <td>Foxtrot<br><span style="font-size:12px; color:var(--muted);">Príncipe Real</span></td>
+        <td>Bar histórico desde os anos 70, clima de speakeasy dos anos 20, especialista em Negroni, Old Fashioned e Whiskey Sour — ótimo pro Boulevardier.</td>
+        <td>~€10–13/drink</td>
+        <td>Não está na lista</td>
+      </tr>
+      <tr>
+        <td>Pensão Amor<br><span style="font-size:12px; color:var(--muted);">Cais do Sodré</span></td>
+        <td>Ex-bordel vintage no antigo bairro da luz vermelha, 5 andares, ambiente único e bem fotogênico.</td>
+        <td>~€9–12/drink</td>
+        <td>Não está na lista</td>
+      </tr>
+      <tr>
+        <td rowspan="3">Porto</td>
+        <td>ATMAN<br><span style="font-size:12px; color:var(--muted);">Baixa do Porto</span></td>
+        <td>Speakeasy com dois bartenders catalães — clássicos reinterpretados com bastante técnica. O mais bem avaliado da cena de coquetelaria portuense.</td>
+        <td>~€12–15/drink</td>
+        <td>Não está na lista</td>
+      </tr>
+      <tr>
+        <td>Bigorna Social Club<br><span style="font-size:12px; color:var(--muted);">Perto do Mercado do Bolhão</span></td>
+        <td>Speakeasy nos bastidores de uma barbearia, ambiente industrial, mesa de bilhar ao centro, clássicos com um twist.</td>
+        <td>~€10–13/drink</td>
+        <td>Não está na lista</td>
+      </tr>
+      <tr>
+        <td>Wine Quay Bar<br><span style="font-size:12px; color:var(--muted);">Ribeira, vista pro Douro</span></td>
+        <td>Mais focado em vinho, mas tem coquetéis clássicos e a melhor vista da Ribeira pro pôr do sol.</td>
+        <td>~€8–12/drink</td>
+        <td>Não está na lista</td>
+      </tr>
+      <tr>
+        <td rowspan="3">Madrid</td>
+        <td>Salmon Guru<br><span style="font-size:12px; color:var(--muted);">Barrio de las Letras · salmonguru.es</span></td>
+        <td>Décor tiki/neon, cocktails teatrais do argentino Diego Cabrera. <b>Não aceita reserva</b> — cheguem perto da abertura (17h).</td>
+        <td>~€12–18/drink</td>
+        <td><span class="tag-50best">#37</span></td>
+      </tr>
+      <tr>
+        <td>Angelita<br><span style="font-size:12px; color:var(--muted);">Malasaña</span></td>
+        <td>Bar de dois andares num porão gótico, carta extensa, um dos mais premiados de Madrid nos últimos anos.</td>
+        <td>~€12–16/drink</td>
+        <td><span class="tag-50best">#51</span></td>
+      </tr>
+      <tr>
+        <td>Museo Chicote<br><span style="font-size:12px; color:var(--muted);">Gran Vía</span></td>
+        <td>Coquetelaria histórica desde 1931 na Gran Vía, frequentado por Hemingway e Sinatra — clássico perfeito pra Dry Martini "old school".</td>
+        <td>~€12–15/drink</td>
+        <td>Não está na lista</td>
+      </tr>
+      <tr>
+        <td rowspan="4">Barcelona</td>
+        <td>Paradiso<br><span style="font-size:12px; color:var(--muted);">El Born</span></td>
+        <td>Escondido atrás de uma loja de sanduíches — um dos bares mais premiados do mundo nos últimos anos.</td>
+        <td>~€14–18/drink</td>
+        <td><span class="tag-50best">#4</span></td>
+      </tr>
+      <tr>
+        <td>Boadas<br><span style="font-size:12px; color:var(--muted);">Rambla / Tallers</span></td>
+        <td>O bar mais antigo de Barcelona (1933) — clássico perfeito pra Dry Martini "old school", coqueteleira à vista. Cliente famoso: Hemingway.</td>
+        <td>~€12–16/drink</td>
+        <td>Não está na lista (mas é uma instituição)</td>
+      </tr>
+      <tr>
+        <td>Sips<br><span style="font-size:12px; color:var(--muted);">Eixample</span></td>
+        <td>O bar nº1 do mundo em 2023, ainda no top 5 — reserva essencial, com bastante antecedência.</td>
+        <td>~€16–20/drink</td>
+        <td><span class="tag-50best">#3</span></td>
+      </tr>
+      <tr>
+        <td>Dr. Stravinsky<br><span style="font-size:12px; color:var(--muted);">El Raval, dentro do Hotel Cotton House</span></td>
+        <td>Coquetelaria de autor num hotel boutique, ambiente elegante e sofisticado.</td>
+        <td>~€14–17/drink</td>
+        <td><span class="tag-50best">#83</span></td>
+      </tr>
+    </table>
+  </div>
+  <p style="font-size:13px; color:var(--muted); margin-top:14px;">Preços de "ticket médio" são por drink/pessoa, estimados a partir de avaliações recentes — confirmem na carta do local, já que coquetelaria de autor muda de preço com frequência.</p>
+</section>
+
+<!-- ============ COMPRAS ANTECIPADAS ============ -->
+<section class="info" id="compras">
+  <h2>Compras antecipadas — todos os links num só lugar</h2>
+  <p style="font-size:14px; color:var(--muted); margin-bottom:20px; max-width:640px;">Tudo que dá para comprar/reservar agora, direto nos sites oficiais (nada de revenda). Preços por pessoa, salvo indicação contrária.</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>O quê</th><th>Onde</th><th>Preço aprox.</th><th>Comprar</th></tr>
+      <tr><td>Mosteiro dos Jerónimos</td><td>museusemonumentospt.pt — site oficial</td><td>€12 (online)</td><td><a class="buy" href="https://mj.museusemonumentospt.pt/prepare_visita_cat/bilheteira/" target="_blank" rel="noopener">Comprar</a></td></tr>
+      <tr><td>Torre de Belém</td><td>museusemonumentospt.pt — site oficial</td><td>€8 (online)</td><td><a class="buy" href="https://mj.museusemonumentospt.pt/prepare_visita_cat/bilheteira/" target="_blank" rel="noopener">Comprar</a></td></tr>
+      <tr><td>Castelo de São Jorge</td><td>castelodesaojorge.pt — site oficial</td><td>~€15</td><td><a class="buy" href="https://castelodesaojorge.pt/en/tickets/" target="_blank" rel="noopener">Comprar</a></td></tr>
+      <tr><td>Biblioteca Joanina (Coimbra)</td><td>visit.uc.pt — site oficial da Universidade</td><td>€13,50</td><td><a class="buy" href="https://visit.uc.pt/pt/program-list/4" target="_blank" rel="noopener">Comprar</a></td></tr>
+      <tr><td>Almoço leitão — Pedro dos Leitões (Mealhada)</td><td>TheFork</td><td>~€27 médio/pessoa</td><td><a class="buy" href="https://www.thefork.pt/restaurante/pedro-dos-leitoes-r67530" target="_blank" rel="noopener">Reservar</a></td></tr>
+      <tr><td>Livraria Lello (Porto)</td><td>livrarialello.pt — site oficial</td><td>€15,95 (abate em livro)</td><td><a class="buy" href="https://livrarialello.pt/en/" target="_blank" rel="noopener">Comprar</a></td></tr>
+      <tr><td>Quinta da Aveleda (vinícola, Penafiel)</td><td>company.aveleda.com — site oficial</td><td>~€31,50</td><td><a class="buy" href="https://company.aveleda.com/pt/enoturismo/aveleda" target="_blank" rel="noopener">Comprar</a></td></tr>
+      <tr><td>Palácio da Bolsa (Salão Árabe)</td><td>porto.travel — portal oficial de turismo</td><td>~€14</td><td><a class="buy" href="https://porto.travel/palacio-da-bolsa/" target="_blank" rel="noopener">Ver/Comprar</a></td></tr>
+      <tr><td>Tour Santiago Bernabéu</td><td>realmadrid.com — site oficial</td><td>~€25</td><td><a class="buy" href="https://www.realmadrid.com/pt-PT/tour-bernabeu/individual" target="_blank" rel="noopener">Comprar</a></td></tr>
+      <tr><td>Palácio Real de Madrid</td><td>tickets.patrimonionacional.es — site oficial</td><td>~€18</td><td><a class="buy" href="https://tickets.patrimonionacional.es/es/tickets/palacio-real-de-madrid" target="_blank" rel="noopener">Comprar</a></td></tr>
+      <tr><td>Ingresso Barça x Getafe (11/10)</td><td>fcbarcelona.com — site oficial</td><td>~€40–150 (TBD)</td><td><a class="buy" href="https://www.fcbarcelona.com/en/tickets/football" target="_blank" rel="noopener">Acompanhar</a></td></tr>
+      <tr><td>Sagrada Família</td><td>sagradafamilia.org — site oficial</td><td>€26–36</td><td><a class="buy" href="https://sagradafamilia.org/en/tickets-individuals" target="_blank" rel="noopener">Comprar</a></td></tr>
+      <tr><td>Caves Ferreira (vinho do Porto, Gaia)</td><td>winetourism.sogrape.com — site oficial Sogrape</td><td>~€20–35</td><td><a class="buy" href="https://winetourism.sogrape.com/en/visit/ferreira" target="_blank" rel="noopener">Comprar</a></td></tr>
+      <tr><td>Park Güell</td><td>parkguell.barcelona — site oficial</td><td>~€22</td><td><a class="buy" href="https://parkguell.barcelona/en/buy-tickets" target="_blank" rel="noopener">Comprar</a></td></tr>
+      <tr><td>Restaurante Animar (paella, Eixample BCN)</td><td>TheFork</td><td>~€30–40/pessoa</td><td><a class="buy" href="https://www.thefork.es/restaurante/animar-r824419" target="_blank" rel="noopener">Reservar</a></td></tr>
+      <tr><td>Trem Madrid↔Barcelona — Renfe AVE (clássico)</td><td>renfe.com — site oficial</td><td>~€41–152/trecho</td><td><a class="buy" href="https://www.renfe.com/es/es" target="_blank" rel="noopener">Comprar</a></td></tr>
+      <tr><td>Trem Madrid↔Barcelona — Avlo (low-cost do Renfe)</td><td>renfe.com — site oficial (precisa criar conta)</td><td>~€10–60/trecho</td><td><a class="buy" href="https://www.renfe.com/es/es" target="_blank" rel="noopener">Comprar</a></td></tr>
+      <tr><td>Trem Madrid↔Barcelona — Ouigo</td><td>ouigo.com — site oficial</td><td>desde €9 (promo) / ~€40–80</td><td><a class="buy" href="https://www.ouigo.com/es/tren-madrid-barcelona" target="_blank" rel="noopener">Comprar</a></td></tr>
+      <tr><td>Comparar as 3 opções de trem de uma vez</td><td>omio.es</td><td>—</td><td><a class="buy" href="https://www.omio.es/companias/trenes/renfe-avlo" target="_blank" rel="noopener">Comparar</a></td></tr>
+      <tr><td>eSIM Airalo (Eurolink, 42 países)</td><td>airalo.com — site oficial</td><td>~€25–31 (10GB/30d)</td><td><a class="buy" href="https://www.airalo.com/europe-esim" target="_blank" rel="noopener">Comprar</a></td></tr>
+    </table>
+  </div>
+  <p style="font-size:13px; color:var(--muted); margin-top:14px;">Reservas de restaurante/bar sem link oficial de venda (Casa Toribio, Casa Alberto, La Barraca, Cava Baja, Cinco Lounge, ATMAN, Boadas) — recomendo buscar o nome direto no TheFork ou ligar/checar Instagram com 1–2 semanas de antecedência.</p>
+</section>
+
+<!-- ============ CUSTOS ============ -->
+<section class="info" id="custos">
+  <h2>Custos — visão geral</h2>
+  <div class="cards-grid" style="margin-bottom:24px;">
+    <div class="mini-card"><div class="k">Lisboa + Porto</div><div class="v">~€650</div><p>2 pessoas, 6 dias, inclui carro alugado</p></div>
+    <div class="mini-card"><div class="k">Madrid</div><div class="v">~€410</div><p>2 pessoas, 4 dias, sem hospedagem (já paga)</p></div>
+    <div class="mini-card"><div class="k">Barcelona</div><div class="v">~€720–850</div><p style="color:var(--barcelona); font-weight:600;">Atualizado para 3 pessoas (com Diego)</p></div>
+    <div class="mini-card"><div class="k">Total estimado</div><div class="v">~€2.030–2.230</div><p>Sem voos internacionais (já comprados)</p></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Item extra em Barcelona (com Diego)</th><th>2 pessoas</th><th>3 pessoas</th></tr>
+      <tr><td>Alimentação/dia</td><td>~€50–70</td><td>~€75–100</td></tr>
+      <tr><td>AVE Madrid↔Barcelona (ida+volta)</td><td>~€240–320</td><td>~€240–320 <span class="mono" style="font-size:11px; color:var(--muted);">(Diego chega por conta própria)</span></td></tr>
+      <tr><td>Ingresso do jogo</td><td>~€100–200</td><td>~€150–300</td></tr>
+      <tr><td>Sagrada Família + Park Güell</td><td>~€70</td><td>~€105</td></tr>
+    </table>
+  </div>
+  <p style="font-size:13px; color:var(--muted); margin-top:12px;">Já pago: apartamento de Madrid (R$ 2.372,66). Diego chega em Barcelona por conta própria — ele só entra na conta de alimentação, passeios e ingresso do jogo, não no AVE. Impostos municipais (Lisboa/Barcelona, ~€2/pessoa/noite) ainda não incluídos na hospedagem — confirmar valor exato de Barcelona com 3 hóspedes.</p>
+</section>
+
+<!-- ============ DOCUMENTOS ============ -->
+<section class="info" id="documentos">
+  <h2>Documentos essenciais — onde providenciar e até quando</h2>
+  <p style="font-size:14px; color:var(--muted); margin-bottom:20px; max-width:700px;">Hoje é 16/08 e a viagem é 29/09 — uns 44 dias. Os prazos abaixo já contam a folga necessária pra cada trâmite não virar aperto de última hora.</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Documento</th><th>O que fazer</th><th>Prazo sugerido</th><th>Link oficial</th></tr>
+      <tr>
+        <td>Passaporte</td>
+        <td>Verificar validade (mín. 6 meses após a viagem, ou seja, até 29/03/2027). Se precisar tirar ou renovar: agendamento obrigatório pela Polícia Federal, comparecimento presencial pra biometria, emissão em 6–10 dias úteis depois disso. Taxa: R$257,25.</td>
+        <td><b>Agendar ainda esta semana</b> — vagas na PF costumam ficar escassas e todo o prazo (agendamento + emissão) pode passar de 2–4 semanas.</td>
+        <td><a class="buy" href="https://www.gov.br/pt-br/servicos/obter-passaporte-comum-para-brasileiro" target="_blank" rel="noopener">gov.br/PF</a></td>
+      </tr>
+      <tr>
+        <td>Visto Schengen</td>
+        <td>Não precisa — turista brasileiro é isento até 90 dias.</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>ETIAS</td>
+        <td>Ainda não está em vigor, sem data confirmada. Nada a fazer agora — só checar mais perto da viagem se já abriu.</td>
+        <td>Checar 2 semanas antes (por volta de 15/09)</td>
+        <td><a class="buy" href="https://travel-europe.europa.eu/etias_en" target="_blank" rel="noopener">Portal oficial UE</a></td>
+      </tr>
+      <tr>
+        <td>EES (biometria)</td>
+        <td>Automático na entrada em Madrid (ver seção Aeroportos) — nenhuma ação prévia necessária.</td>
+        <td>—</td>
+        <td><a class="buy" href="https://travel-europe.europa.eu/ees_en" target="_blank" rel="noopener">Portal oficial UE</a></td>
+      </tr>
+      <tr>
+        <td>Seguro viagem</td>
+        <td>Obrigatório — cobertura mínima €30.000. Cotação online rápida, apólice sai na hora por e-mail. ~R$10–30/dia/pessoa dependendo do plano.</td>
+        <td>Pode contratar a qualquer momento até a véspera, mas comprando com folga geralmente sai mais barato.</td>
+        <td><a class="buy" href="https://www.segurospromo.com.br/seguro-viagem/europa/" target="_blank" rel="noopener">Comparar cotações</a></td>
+      </tr>
+      <tr>
+        <td>CNH + PID (Permissão Internacional para Dirigir)</td>
+        <td>Precisa da CNH física válida + a PID, emitida pelo Detran do seu estado (5–20 dias úteis dependendo do estado) ou pela ACBr, entidade autorizada que despacha em ~3 dias úteis + Correios.</td>
+        <td><b>Solicitar até o fim de agosto</b> — precisa estar em mãos até 02/10, quando pegam o carro em Lisboa.</td>
+        <td><a class="buy" href="https://carteirainternacional.org/" target="_blank" rel="noopener">ACBr (nacional)</a></td>
+      </tr>
+      <tr>
+        <td>Comprovantes para imigração</td>
+        <td>Reunir e salvar offline (PDF no celular + impresso): passagem de volta, reservas de hotel de todas as cidades, comprovante de fundos.</td>
+        <td>Organizar na semana anterior à viagem</td>
+        <td>—</td>
+      </tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============ ESIM ============ -->
+<section class="info" id="esim">
+  <h2>Conectividade — eSIM</h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Provedor</th><th>Plano</th><th>Preço aprox.</th><th>Observação</th><th>Comprar</th></tr>
+      <tr><td>Airalo (Eurolink, 42 países)</td><td>10 GB / 30 dias</td><td>~€25–31</td><td>Recomendado — hotspot liberado, compartilhar entre 2 celulares</td><td><a class="buy" href="https://www.airalo.com/europe-esim" target="_blank" rel="noopener">Comprar</a></td></tr>
+      <tr><td>Nomad (35 países)</td><td>10 GB / 30 dias</td><td>~€20</td><td>Mais barato por GB</td><td><a class="buy" href="https://www.nomadesim.com/europe-eSIM" target="_blank" rel="noopener">Comprar</a></td></tr>
+      <tr><td>Holafly (33 países)</td><td>Ilimitado (com FUP)</td><td>~€25–35 / semana</td><td>"Ilimitado" com redução de velocidade após uso pesado; hotspot limitado a 500MB</td><td><a class="buy" href="https://esim.holafly.com/esim-europe/" target="_blank" rel="noopener">Comprar</a></td></tr>
+    </table>
+  </div>
+  <p style="font-size:13px; color:var(--muted); margin-top:12px;">Comprar e instalar o eSIM ainda no Brasil, ativar só ao pousar em Lisboa (depois da imigração em Madrid). Manter o chip brasileiro com roaming de dados desligado, só para WhatsApp/SMS. Preços mudam com frequência — confirmem no momento da compra.</p>
+</section>
+
+<footer>
+  <div class="pending">
+    <h3>Pendências para o grupo confirmar</h3>
+    <ol>
+      <li>Horário do jogo Barça x Getafe — só sai 15–20 dias antes (por volta de 21–26/09). Aviso vocês assim que sair.</li>
+      <li>Trocar algo para encaixar Panteão Nacional, Basílica da Estrela ou Cristo Rei? (não couberam nos 2 dias fixos de Lisboa)</li>
+      <li>Estação de metrô exata mais próxima da Calle de Vallehermoso 7 varia um pouco (Bilbao/San Bernardo/Quevedo) — confirmar com Google Maps ao chegar em Nuevos Ministerios.</li>
+    </ol>
+  </div>
+  Roteiro montado para Rodrigo, Fabiana e Diego · Preços e horários marcados como estimativa devem ser reconfirmados perto da viagem.
+</footer>
+
+</body>
+</html>
