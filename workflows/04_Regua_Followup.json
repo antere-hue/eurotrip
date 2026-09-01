@@ -1166,7 +1166,7 @@
             },
             {
               "name": "Authorization",
-              "value": "Bearer [REDACTED-NO-REPO — chave Resend hardcoded, achado de seguranca reportado na auditoria]"
+              "value": "=Bearer {{ $('busca_token_resend').item.json.signing_secret }}"
             }
           ]
         },
@@ -1262,7 +1262,7 @@
             },
             {
               "name": "Authorization",
-              "value": "Bearer [REDACTED-NO-REPO — chave Resend hardcoded, achado de seguranca reportado na auditoria]"
+              "value": "=Bearer {{ $('busca_token_resend').item.json.signing_secret }}"
             }
           ]
         },
@@ -1358,7 +1358,7 @@
             },
             {
               "name": "Authorization",
-              "value": "Bearer [REDACTED-NO-REPO — chave Resend hardcoded, achado de seguranca reportado na auditoria]"
+              "value": "=Bearer {{ $('busca_token_resend').item.json.signing_secret }}"
             }
           ]
         },
@@ -1488,7 +1488,7 @@
             },
             {
               "name": "Authorization",
-              "value": "Bearer [REDACTED-NO-REPO — chave Resend hardcoded, achado de seguranca reportado na auditoria]"
+              "value": "=Bearer {{ $('busca_token_resend').item.json.signing_secret }}"
             }
           ]
         },
@@ -1584,7 +1584,7 @@
             },
             {
               "name": "Authorization",
-              "value": "Bearer [REDACTED-NO-REPO — chave Resend hardcoded, achado de seguranca reportado na auditoria]"
+              "value": "=Bearer {{ $('busca_token_resend').item.json.signing_secret }}"
             }
           ]
         },
@@ -2882,6 +2882,50 @@
       "id": "wt-throttle-0000-0000-000000000001",
       "name": "wait_throttle_4s",
       "webhookId": "46c7bb9d-ad67-463f-8a14-95e3a43fe960"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1514838753"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "resend_api"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -848,
+        656
+      ],
+      "id": "rk000000-0000-0000-0000-000000000004",
+      "name": "busca_token_resend",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
     }
   ],
   "connections": {
@@ -3315,7 +3359,7 @@
         [],
         [
           {
-            "node": "06_switch_dia",
+            "node": "busca_token_resend",
             "type": "main",
             "index": 0
           }
@@ -3338,6 +3382,17 @@
         [
           {
             "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "busca_token_resend": {
+      "main": [
+        [
+          {
+            "node": "06_switch_dia",
             "type": "main",
             "index": 0
           }

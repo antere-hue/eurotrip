@@ -312,7 +312,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer [REDACTED-NO-REPO — chave Resend hardcoded, achado de seguranca reportado na auditoria]"
+              "value": "=Bearer {{ $('busca_token_resend').item.json.signing_secret }}"
             },
             {
               "name": "Content-Type",
@@ -619,7 +619,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer [REDACTED-NO-REPO — chave Resend hardcoded, achado de seguranca reportado na auditoria]"
+              "value": "=Bearer {{ $('busca_token_resend').item.json.signing_secret }}"
             },
             {
               "name": "Content-Type",
@@ -855,7 +855,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer [REDACTED-NO-REPO — ver nó real em producao; achado de seguranca: chave hardcoded, reportado na auditoria]"
+              "value": "=Bearer {{ $('busca_token_resend').item.json.signing_secret }}"
             }
           ]
         },
@@ -882,7 +882,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer [REDACTED-NO-REPO — chave Resend hardcoded, achado de seguranca reportado na auditoria]"
+              "value": "=Bearer {{ $('busca_token_resend').item.json.signing_secret }}"
             }
           ]
         },
@@ -1748,6 +1748,50 @@
           "name": "Google Sheets account"
         }
       }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1514838753"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "resend_api"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -320,
+        -380
+      ],
+      "id": "rk000000-0000-0000-0000-000000000001",
+      "name": "busca_token_resend",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
     }
   ],
   "connections": {
@@ -1766,7 +1810,7 @@
       "main": [
         [
           {
-            "node": "03_valida_cnpj",
+            "node": "busca_token_resend",
             "type": "main",
             "index": 0
           }
@@ -2164,6 +2208,17 @@
         [
           {
             "node": "20d_anexa_pdf",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "busca_token_resend": {
+      "main": [
+        [
+          {
+            "node": "03_valida_cnpj",
             "type": "main",
             "index": 0
           }

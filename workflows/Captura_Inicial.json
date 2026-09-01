@@ -334,7 +334,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer [REDACTED-NO-REPO — chave Resend hardcoded, achado de seguranca reportado na auditoria]"
+              "value": "=Bearer {{ $('busca_token_resend').item.json.signing_secret }}"
             }
           ]
         },
@@ -943,6 +943,50 @@
           "name": "Google Sheets account"
         }
       }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1514838753"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "resend_api"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1180,
+        -480
+      ],
+      "id": "rk000000-0000-0000-0000-000000000003",
+      "name": "busca_token_resend",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
     }
   ],
   "connections": {
@@ -1034,7 +1078,7 @@
       "main": [
         [
           {
-            "node": "08a_email_boasvindas",
+            "node": "busca_token_resend",
             "type": "main",
             "index": 0
           },
@@ -1071,6 +1115,17 @@
     "08b_if_optin_whatsapp": {
       "main": [
         []
+      ]
+    },
+    "busca_token_resend": {
+      "main": [
+        [
+          {
+            "node": "08a_email_boasvindas",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
