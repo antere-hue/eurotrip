@@ -1,0 +1,598 @@
+{
+  "name": "11_Captura_Lote_Planilha",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "bf9a499b-18a6-4fe2-a694-9bc6ab524ef6",
+      "name": "01_trigger_manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1200,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 659258119,
+          "mode": "list",
+          "cachedResultName": "leads_importados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=659258119"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "status",
+              "lookupValue": "novo"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "79389a8b-851d-42b0-9b9c-d8c82b48ab2e",
+      "name": "02_le_pendentes",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -960,
+        128
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Le somente as linhas com status = novo na aba leads_importados. Colunas esperadas: nome, email, telefone, data_importacao, status, erro_detalhe.",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "639b2263-984b-41ec-8cca-457ea97d21e4",
+      "name": "03_loop_leads",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -720,
+        128
+      ],
+      "notes": "Processa uma linha por vez, para nao sobrecarregar a API do RD Station e facilitar o rastreio de erro por linha."
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json: {\n    nome: $json.nome || '',\n    email: $json.email || '',\n    telefone: $json.telefone || '',\n    origem: 'importacao_planilha',\n    ref: '',\n    row_number: $json.row_number,\n    data_importacao: DateTime.now().setZone('America/Sao_Paulo').toFormat('dd/MM/yyyy HH:mm')\n  }\n};"
+      },
+      "id": "6a7bbc01-e7e8-4849-948a-428ab0a477b5",
+      "name": "04_normaliza_lead_lote",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -496,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ptiyq22o4yT5lb1q",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/ptiyq22o4yT5lb1q",
+          "cachedResultName": "Captura Inicial / Funil do Lead"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "nome": "={{ $json.nome }}",
+            "telefone": "={{ String($json.telefone) }}",
+            "email": "={{ $json.email }}",
+            "origem": "={{ $json.origem }}",
+            "ref": "={{ $json.ref }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "nome",
+              "displayName": "nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "telefone",
+              "displayName": "telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "origem",
+              "displayName": "origem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "ref",
+              "displayName": "ref",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "dbaaa9d3-2811-4688-9bc3-7db6ac2ef49c",
+      "name": "05_chama_sub_criar_lead",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -272,
+        240
+      ],
+      "onError": "continueErrorOutput",
+      "notes": "onError = Continue (using error output): se um lead falhar, o loop segue para o proximo sem travar o lote inteiro."
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 659258119,
+          "mode": "list",
+          "cachedResultName": "leads_importados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=659258119"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "nome": "={{ $('04_normaliza_lead_lote').item.json.nome }}",
+            "email": "={{ $('04_normaliza_lead_lote').item.json.email }}",
+            "telefone": "={{ $('04_normaliza_lead_lote').item.json.telefone }}",
+            "data_importacao": "={{ $('04_normaliza_lead_lote').item.json.data_importacao }}",
+            "ref": "={{ $('04_normaliza_lead_lote').item.json.ref }}",
+            "error": "={{ $('03_loop_leads').item.json.error }}",
+            "origem": "={{ $('03_loop_leads').item.json.origem }}",
+            "erro_detalhe": "={{ $('03_loop_leads').item.json.erro_detalhe }}",
+            "status": "sucesso",
+            "row_number": "={{ $('04_normaliza_lead_lote').item.json.row_number }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "nome",
+              "displayName": "nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "telefone",
+              "displayName": "telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_importacao",
+              "displayName": "data_importacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "erro_detalhe",
+              "displayName": "erro_detalhe",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "origem",
+              "displayName": "origem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ref",
+              "displayName": "ref",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error",
+              "displayName": "error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "45ec92b9-35ec-4f59-a4dd-805076dccbec",
+      "name": "06a_atualiza_status_sucesso",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        16,
+        -128
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 659258119,
+          "mode": "list",
+          "cachedResultName": "leads_importados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=659258119"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "error": "={{ $json.error }}",
+            "data_importacao": "={{ $json.data_importacao }}",
+            "erro_detalhe": "={{ $('02_le_pendentes').item.json.erro_detalhe }}",
+            "status": "erro",
+            "row_number": "={{ $json.row_number }}",
+            "ref": "={{ $json.ref }}",
+            "origem": "={{ $json.origem }}",
+            "nome": "={{ $json.nome }}",
+            "email": "={{ $json.email }}",
+            "telefone": "={{ $json.telefone }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "nome",
+              "displayName": "nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "telefone",
+              "displayName": "telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_importacao",
+              "displayName": "data_importacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "erro_detalhe",
+              "displayName": "erro_detalhe",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "origem",
+              "displayName": "origem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ref",
+              "displayName": "ref",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "error",
+              "displayName": "error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "c80b8e42-8b26-409b-b5a7-1f1218207129",
+      "name": "06b_atualiza_status_erro",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        0,
+        256
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 0 9,12,15,18 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1216,
+        16
+      ],
+      "id": "ba955e9f-8fe4-473f-91bf-fdf3b3e25765",
+      "name": "01b_trigger_schedule"
+    }
+  ],
+  "connections": {
+    "01_trigger_manual": {
+      "main": [
+        [
+          {
+            "node": "02_le_pendentes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02_le_pendentes": {
+      "main": [
+        [
+          {
+            "node": "03_loop_leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03_loop_leads": {
+      "main": [
+        [],
+        [
+          {
+            "node": "04_normaliza_lead_lote",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04_normaliza_lead_lote": {
+      "main": [
+        [
+          {
+            "node": "05_chama_sub_criar_lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05_chama_sub_criar_lead": {
+      "main": [
+        [
+          {
+            "node": "06a_atualiza_status_sucesso",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "06b_atualiza_status_erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06a_atualiza_status_sucesso": {
+      "main": [
+        [
+          {
+            "node": "03_loop_leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06b_atualiza_status_erro": {
+      "main": [
+        [
+          {
+            "node": "03_loop_leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "01b_trigger_schedule": {
+      "main": [
+        [
+          {
+            "node": "02_le_pendentes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
