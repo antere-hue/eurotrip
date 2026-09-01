@@ -244,7 +244,7 @@
     },
     {
       "parameters": {
-        "url": "=https://brasilapi.com.br/api/cnpj/v1/{{$json.cnpj}}",
+        "url": "=https://brasilapi.com.br/api/cnpj/v1/{{ $('02_normalizacao_lead').item.json.cnpj }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",

@@ -263,7 +263,7 @@
                 "conditions": [
                   {
                     "id": "5ae52f6e-e68b-487b-9ab2-870d5d6414b9",
-                    "leftValue": "={{$json.dias_corridos}}",
+                    "leftValue": "={{ $('04_calcula_dias_corridos').item.json.dias_corridos }}",
                     "rightValue": 1,
                     "operator": {
                       "type": "number",
@@ -287,7 +287,7 @@
                 "conditions": [
                   {
                     "id": "636f0b57-892a-48c4-8485-bfd48cb367b2",
-                    "leftValue": "={{$json.dias_corridos}}",
+                    "leftValue": "={{ $('04_calcula_dias_corridos').item.json.dias_corridos }}",
                     "rightValue": 3,
                     "operator": {
                       "type": "number",
@@ -311,7 +311,7 @@
                 "conditions": [
                   {
                     "id": "9301019d-53b9-4228-b1d3-e3427a6af5f6",
-                    "leftValue": "={{$json.dias_corridos}}",
+                    "leftValue": "={{ $('04_calcula_dias_corridos').item.json.dias_corridos }}",
                     "rightValue": 5,
                     "operator": {
                       "type": "number",
@@ -335,7 +335,7 @@
                 "conditions": [
                   {
                     "id": "47e576ed-3bb2-4cd5-be8b-6d5ea85bc360",
-                    "leftValue": "={{$json.dias_corridos}}",
+                    "leftValue": "={{ $('04_calcula_dias_corridos').item.json.dias_corridos }}",
                     "rightValue": 8,
                     "operator": {
                       "type": "number",
@@ -359,7 +359,7 @@
                 "conditions": [
                   {
                     "id": "2b6c764e-b67a-4ff6-baf3-39d44cbe9064",
-                    "leftValue": "={{$json.dias_corridos}}",
+                    "leftValue": "={{ $('04_calcula_dias_corridos').item.json.dias_corridos }}",
                     "rightValue": 12,
                     "operator": {
                       "type": "number",
@@ -383,7 +383,7 @@
                 "conditions": [
                   {
                     "id": "08d31056-c2c7-41d1-a31e-8a3eb3b1746e",
-                    "leftValue": "={{$json.dias_corridos}}",
+                    "leftValue": "={{ $('04_calcula_dias_corridos').item.json.dias_corridos }}",
                     "rightValue": 16,
                     "operator": {
                       "type": "number",
@@ -407,7 +407,7 @@
                 "conditions": [
                   {
                     "id": "ee537e4b-dbdc-461d-9006-9c5da0be3dbb",
-                    "leftValue": "={{$json.dias_corridos}}",
+                    "leftValue": "={{ $('04_calcula_dias_corridos').item.json.dias_corridos }}",
                     "rightValue": 20,
                     "operator": {
                       "type": "number",
@@ -431,7 +431,7 @@
                 "conditions": [
                   {
                     "id": "2dab5e5d-9cb1-4b52-80e9-bf54d7cb0495",
-                    "leftValue": "={{$json.dias_corridos}}",
+                    "leftValue": "={{ $('04_calcula_dias_corridos').item.json.dias_corridos }}",
                     "rightValue": 25,
                     "operator": {
                       "type": "number",
@@ -455,7 +455,7 @@
                 "conditions": [
                   {
                     "id": "d0da32d5-ed08-45bc-bfd0-1d02e5f7a262",
-                    "leftValue": "={{$json.dias_corridos}}",
+                    "leftValue": "={{ $('04_calcula_dias_corridos').item.json.dias_corridos }}",
                     "rightValue": 30,
                     "operator": {
                       "type": "number",
