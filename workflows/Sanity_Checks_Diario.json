@@ -7,7 +7,7 @@
           "interval": [
             {
               "field": "cronExpression",
-              "expression": "0 7 * * *"
+              "expression": "0 0 6 * * *"
             }
           ]
         }
@@ -20,7 +20,7 @@
         -1600,
         0
       ],
-      "notes": "07h no fuso padrao da instancia (America/New_York, mesmo comportamento nao-sobrescrito do 04_Regua_Followup). Nao ajustado para horario de Brasilia -- ver ressalva no relatorio."
+      "notes": "7h de Brasilia, convertido para o fuso padrao da instancia (America/New_York), mesmo padrao do Workflow 11 (01b_trigger_schedule, Anexo C). Ajuste sazonal necessario 2x/ano por causa do horario de verao americano (Brasilia nao tem horario de verao desde 2019):\n- Horario de verao americano ATIVO (meados de marco a inicio de novembro, NY = Brasilia -1h): 0 0 6 * * * (6h NY = 7h Brasilia) -- valor atual.\n- Horario de verao americano INATIVO (inicio de novembro a meados de marco, NY = Brasilia -2h): 0 0 5 * * * (5h NY = 7h Brasilia).\nTrocar a expressao manualmente nas duas transicoes do ano (mesma limitacao do Workflow 11 -- cron nao ajusta twice-a-year DST sozinho)."
     },
     {
       "parameters": {
