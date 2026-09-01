@@ -54,7 +54,10 @@
           "name": "Google Sheets account"
         }
       },
-      "notes": "TODO: preencher documentId e credencial do Google Sheets"
+      "notes": "TODO: preencher documentId e credencial do Google Sheets",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
@@ -89,7 +92,10 @@
           "name": "Google Sheets account"
         }
       },
-      "notes": "Lido em paralelo; referenciado dentro do Code node 04 via $('02b_le_email_status').all() -- NAO conectar diretamente ao 04"
+      "notes": "Lido em paralelo; referenciado dentro do Code node 04 via $('02b_le_email_status').all() -- NAO conectar diretamente ao 04",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
@@ -1045,7 +1051,10 @@
           "name": "Google Sheets account"
         }
       },
-      "notes": "Todos os ramos convergem aqui. Usa referencia explicita: $('04_calcula_dias_corridos').item.json.lead_id -- NUNCA $json cru, pois quase todo ramo passou por um HTTP Request antes."
+      "notes": "Todos os ramos convergem aqui. Usa referencia explicita: $('04_calcula_dias_corridos').item.json.lead_id -- NUNCA $json cru, pois quase todo ramo passou por um HTTP Request antes.",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
@@ -2194,7 +2203,10 @@
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
@@ -2762,7 +2774,10 @@
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
@@ -2803,7 +2818,10 @@
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
