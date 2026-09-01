@@ -1116,7 +1116,8 @@
           "name": "Header Auth account"
         }
       },
-      "notes": "Template: confirmacao_envio_proposta (Utility, Anexo I.6). D+1, sempre disparada se optin=true."
+      "notes": "Template: confirmacao_envio_proposta (Utility, Anexo I.6). D+1, sempre disparada se optin=true.",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -1184,7 +1185,8 @@
         -96
       ],
       "notesInFlow": true,
-      "notes": "E-mail D+3: reforco de beneficio nao destacado antes. Disparado quando D0 FOI aberto."
+      "notes": "E-mail D+3: reforco de beneficio nao destacado antes. Disparado quando D0 FOI aberto.",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -1246,7 +1248,8 @@
           "name": "Header Auth account"
         }
       },
-      "notes": "WhatsApp priorizado: D0 nao aberto + optin=true."
+      "notes": "WhatsApp priorizado: D0 nao aberto + optin=true.",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -1280,7 +1283,8 @@
         192
       ],
       "notesInFlow": true,
-      "notes": "Fallback: D0 nao aberto mas sem optin de WhatsApp -> mantem e-mail mesmo assim."
+      "notes": "Fallback: D0 nao aberto mas sem optin de WhatsApp -> mantem e-mail mesmo assim.",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -1342,7 +1346,8 @@
           "name": "Header Auth account"
         }
       },
-      "notes": "D+5: pergunta objetiva sobre produto de interesse (produtos_contratados)."
+      "notes": "D+5: pergunta objetiva sobre produto de interesse (produtos_contratados).",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -1376,7 +1381,8 @@
         512
       ],
       "notesInFlow": true,
-      "notes": "D+8: urgencia real -- validade da proposta (data_proposta + 30 dias). Sempre disparado."
+      "notes": "D+8: urgencia real -- validade da proposta (data_proposta + 30 dias). Sempre disparado.",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -1438,7 +1444,8 @@
           "name": "Header Auth account"
         }
       },
-      "notes": "D+12: prova social leve (caso de uso do setor do lead)."
+      "notes": "D+12: prova social leve (caso de uso do setor do lead).",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -1506,7 +1513,8 @@
         912
       ],
       "notesInFlow": true,
-      "notes": "D+16: reforco da isencao da taxa de implantacao. So dispara se isencao != Sim."
+      "notes": "D+16: reforco da isencao da taxa de implantacao. So dispara se isencao != Sim.",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -1568,7 +1576,8 @@
           "name": "Header Auth account"
         }
       },
-      "notes": "D+20: ultima tentativa automatizada + CTA de agendamento."
+      "notes": "D+20: ultima tentativa automatizada + CTA de agendamento.",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -1602,7 +1611,8 @@
         1504
       ],
       "notesInFlow": true,
-      "notes": "D+25: aviso de expiracao proxima (faltam 5 dias)."
+      "notes": "D+25: aviso de expiracao proxima (faltam 5 dias).",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -2926,6 +2936,558 @@
       "retryOnFail": true,
       "maxTries": 5,
       "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 810524007,
+          "mode": "list",
+          "cachedResultName": "base_funil_completo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "lead_id",
+              "lookupValue": "={{ $('04_calcula_dias_corridos').item.json.lead_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1856,
+        -424
+      ],
+      "id": "rc-d1-0000-0000-000000000001",
+      "name": "releitura_optin_d1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $('releitura_optin_d1').all();\nreturn [{ json: { optin_whatsapp_atual: rows.length > 0 ? (rows[0].json.optin_whatsapp === true || rows[0].json.optin_whatsapp === 'true') : false } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1676,
+        -364
+      ],
+      "id": "rc-d1-0000-0000-000000000002",
+      "name": "normaliza_releitura_d1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-d1-optin-atual",
+              "leftValue": "={{ $json.optin_whatsapp_atual }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1496,
+        -364
+      ],
+      "id": "rc-d1-0000-0000-000000000003",
+      "name": "if_optin_ainda_valido_d1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 810524007,
+          "mode": "list",
+          "cachedResultName": "base_funil_completo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "lead_id",
+              "lookupValue": "={{ $('04_calcula_dias_corridos').item.json.lead_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1216,
+        -520
+      ],
+      "id": "rc-d3-0000-0000-000000000001",
+      "name": "releitura_optin_d3",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $('releitura_optin_d3').all();\nreturn [{ json: { optin_whatsapp_atual: rows.length > 0 ? (rows[0].json.optin_whatsapp === true || rows[0].json.optin_whatsapp === 'true') : false } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1036,
+        -460
+      ],
+      "id": "rc-d3-0000-0000-000000000002",
+      "name": "normaliza_releitura_d3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-d3-optin-atual",
+              "leftValue": "={{ $json.optin_whatsapp_atual }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -856,
+        -460
+      ],
+      "id": "rc-d3-0000-0000-000000000003",
+      "name": "if_optin_ainda_valido_d3"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 810524007,
+          "mode": "list",
+          "cachedResultName": "base_funil_completo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "lead_id",
+              "lookupValue": "={{ $('04_calcula_dias_corridos').item.json.lead_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -576,
+        -296
+      ],
+      "id": "rc-d5-0000-0000-000000000001",
+      "name": "releitura_optin_d5",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $('releitura_optin_d5').all();\nreturn [{ json: { optin_whatsapp_atual: rows.length > 0 ? (rows[0].json.optin_whatsapp === true || rows[0].json.optin_whatsapp === 'true') : false } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -396,
+        -236
+      ],
+      "id": "rc-d5-0000-0000-000000000002",
+      "name": "normaliza_releitura_d5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-d5-optin-atual",
+              "leftValue": "={{ $json.optin_whatsapp_atual }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -216,
+        -236
+      ],
+      "id": "rc-d5-0000-0000-000000000003",
+      "name": "if_optin_ainda_valido_d5"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 810524007,
+          "mode": "list",
+          "cachedResultName": "base_funil_completo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "lead_id",
+              "lookupValue": "={{ $('04_calcula_dias_corridos').item.json.lead_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        64,
+        -40
+      ],
+      "id": "rc-d12-0000-0000-000000000001",
+      "name": "releitura_optin_d12",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $('releitura_optin_d12').all();\nreturn [{ json: { optin_whatsapp_atual: rows.length > 0 ? (rows[0].json.optin_whatsapp === true || rows[0].json.optin_whatsapp === 'true') : false } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        244,
+        20
+      ],
+      "id": "rc-d12-0000-0000-000000000002",
+      "name": "normaliza_releitura_d12"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-d12-optin-atual",
+              "leftValue": "={{ $json.optin_whatsapp_atual }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        424,
+        20
+      ],
+      "id": "rc-d12-0000-0000-000000000003",
+      "name": "if_optin_ainda_valido_d12"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 810524007,
+          "mode": "list",
+          "cachedResultName": "base_funil_completo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "lead_id",
+              "lookupValue": "={{ $('04_calcula_dias_corridos').item.json.lead_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        704,
+        280
+      ],
+      "id": "rc-d20-0000-0000-000000000001",
+      "name": "releitura_optin_d20",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $('releitura_optin_d20').all();\nreturn [{ json: { optin_whatsapp_atual: rows.length > 0 ? (rows[0].json.optin_whatsapp === true || rows[0].json.optin_whatsapp === 'true') : false } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        884,
+        340
+      ],
+      "id": "rc-d20-0000-0000-000000000002",
+      "name": "normaliza_releitura_d20"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-d20-optin-atual",
+              "leftValue": "={{ $json.optin_whatsapp_atual }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1064,
+        340
+      ],
+      "id": "rc-d20-0000-0000-000000000003",
+      "name": "if_optin_ainda_valido_d20"
+    },
+    {
+      "parameters": {
+        "jsCode": "let errMsg = 'Erro sem mensagem';\nif ($json.error) {\n  errMsg = (typeof $json.error === 'string') ? $json.error : ($json.error.message || errMsg);\n}\nreturn [{ json: {\n  workflow_origem: '04_Regua_Followup',\n  no_origem: $prevNode.name,\n  mensagem_erro: errMsg,\n  timestamp: $now.toISO(),\n  link_execucao: `https://raregoat-n8n.cloudfy.live/workflow/a8P2SlOqAoGIgrYB/executions/${$execution.id}`\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1000,
+        1856
+      ],
+      "id": "e2000000-0000-0000-0000-000000000001",
+      "name": "prepara_erro_envio_regua",
+      "notes": "Fan-in dos outputs de erro dos 10 nos de envio (onError=continueErrorOutput). $prevNode.name identifica dinamicamente qual no falhou."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "MAvApEDIanoBGJPE",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/MAvApEDIanoBGJPE",
+          "cachedResultName": "Mission_Control_Error_Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workflow_origem": "={{ $('prepara_erro_envio_regua').item.json.workflow_origem }}",
+            "no_origem": "={{ $('prepara_erro_envio_regua').item.json.no_origem }}",
+            "mensagem_erro": "={{ $('prepara_erro_envio_regua').item.json.mensagem_erro }}",
+            "timestamp": "={{ $('prepara_erro_envio_regua').item.json.timestamp }}",
+            "link_execucao": "={{ $('prepara_erro_envio_regua').item.json.link_execucao }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "workflow_origem",
+              "displayName": "workflow_origem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "no_origem",
+              "displayName": "no_origem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "mensagem_erro",
+              "displayName": "mensagem_erro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "link_execucao",
+              "displayName": "link_execucao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "e2000000-0000-0000-0000-000000000002",
+      "name": "notifica_mission_control_regua",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -780,
+        1856
+      ],
+      "notes": "Chama Mission_Control_Error_Handler para registrar o erro (log_erros_producao + notificacao) e depois segue para 99_atualiza_base_funil para o loop continuar no proximo item."
     }
   ],
   "connections": {
@@ -3055,7 +3617,12 @@
       "main": [
         [
           {
-            "node": "08_d1_whatsapp_confirmacao",
+            "node": "releitura_optin_d1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "normaliza_releitura_d1",
             "type": "main",
             "index": 0
           }
@@ -3074,6 +3641,13 @@
         [
           {
             "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "prepara_erro_envio_regua",
             "type": "main",
             "index": 0
           }
@@ -3106,6 +3680,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "prepara_erro_envio_regua",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -3113,7 +3694,12 @@
       "main": [
         [
           {
-            "node": "12_d3_whatsapp_prioritario",
+            "node": "releitura_optin_d3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "normaliza_releitura_d3",
             "type": "main",
             "index": 0
           }
@@ -3135,6 +3721,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "prepara_erro_envio_regua",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -3146,6 +3739,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "prepara_erro_envio_regua",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -3153,7 +3753,12 @@
       "main": [
         [
           {
-            "node": "15_d5_whatsapp_pergunta",
+            "node": "releitura_optin_d5",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "normaliza_releitura_d5",
             "type": "main",
             "index": 0
           }
@@ -3175,6 +3780,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "prepara_erro_envio_regua",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -3186,6 +3798,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "prepara_erro_envio_regua",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -3193,7 +3812,12 @@
       "main": [
         [
           {
-            "node": "18_d12_whatsapp_prova_social",
+            "node": "releitura_optin_d12",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "normaliza_releitura_d12",
             "type": "main",
             "index": 0
           }
@@ -3212,6 +3836,13 @@
         [
           {
             "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "prepara_erro_envio_regua",
             "type": "main",
             "index": 0
           }
@@ -3244,6 +3875,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "prepara_erro_envio_regua",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -3251,7 +3889,12 @@
       "main": [
         [
           {
-            "node": "22_d20_whatsapp_ultima_tentativa",
+            "node": "releitura_optin_d20",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "normaliza_releitura_d20",
             "type": "main",
             "index": 0
           }
@@ -3273,6 +3916,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "prepara_erro_envio_regua",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -3281,6 +3931,13 @@
         [
           {
             "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "prepara_erro_envio_regua",
             "type": "main",
             "index": 0
           }
@@ -3393,6 +4050,173 @@
         [
           {
             "node": "06_switch_dia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normaliza_releitura_d1": {
+      "main": [
+        [
+          {
+            "node": "if_optin_ainda_valido_d1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if_optin_ainda_valido_d1": {
+      "main": [
+        [
+          {
+            "node": "08_d1_whatsapp_confirmacao",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normaliza_releitura_d3": {
+      "main": [
+        [
+          {
+            "node": "if_optin_ainda_valido_d3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if_optin_ainda_valido_d3": {
+      "main": [
+        [
+          {
+            "node": "12_d3_whatsapp_prioritario",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "13_d3_email_fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normaliza_releitura_d5": {
+      "main": [
+        [
+          {
+            "node": "if_optin_ainda_valido_d5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if_optin_ainda_valido_d5": {
+      "main": [
+        [
+          {
+            "node": "15_d5_whatsapp_pergunta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normaliza_releitura_d12": {
+      "main": [
+        [
+          {
+            "node": "if_optin_ainda_valido_d12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if_optin_ainda_valido_d12": {
+      "main": [
+        [
+          {
+            "node": "18_d12_whatsapp_prova_social",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normaliza_releitura_d20": {
+      "main": [
+        [
+          {
+            "node": "if_optin_ainda_valido_d20",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if_optin_ainda_valido_d20": {
+      "main": [
+        [
+          {
+            "node": "22_d20_whatsapp_ultima_tentativa",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prepara_erro_envio_regua": {
+      "main": [
+        [
+          {
+            "node": "notifica_mission_control_regua",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "notifica_mission_control_regua": {
+      "main": [
+        [
+          {
+            "node": "99_atualiza_base_funil",
             "type": "main",
             "index": 0
           }

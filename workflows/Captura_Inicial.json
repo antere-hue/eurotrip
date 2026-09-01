@@ -987,6 +987,34 @@
       "retryOnFail": true,
       "maxTries": 5,
       "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "vendas-negociacao",
+          "mode": "name"
+        },
+        "text": "=:busts_in_silhouette: *Negociação duplicada em preparação*\nUm contato que já existe no RD Station reenviou o formulário de captura — uma nova negociação está sendo criada para ele.\n*Nome:* {{ $('02_normalizacao_lead').item.json.nome }}\n*ID do contato (RD Station):* {{ Array.isArray($('04_verifica_contato').item.json.data) ? $('04_verifica_contato').item.json.data[0].id : $('04_verifica_contato').item.json.data.id }}\n*Nova submissão em:* {{ $('02_normalizacao_lead').item.json.capturado_em }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        800,
+        -240
+      ],
+      "id": "d3000000-0000-0000-0000-000000000001",
+      "name": "notifica_slack_duplicidade",
+      "credentials": {
+        "slackApi": {
+          "id": "8Qwkl6tupIvuM69K",
+          "name": "Slack - Funil Antere"
+        }
+      },
+      "notes": "Avisa a equipe de vendas quando um contato ja existente reenvia o formulario e uma nova negociacao esta sendo criada (comportamento de criacao inalterado). Canal: #vendas-negociacao.",
+      "webhookId": "ec0020da-2e03-452c-b520-9b1336c12dde"
     }
   ],
   "connections": {
@@ -1046,6 +1074,11 @@
         [
           {
             "node": "06_criar_negociacao",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "notifica_slack_duplicidade",
             "type": "main",
             "index": 0
           }
