@@ -468,6 +468,116 @@
         -688,
         448
       ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-email-aberto",
+              "leftValue": "={{ $('6 - Extrair Dados').item.json.evento }}",
+              "rightValue": "email.opened",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        900,
+        300
+      ],
+      "id": "rd000000-0000-0000-0000-000000000001",
+      "name": "11 - Checa Email Aberto",
+      "notes": "Sincronizacao com RD Station (Anexo J.0c) -- fan-out em paralelo com '7 - Google Sheets Append', nao altera a logica existente. So dispara para email.opened."
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1514838753"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "rdstation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1120,
+        240
+      ],
+      "id": "rd000000-0000-0000-0000-000000000002",
+      "name": "12 - Busca Token RD Station",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ `https://api.rd.services/crm/v2/deals/${$('6 - Extrair Dados').item.json.lead_id}` }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('12 - Busca Token RD Station').item.json.access_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { data: { custom_fields: { \"email-aberto\": \"Sim\" } } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        240
+      ],
+      "id": "rd000000-0000-0000-0000-000000000003",
+      "name": "13 - Atualiza Campo Email Aberto RD Station",
+      "notes": "Custom field 'Email Aberto' (slug email-aberto, id 6a97a37540a345002a388616) na negociacao, criado em 02/09/2026. lead_id = id da negociacao no RD Station (mesmo padrao ja usado em todo o projeto)."
     }
   ],
   "connections": {
@@ -554,6 +664,11 @@
             "node": "7 - Google Sheets Append",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "11 - Checa Email Aberto",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -563,6 +678,29 @@
         [
           {
             "node": "9 - Google Sheets Append (Bounce Etc)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Checa Email Aberto": {
+      "main": [
+        [
+          {
+            "node": "12 - Busca Token RD Station",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "12 - Busca Token RD Station": {
+      "main": [
+        [
+          {
+            "node": "13 - Atualiza Campo Email Aberto RD Station",
             "type": "main",
             "index": 0
           }
