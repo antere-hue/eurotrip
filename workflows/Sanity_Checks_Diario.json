@@ -1,0 +1,451 @@
+{
+  "name": "Sanity_Checks_Diario",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 0 6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "sc000000-0000-0000-0000-000000000001",
+      "name": "01_schedule_trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1600,
+        0
+      ],
+      "notes": "7h de Brasilia, convertido para o fuso padrao da instancia (America/New_York), mesmo padrao do Workflow 11 (01b_trigger_schedule, Anexo C). Ajuste sazonal necessario 2x/ano por causa do horario de verao americano (Brasilia nao tem horario de verao desde 2019):\n- Horario de verao americano ATIVO (meados de marco a inicio de novembro, NY = Brasilia -1h): 0 0 6 * * * (6h NY = 7h Brasilia) -- valor atual.\n- Horario de verao americano INATIVO (inicio de novembro a meados de marco, NY = Brasilia -2h): 0 0 5 * * * (5h NY = 7h Brasilia).\nTrocar a expressao manualmente nas duas transicoes do ano (mesma limitacao do Workflow 11 -- cron nao ajusta twice-a-year DST sozinho)."
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1514838753"
+        },
+        "options": {}
+      },
+      "id": "sc000000-0000-0000-0000-000000000002",
+      "name": "02a_busca_tokens",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1360,
+        -160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
+      "notes": "Le a aba tokens inteira -- reutilizada tanto para o check do token RD Station quanto para a chave de API do n8n usada em 04a (evita 2 leituras da mesma aba)."
+    },
+    {
+      "parameters": {
+        "jsCode": "const tokens = $('02a_busca_tokens').all().map(i => i.json);\nconst tokenRD = tokens.find(t => t.service === 'rdstation') || null;\nconst agora = new Date();\nconst rdExpiraEm = (tokenRD && tokenRD.expires_at) ? new Date(tokenRD.expires_at) : null;\nconst rdHorasParaExpirar = (rdExpiraEm && !isNaN(rdExpiraEm)) ? (rdExpiraEm - agora) / (1000 * 60 * 60) : null;\n\n// O token RD Station e renovado a cada 1h-1h30 pelo workflow Renovar Token (Anexo C.3) --\n// por isso o alerta so faz sentido quando o token JA expirou (falha real da renovacao\n// automatica), nao por estar perto de expirar (ele sempre esta perto, por design).\nlet ok = true;\nlet detalhe = 'Token RD Station valido.';\nif (!tokenRD || rdHorasParaExpirar === null) {\n  ok = false;\n  detalhe = 'Token RD Station nao encontrado ou sem expires_at na aba tokens.';\n} else if (rdHorasParaExpirar < 0) {\n  ok = false;\n  detalhe = `Token RD Station expirado ha ${Math.abs(rdHorasParaExpirar).toFixed(1)}h -- possivel falha na renovacao automatica (workflow Renovar Token).`;\n} else {\n  detalhe = `Token RD Station valido, expira em ${rdHorasParaExpirar.toFixed(1)}h (renovacao automatica de hora em hora).`;\n}\n\nreturn [{ json: { token_ok: ok, token_detalhe: detalhe } }];"
+      },
+      "id": "sc000000-0000-0000-0000-000000000003",
+      "name": "02_check_token_rdstation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        -160
+      ],
+      "notes": "NAO reusa o limiar de 2 dias do Painel Operacional -- inadequado aqui: o token RD Station e renovado de hora em hora por design, entao sempre estaria a menos de 2 dias da expiracao (falso positivo permanente). Alerta apenas se ja expirado de fato."
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 810524007,
+          "mode": "list",
+          "cachedResultName": "base_funil_completo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007"
+        },
+        "options": {}
+      },
+      "id": "sc000000-0000-0000-0000-000000000004",
+      "name": "03a_busca_base_funil",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1360,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "jsCode": "const leads = $('03a_busca_base_funil').all().map(i => i.json);\nconst totalLeads = leads.length;\nconst cabecalhoIntegro = totalLeads > 0 && Object.prototype.hasOwnProperty.call(leads[0], 'lead_id');\n\nlet ok = true;\nlet detalhe = `Base integra: ${totalLeads} lead(s), cabecalho com lead_id.`;\nif (totalLeads === 0) {\n  ok = false;\n  detalhe = 'base_funil_completo esta vazia (0 linhas).';\n} else if (!cabecalhoIntegro) {\n  ok = false;\n  detalhe = 'Cabecalho da base_funil_completo nao contem a coluna lead_id -- possivel aba trocada (bug de gid).';\n}\n\nreturn [{ json: { base_ok: ok, base_detalhe: detalhe, base_total_leads: totalLeads } }];"
+      },
+      "id": "sc000000-0000-0000-0000-000000000005",
+      "name": "03_check_base_funil",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://raregoat-n8n.cloudfy.live/api/v1/executions",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "workflowId",
+              "value": "a8P2SlOqAoGIgrYB"
+            },
+            {
+              "name": "limit",
+              "value": "1"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-API-KEY",
+              "value": "={{ $('02a_busca_tokens').all().find(t => t.json.service === 'n8n_api_key').json.signing_secret }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "sc000000-0000-0000-0000-000000000006",
+      "name": "04a_busca_execucao_regua",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1120,
+        160
+      ],
+      "notes": "Reusa a chave n8n_api_key ja lida por 02a_busca_tokens (mesmo padrao usado em 06_busca_execucoes_n8n do Painel_Operacional_GET)."
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $('04a_busca_execucao_regua').item.json;\nconst execucoes = Array.isArray(resp.data) ? resp.data : [];\nconst ultima = execucoes.length > 0 ? execucoes[0] : null;\nconst agora = new Date();\nconst janelaHoras = 25;\n\nlet ok = true;\nlet detalhe = '';\nif (!ultima) {\n  ok = false;\n  detalhe = '04_Regua_Followup nao tem nenhuma execucao registrada.';\n} else {\n  const iniciadaEm = new Date(ultima.startedAt);\n  const horasDesde = (agora - iniciadaEm) / (1000 * 60 * 60);\n  if (isNaN(horasDesde)) {\n    ok = false;\n    detalhe = 'Nao foi possivel calcular ha quanto tempo foi a ultima execucao do 04_Regua_Followup.';\n  } else if (horasDesde > janelaHoras) {\n    ok = false;\n    detalhe = `04_Regua_Followup nao executa ha ${horasDesde.toFixed(1)}h (esperado: diariamente, janela de ${janelaHoras}h) -- possivel Schedule Trigger parado.`;\n  } else {\n    detalhe = `Ultima execucao do 04_Regua_Followup ha ${horasDesde.toFixed(1)}h.`;\n  }\n}\n\nreturn [{ json: { regua_ok: ok, regua_detalhe: detalhe } }];"
+      },
+      "id": "sc000000-0000-0000-0000-000000000007",
+      "name": "04_check_execucoes_regua",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        160
+      ],
+      "notes": "Conta qualquer execucao (sucesso ou erro) dentro da janela -- o objetivo desta camada e detectar Schedule Trigger parado (execucao zero), nao validar sucesso de negocio (isso ja e coberto pelo Mission Control/Camada 1). Ver ressalva no relatorio sobre esta leitura do Anexo O.9."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 3,
+        "options": {}
+      },
+      "id": "sc000000-0000-0000-0000-000000000008",
+      "name": "merge_checks",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -640,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const m = $('merge_checks').item.json;\nconst checks = [\n  { nome: '02_check_token_rdstation', ok: m.token_ok, detalhe: m.token_detalhe },\n  { nome: '03_check_base_funil', ok: m.base_ok, detalhe: m.base_detalhe },\n  { nome: '04_check_execucoes_regua', ok: m.regua_ok, detalhe: m.regua_detalhe },\n];\n\nconst falhas = checks.filter(c => !c.ok);\nconst tem_problema = falhas.length > 0;\n\nreturn [{\n  json: {\n    tem_problema,\n    no_origem: falhas.map(f => f.nome).join(', '),\n    mensagem_erro: falhas.map(f => f.detalhe).join(' | '),\n    timestamp: $now.toISO(),\n    resumo: checks,\n  }\n}];"
+      },
+      "id": "sc000000-0000-0000-0000-000000000009",
+      "name": "05_consolida_resultado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "sc0if0000-0000-0000-0000-000000000001",
+              "leftValue": "={{ $('05_consolida_resultado').item.json.tem_problema }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "sc00000a-0000-0000-0000-000000000010",
+      "name": "06_if_problema",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -160,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "MAvApEDIanoBGJPE",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/MAvApEDIanoBGJPE",
+          "cachedResultName": "Mission_Control_Error_Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workflow_origem": "Sanity_Checks_Diario",
+            "no_origem": "={{ $('05_consolida_resultado').item.json.no_origem }}",
+            "mensagem_erro": "={{ $('05_consolida_resultado').item.json.mensagem_erro }}",
+            "timestamp": "={{ $('05_consolida_resultado').item.json.timestamp }}",
+            "link_execucao": "={{ `https://raregoat-n8n.cloudfy.live/workflow/rux1BR9Q1ydCkG0K/executions/${$execution.id}` }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "workflow_origem",
+              "displayName": "workflow_origem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "no_origem",
+              "displayName": "no_origem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "mensagem_erro",
+              "displayName": "mensagem_erro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "link_execucao",
+              "displayName": "link_execucao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "sc00000b-0000-0000-0000-000000000011",
+      "name": "07_notifica_mission_control",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        80,
+        -80
+      ],
+      "notes": "PENDENTE DE TESTE (bloqueado por restricao ativa em log_erros_producao ate checagem do historico de versoes). Ver relatorio."
+    }
+  ],
+  "connections": {
+    "01_schedule_trigger": {
+      "main": [
+        [
+          {
+            "node": "02a_busca_tokens",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "03a_busca_base_funil",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "02_check_token_rdstation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "03_check_base_funil",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "04a_busca_execucao_regua",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02a_busca_tokens": {
+      "main": [
+        []
+      ]
+    },
+    "02_check_token_rdstation": {
+      "main": [
+        [
+          {
+            "node": "merge_checks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03a_busca_base_funil": {
+      "main": [
+        []
+      ]
+    },
+    "03_check_base_funil": {
+      "main": [
+        [
+          {
+            "node": "merge_checks",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "04a_busca_execucao_regua": {
+      "main": [
+        [
+          {
+            "node": "04_check_execucoes_regua",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04_check_execucoes_regua": {
+      "main": [
+        [
+          {
+            "node": "merge_checks",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "merge_checks": {
+      "main": [
+        [
+          {
+            "node": "05_consolida_resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05_consolida_resultado": {
+      "main": [
+        [
+          {
+            "node": "06_if_problema",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06_if_problema": {
+      "main": [
+        [
+          {
+            "node": "07_notifica_mission_control",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

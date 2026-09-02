@@ -1,0 +1,1168 @@
+{
+  "name": "Captura Inicial / Funil do Lead",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Fale com a Antere",
+        "formDescription": "Automação comercial, do caixa ao pagamento",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Nome",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Telefone contato",
+              "requiredField": true
+            },
+            {
+              "fieldType": "hiddenField",
+              "fieldName": "origem",
+              "fieldValue": "indicacao"
+            },
+            {
+              "fieldType": "hiddenField",
+              "fieldName": "ref"
+            },
+            {
+              "fieldLabel": "Comunicações",
+              "fieldType": "checkbox",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Aceito receber novidades e comunicações comerciais da Antere por WhatsApp."
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false,
+          "buttonLabel": "Quero saber mais",
+          "path": "indicacao",
+          "respondWithOptions": {
+            "values": {
+              "formSubmittedText": "Recebemos seu contato! Em instantes você vai receber um e-mail com o próximo passo para montarmos sua proposta."
+            }
+          },
+          "ignoreBots": "={{ true }}",
+          "useWorkflowTimezone": "={{ true }}",
+          "customCss": ".form-container {\n  border-top: 6px solid #3A34D6;\n}\nh1, .form-title {\n  color: #3A34D6 !important;\n}\nbutton[type=\"submit\"], .form-submit-button {\n  background-color: #3A34D6 !important;\n  border-color: #3A34D6 !important;\n}\nbutton[type=\"submit\"]:hover, .form-submit-button:hover {\n  background-color: #544DFF !important;\n  border-color: #544DFF !important;\n}\na {\n  color: #12786B !important;\n}\n.form-description {\n  color: #5B5F6B !important;\n}"
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -336,
+        -656
+      ],
+      "id": "6272fa73-1fcd-4b38-b378-4130ff6cf798",
+      "name": "01_form_trigger",
+      "webhookId": "8043eafe-f1fd-4162-a138-203054f2092b"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "function pick(obj, ...candidates) {\n  for (const key of Object.keys(obj)) {\n    const clean = key.trim().toLowerCase();\n    if (candidates.includes(clean)) return obj[key];\n  }\n  return undefined;\n}\n\nconst nomeRaw = pick($json, 'nome') || '';\nconst nome = String(nomeRaw).trim();\nconst primeiro_nome = nome.split(' ')[0] || 'Cliente';\n\nconst telefoneRaw = pick($json, 'telefone', 'telefone contato') || '';\nconst digits = String(telefoneRaw).replace(/\\D/g, '');\nconst telefone = digits.startsWith('55') ? digits : (digits ? '55' + digits : '');\n\nconst email = pick($json, 'email') || '';\nconst origem = pick($json, 'origem') || 'indicacao';\nconst ref = pick($json, 'ref') || '';\n\nconst optinRaw = pick($json, 'comunicacoes', 'comunicações') || [];\nconst optin_whatsapp = Array.isArray(optinRaw) ? optinRaw.length > 0 : Boolean(optinRaw);\n\nreturn {\n  json: {\n    nome,\n    primeiro_nome,\n    email,\n    telefone,\n    origem,\n    ref,\n    capturado_em: $now.toISO(),\n    optin_whatsapp,\n    optin_whatsapp_data: optin_whatsapp ? $now.toISO() : '',\n    optin_whatsapp_texto: optin_whatsapp ? String(optinRaw[0] || '') : '',\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        -656
+      ],
+      "id": "6ed10fb8-02cc-4c5b-913d-8e3479b2c10c",
+      "name": "02_normalizacao_lead"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1514838753"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "rdstation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        64,
+        -656
+      ],
+      "id": "84f0a923-65bc-4e02-a91b-3203196cb51e",
+      "name": "03_token_rdstation",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "url": "https://api.rd.services/crm/v2/contacts",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filter",
+              "value": "=email:{{ $('02_normalizacao_lead').item.json.email }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        256,
+        -656
+      ],
+      "id": "98667b9b-53d2-4ffc-b9ff-13381f605d3e",
+      "name": "04_verifica_contato"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "93b7f463-7390-4a85-8fa9-97b535bfe351",
+              "leftValue": "={{ $json.data.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        464,
+        -656
+      ],
+      "id": "6c5cd9b0-0516-4f18-bdca-b3fb0d58c9c5",
+      "name": "05_if_contato_existe"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.rd.services/crm/v2/contacts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('03_token_rdstation').item.json.access_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": {\n    \"name\": \"{{ $('02_normalizacao_lead').item.json.nome }}\",\n    \"emails\": [{ \"email\": \"{{ $('02_normalizacao_lead').item.json.email }}\" }],\n    \"phones\": [{ \"phone\": \"{{ $('02_normalizacao_lead').item.json.telefone }}\" }]\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        784,
+        -720
+      ],
+      "id": "65c8fb4a-620e-43b3-91cd-e1f775715089",
+      "name": "05a_criar_contato"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.rd.services/crm/v2/deals",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('03_token_rdstation').item.json.access_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": {\n    \"name\": \"{{ $('02_normalizacao_lead').item.json.nome }} - Identificação de Interesse\",\n    \"stage_id\": \"63a0f06e85f086001ce207d0\",\n    \"contact_ids\": [\"{{ Array.isArray($json.data) ? $json.data[0].id : $json.data.id }}\"],\n    \"status\": \"ongoing\",\n    \"owner_id\": \"63a0f04366d0e60019e9c9d6\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        800,
+        -416
+      ],
+      "id": "d3489669-45b5-4a04-9822-f530acc33cd6",
+      "name": "06_criar_negociacao"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json: {\n    ...$('02_normalizacao_lead').item.json,\n    lead_id: $json.data.id,\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        -416
+      ],
+      "id": "cbec0f6c-b46e-4c70-b6fc-1fafbb7acfcf",
+      "name": "07_extrai_lead_id"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "nome"
+            },
+            {
+              "name": "email"
+            },
+            {
+              "name": "telefone"
+            },
+            {
+              "name": "origem"
+            },
+            {
+              "name": "ref"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -336,
+        -480
+      ],
+      "id": "387f8c96-5109-4132-b29b-12a06f0603f5",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v21.0/1335430412979767/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $('02_normalizacao_lead').item.json.telefone }}\",\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"boas_vindas_antere\",\n    \"language\": { \"code\": \"pt_BR\" },\n    \"components\": [\n      {\n        \"type\": \"body\",\n        \"parameters\": [\n          { \"type\": \"text\", \"text\": \"{{ $('02_normalizacao_lead').item.json.primeiro_nome }}\" }\n        ]\n      },\n      {\n        \"type\": \"button\",\n        \"sub_type\": \"url\",\n        \"index\": \"0\",\n        \"parameters\": [\n          { \"type\": \"text\", \"text\": \"{{ $('07_extrai_lead_id').item.json.lead_id }}\" }\n        ]\n      }\n    ]\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1520,
+        -560
+      ],
+      "id": "d74924f0-7c95-4587-8746-7a1c9fbe016e",
+      "name": "09_whatsapp_boasvindas",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "r0RzQWiWxhzmaeWd",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('busca_token_resend').item.json.signing_secret }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  from: \"Fernanda Spahn <comercial@antere.com.br>\",\n  to: [$('07_extrai_lead_id').item.json.email],\n  subject: \"Tecnologia para o seu negócio vender mais — fale com a Antere\",\n  html: `\n    <div style=\"font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #1B1E27;\">\n      <div style=\"background-color: #3A34D6; padding: 32px 24px; text-align: center;\">\n        <h1 style=\"color: #F7F5F1; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;\">Antere</h1>\n        <p style=\"color: #C7C6F5; margin: 8px 0 0; font-size: 13px; letter-spacing: 0.2px;\">Automação comercial, do caixa ao pagamento</p>\n      </div>\n      <div style=\"padding: 32px 24px; background-color: #ffffff;\">\n        <p style=\"font-size: 16px; line-height: 1.6;\">Olá, <strong>${$('07_extrai_lead_id').item.json.primeiro_nome}</strong>!</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Sou Fernanda Spahn, da Antere. Muito obrigada pelo seu contato — fico feliz em ajudar a levar mais tecnologia para o seu negócio.</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Trabalhamos com uma plataforma completa que integra TEF, Gateway, Link de Pagamento e conta digital C6 Bank — tudo conectado ao seu sistema de vendas.</p>\n        <p style=\"font-size: 15px; line-height: 1.6; color: #5B5F6B;\">Na prática, isso significa:</p>\n        <ul style=\"font-size: 15px; line-height: 1.8; color: #5B5F6B; padding-left: 20px;\">\n          <li>Redução de erros de caixa com captura automática</li>\n          <li>Conciliação que sai de horas para minutos</li>\n          <li>Taxas competitivas e PIX gratuito e ilimitado</li>\n          <li>Implantação em até 10 dias úteis</li>\n        </ul>\n        <p style=\"font-size: 16px; line-height: 1.6; font-weight: bold; margin-top: 24px;\">Falta pouco para você ver sua proposta personalizada.</p>\n        <p style=\"font-size: 15px; line-height: 1.6;\">Leva menos de 2 minutos: preencha alguns dados sobre a sua operação e, em instantes, você recebe uma proposta automática com as condições ideais para o seu negócio.</p>\n        <div style=\"text-align: center; margin: 32px 0;\">\n          <a href=\"https://raregoat-n8n.cloudfy.live/form/proposta?lead_id=${$('07_extrai_lead_id').item.json.lead_id}\" style=\"background-color: #3A34D6; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;\">Quero minha proposta personalizada</a>\n        </div>\n        <p style=\"font-size: 14px; line-height: 1.6; color: #5B5F6B;\">Sem burocracia, sem precisar falar com ninguém — a menos que prefira.</p>\n        <hr style=\"border: none; border-top: 1px solid #E5E1D8; margin: 24px 0;\">\n        <p style=\"font-size: 14px; line-height: 1.6;\">Se preferir um atendimento personalizado, estou à disposição no WhatsApp:</p>\n        <p style=\"font-size: 14px; line-height: 1.6;\">📱 <a href=\"https://wa.me/5511993979324\" style=\"color: #12786B;\">(11) 99397-9324</a></p>\n        <p style=\"font-size: 14px; line-height: 1.6; margin-top: 24px;\">Abraço,<br><strong>Fernanda Spahn</strong><br>Consultoria Comercial — Antere</p>\n      </div>\n      <div style=\"background-color: #F7F5F1; padding: 16px 24px; text-align: center;\">\n        <p style=\"font-size: 11px; color: #8B8F9C; margin: 0;\">Antere Tecnologia (F. de Carvalho Spahn Consultoria em Tecnologia da Informação LTDA)</p>\n        <p style=\"font-size: 11px; color: #8B8F9C; margin: 4px 0 0;\">Seus dados serão usados exclusivamente para elaborar sua proposta comercial, conforme a LGPD.</p>\n      </div>\n    </div>\n  `,\n  tags: [\n    { name: \"lead_id\", value: $('07_extrai_lead_id').item.json.lead_id }\n  ]\n} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1248,
+        -304
+      ],
+      "id": "58d77c2f-7473-4c00-9ae6-e9829df3ef95",
+      "name": "08a_email_boasvindas"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "929b5dd7-01a7-4e9e-b553-fa37d85e8df0",
+              "leftValue": "={{ $('02_normalizacao_lead').item.json.optin_whatsapp }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1248,
+        -544
+      ],
+      "id": "5872fa81-3e96-4a52-adbc-d1db801badd6",
+      "name": "08b_if_optin_whatsapp"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 810524007,
+          "mode": "list",
+          "cachedResultName": "base_funil_completo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_id": "={{ $('07_extrai_lead_id').item.json.lead_id }}",
+            "nome_contato": "={{ $('02_normalizacao_lead').item.json.nome }}",
+            "email": "={{ $('02_normalizacao_lead').item.json.email }}",
+            "data_primeiro_contato": "={{ $('02_normalizacao_lead').item.json.capturado_em }}",
+            "optin_whatsapp": "={{ $('02_normalizacao_lead').item.json.optin_whatsapp }}",
+            "optin_whatsapp_texto": "={{ $('02_normalizacao_lead').item.json.optin_whatsapp_texto }}",
+            "status_funil": "Em andamento",
+            "primeiro_nome": "={{ $('02_normalizacao_lead').item.json.primeiro_nome }}",
+            "telefone": "={{ $('02_normalizacao_lead').item.json.telefone }}",
+            "origem": "={{ $('02_normalizacao_lead').item.json.origem }}",
+            "optin_whatsapp_data": "={{ $('02_normalizacao_lead').item.json.optin_whatsapp_data }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "nome_contato",
+              "displayName": "nome_contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "primeiro_nome",
+              "displayName": "primeiro_nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "telefone",
+              "displayName": "telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "origem",
+              "displayName": "origem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_primeiro_contato",
+              "displayName": "data_primeiro_contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "optin_whatsapp",
+              "displayName": "optin_whatsapp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "optin_whatsapp_data",
+              "displayName": "optin_whatsapp_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "optin_whatsapp_texto",
+              "displayName": "optin_whatsapp_texto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "razao_social",
+              "displayName": "razao_social",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "cnpj",
+              "displayName": "cnpj",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "cidade",
+              "displayName": "cidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "uf",
+              "displayName": "uf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "qtd_caixas",
+              "displayName": "qtd_caixas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "produtos_interesse",
+              "displayName": "produtos_interesse",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "isencao",
+              "displayName": "isencao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_envio_proposta",
+              "displayName": "data_envio_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_proposta",
+              "displayName": "valor_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "link_pdf",
+              "displayName": "link_pdf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "score_qualificacao",
+              "displayName": "score_qualificacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status_funil",
+              "displayName": "status_funil",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_resposta_proposta",
+              "displayName": "data_resposta_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_data",
+              "displayName": "ultimo_toque_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_canal",
+              "displayName": "ultimo_toque_canal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_dia_regua",
+              "displayName": "ultimo_toque_dia_regua",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_perda",
+              "displayName": "motivo_perda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nutricao_mensal",
+              "displayName": "nutricao_mensal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "consultor_responsavel",
+              "displayName": "consultor_responsavel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_fechamento_comercial",
+              "displayName": "data_fechamento_comercial",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_fechado",
+              "displayName": "valor_fechado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "produtos_contratados",
+              "displayName": "produtos_contratados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_cadastro_sistema_gestao",
+              "displayName": "data_cadastro_sistema_gestao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sistema_gestao_usado",
+              "displayName": "sistema_gestao_usado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_instalacao_ativacao",
+              "displayName": "data_instalacao_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "mrr_mensal",
+              "displayName": "mrr_mensal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_cancelamento",
+              "displayName": "data_cancelamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_cancelamento",
+              "displayName": "motivo_cancelamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "homologado_paygo",
+              "displayName": "homologado_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_solicitacao_integracao",
+              "displayName": "data_solicitacao_integracao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status_integracao_paygo",
+              "displayName": "status_integracao_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_abertura_conta_c6",
+              "displayName": "data_abertura_conta_c6",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sla_ativacao_dias",
+              "displayName": "sla_ativacao_dias",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_ativacao_real",
+              "displayName": "data_ativacao_real",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_atraso_ativacao",
+              "displayName": "motivo_atraso_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_validacao_pos_ativacao",
+              "displayName": "data_validacao_pos_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nf_paygo_recebida_em",
+              "displayName": "nf_paygo_recebida_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_comissao_esperado",
+              "displayName": "valor_comissao_esperado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_comissao_informado_paygo",
+              "displayName": "valor_comissao_informado_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "divergencia_comissao",
+              "displayName": "divergencia_comissao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nf_faturamento_emitida_em",
+              "displayName": "nf_faturamento_emitida_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1456,
+        -304
+      ],
+      "id": "e2cb2cb0-3090-47fd-a7ce-06a75aa2fb9a",
+      "name": "09a_grava_base_funil",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1514838753"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "resend_api"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1180,
+        -480
+      ],
+      "id": "rk000000-0000-0000-0000-000000000003",
+      "name": "busca_token_resend",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "vendas-negociacao",
+          "mode": "name"
+        },
+        "text": "=:busts_in_silhouette: *Negociação duplicada em preparação*\nUm contato que já existe no RD Station reenviou o formulário de captura — uma nova negociação está sendo criada para ele.\n*Nome:* {{ $('02_normalizacao_lead').item.json.nome }}\n*ID do contato (RD Station):* {{ Array.isArray($('04_verifica_contato').item.json.data) ? $('04_verifica_contato').item.json.data[0].id : $('04_verifica_contato').item.json.data.id }}\n*Nova submissão em:* {{ $('02_normalizacao_lead').item.json.capturado_em }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        800,
+        -240
+      ],
+      "id": "d3000000-0000-0000-0000-000000000001",
+      "name": "notifica_slack_duplicidade",
+      "credentials": {
+        "slackApi": {
+          "id": "8Qwkl6tupIvuM69K",
+          "name": "Slack - Funil Antere"
+        }
+      },
+      "notes": "Avisa a equipe de vendas quando um contato ja existente reenvia o formulario e uma nova negociacao esta sendo criada (comportamento de criacao inalterado). Canal: #vendas-negociacao.",
+      "webhookId": "ec0020da-2e03-452c-b520-9b1336c12dde"
+    }
+  ],
+  "connections": {
+    "01_form_trigger": {
+      "main": [
+        [
+          {
+            "node": "02_normalizacao_lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02_normalizacao_lead": {
+      "main": [
+        [
+          {
+            "node": "03_token_rdstation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03_token_rdstation": {
+      "main": [
+        [
+          {
+            "node": "04_verifica_contato",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04_verifica_contato": {
+      "main": [
+        [
+          {
+            "node": "05_if_contato_existe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05_if_contato_existe": {
+      "main": [
+        [
+          {
+            "node": "05a_criar_contato",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "06_criar_negociacao",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "notifica_slack_duplicidade",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05a_criar_contato": {
+      "main": [
+        [
+          {
+            "node": "06_criar_negociacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06_criar_negociacao": {
+      "main": [
+        [
+          {
+            "node": "07_extrai_lead_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07_extrai_lead_id": {
+      "main": [
+        [
+          {
+            "node": "busca_token_resend",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "08b_if_optin_whatsapp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "02_normalizacao_lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08a_email_boasvindas": {
+      "main": [
+        [
+          {
+            "node": "09a_grava_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08b_if_optin_whatsapp": {
+      "main": [
+        []
+      ]
+    },
+    "busca_token_resend": {
+      "main": [
+        [
+          {
+            "node": "08a_email_boasvindas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

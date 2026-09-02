@@ -1,0 +1,447 @@
+{
+  "name": "Painel_Operacional_GET",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "painel-antere",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "p0000000-0000-0000-0000-000000000001",
+      "name": "01_webhook_get",
+      "webhookId": "painel-antere"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1514838753"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        220,
+        0
+      ],
+      "id": "p0000000-0000-0000-0000-000000000013",
+      "name": "02a_busca_tokens",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const tokens = $('02a_busca_tokens').all().map(i => i.json);\nconst painelTokenRow = tokens.find(t => t.service === 'painel_token');\nconst tokenEsperado = painelTokenRow ? painelTokenRow.signing_secret : null;\nconst tokenRecebido = $('01_webhook_get').item.json.query.token || '';\n\nreturn [{\n  json: {\n    token_valido: !!tokenEsperado && tokenRecebido === tokenEsperado\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "p0000000-0000-0000-0000-000000000014",
+      "name": "02b_compara_token"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-token-valido",
+              "leftValue": "={{ $json.token_valido }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        660,
+        0
+      ],
+      "id": "p0000000-0000-0000-0000-000000000002",
+      "name": "02_valida_token"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Acesso negado",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        900,
+        220
+      ],
+      "id": "p0000000-0000-0000-0000-000000000003",
+      "name": "02c_nega_acesso"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 810524007,
+          "mode": "list",
+          "cachedResultName": "base_funil_completo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        900,
+        -220
+      ],
+      "id": "p0000000-0000-0000-0000-000000000004",
+      "name": "03_busca_base_funil",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1549444365,
+          "mode": "list",
+          "cachedResultName": "log_erros_producao",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1549444365"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        900,
+        -100
+      ],
+      "id": "p0000000-0000-0000-0000-000000000005",
+      "name": "04_busca_log_erros",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  { json: { id: 'ptiyq22o4yT5lb1q', nome: '01_Captura_Inicial', janela_horas: 25 } },\n  { json: { id: 'EQ3YEDcPysyaFlZp', nome: '03_Geracao_Proposta', janela_horas: 25 } },\n  { json: { id: 'a8P2SlOqAoGIgrYB', nome: '04_Regua_Followup', janela_horas: 25 } },\n  { json: { id: 'qxRPYOrK5nlZ1Owa', nome: 'Resend_Webhook_Status', janela_horas: 48 } },\n  { json: { id: 'l1Ke8AmXHQdkdRl5', nome: 'WhatsApp_Webhook_Status', janela_horas: 48 } },\n  { json: { id: 'piESSqN70HqtsGzK', nome: 'RD Station - Renovar Token', janela_horas: 25 } }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        20
+      ],
+      "id": "p0000000-0000-0000-0000-000000000007",
+      "name": "06a_workflows_criticos"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://raregoat-n8n.cloudfy.live/api/v1/executions",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "workflowId",
+              "value": "={{ $json.id }}"
+            },
+            {
+              "name": "limit",
+              "value": "1"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-API-KEY",
+              "value": "={{ $('02a_busca_tokens').all().find(t => t.json.service === 'n8n_api_key').json.signing_secret }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1140,
+        20
+      ],
+      "id": "p0000000-0000-0000-0000-000000000008",
+      "name": "06_busca_execucoes_n8n",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1380,
+        -100
+      ],
+      "id": "p0000000-0000-0000-0000-000000000009",
+      "name": "merge_sync"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Coleta bruta de cada fonte (referência explícita, nunca $json cru - dados vêm de branches paralelas)\nconst leads = $('03_busca_base_funil').all().map(i => i.json);\nconst errosLog = $('04_busca_log_erros').all().map(i => i.json);\nconst tokens = $('02a_busca_tokens').all().map(i => i.json);\nconst criticos = $('06a_workflows_criticos').all().map(i => i.json);\nconst execucoes = $('06_busca_execucoes_n8n').all().map(i => i.json);\n\nconst agora = new Date();\n\n// ---------- Seção 2: Saúde da Base ----------\nconst totalLeads = leads.length;\nconst cabecalhoIntegro = totalLeads > 0 && Object.prototype.hasOwnProperty.call(leads[0], 'lead_id');\nconst ultimoLead = totalLeads > 0 ? leads[totalLeads - 1] : null;\nconst ultimoLeadTimestamp = ultimoLead ? (ultimoLead.data_primeiro_contato || null) : null;\n\n// ---------- Token RD Station (usado na Seção 1, card 6, e na Seção 5) ----------\nconst tokenRD = tokens.find(t => t.service === 'rdstation') || null;\nconst rdExpiraEm = (tokenRD && tokenRD.expires_at) ? new Date(tokenRD.expires_at) : null;\nconst rdDiasParaExpirar = (rdExpiraEm && !isNaN(rdExpiraEm)) ? (rdExpiraEm - agora) / (1000 * 60 * 60 * 24) : null;\n\n// ---------- Seção 1: Status dos Workflows Críticos ----------\nconst statusWorkflows = criticos.map((c, idx) => {\n  const resp = execucoes[idx] || {};\n  const lista = resp.data || [];\n  const ultima = lista[0] || null;\n\n  let status, horasDesde, motivo;\n\n  if (!ultima) {\n    status = 'problema';\n    horasDesde = null;\n    motivo = 'nunca executou';\n  } else {\n    const inicio = new Date(ultima.startedAt);\n    horasDesde = (agora - inicio) / (1000 * 60 * 60);\n    const falhou = ultima.status === 'error';\n    const excedeuJanela = horasDesde > c.janela_horas;\n\n    if (falhou || excedeuJanela) {\n      // janela de 25h = severidade vermelha; janela de 48h = severidade amarela\n      status = c.janela_horas <= 25 ? 'problema' : 'atencao';\n      motivo = falhou ? 'última execução falhou' : `não executou nas últimas ${c.janela_horas}h`;\n    } else {\n      status = 'ok';\n      motivo = `última execução há ${horasDesde.toFixed(1)}h`;\n    }\n  }\n\n  // Card do RD Station também reflete a validade do token (pode agravar o status, nunca melhorar)\n  let detalheToken = '';\n  if (c.nome === 'RD Station - Renovar Token') {\n    if (rdDiasParaExpirar === null) {\n      status = 'problema';\n      detalheToken = ' | token RD Station não encontrado na aba tokens';\n    } else if (rdDiasParaExpirar < 0) {\n      status = 'problema';\n      detalheToken = ` | token RD Station expirado há ${Math.abs(rdDiasParaExpirar).toFixed(1)} dias`;\n    } else if (rdDiasParaExpirar < 2) {\n      status = 'problema';\n      detalheToken = ` | token RD Station expira em ${rdDiasParaExpirar.toFixed(1)} dias`;\n    } else {\n      detalheToken = ` | token RD Station expira em ${rdDiasParaExpirar.toFixed(1)} dias`;\n    }\n  }\n\n  return {\n    nome: c.nome,\n    status,\n    motivo: motivo + detalheToken\n  };\n});\n\n// ---------- Seção 3: Funil em Tempo Real ----------\nconst funilEtapas = ['Novo Lead', 'Proposta Enviada', 'Em Follow-up', 'Ganho', 'Perdido'];\nconst funilContagem = funilEtapas.map(etapa => ({\n  etapa,\n  contagem: leads.filter(l => l.status_funil === etapa).length\n}));\n\nconst ultimos5Leads = leads.slice(-5).reverse().map(l => ({\n  nome: l.nome_contato || l.razao_social || '(sem nome)',\n  empresa: l.razao_social || '',\n  status: l.status_funil || '',\n  ultimo_toque: l.ultimo_toque_data || l.data_primeiro_contato || ''\n}));\n\nconst leadCapturadoHoje = leads.some(l => {\n  if (!l.data_primeiro_contato) return false;\n  const d = new Date(l.data_primeiro_contato);\n  return !isNaN(d) && d.toDateString() === agora.toDateString();\n});\n\n// ---------- Seção 4: Log de Erros Recentes ----------\nconst ultimosErros = errosLog.slice(-10).reverse().map(e => ({\n  timestamp: e.timestamp || '',\n  workflow: e.workflow || '',\n  mensagem: e.mensagem_erro || '',\n  link: e.link_execucao || ''\n}));\n\nconst erros24h = errosLog.filter(e => {\n  const t = new Date(e.timestamp);\n  return !isNaN(t) && (agora - t) <= 24 * 60 * 60 * 1000;\n});\n\n// ---------- Seção 5: Alertas Ativos (5 regras, ordenadas por severidade) ----------\nconst alertas = [];\n\n// Regra 1 (🔴): token RD Station expira em menos de 2 dias\nif (rdDiasParaExpirar !== null && rdDiasParaExpirar < 2) {\n  const txt = rdDiasParaExpirar < 0\n    ? `Token RD Station expirado há ${Math.abs(rdDiasParaExpirar).toFixed(1)} dias`\n    : `Token RD Station expira em ${rdDiasParaExpirar.toFixed(1)} dias`;\n  alertas.push({ severidade: 'vermelho', texto: txt });\n}\n\n// Regra 2 (🔴): workflow de janela 25h não executou (ou falhou, ou nunca rodou)\nstatusWorkflows.forEach(w => {\n  const c = criticos.find(x => x.nome === w.nome);\n  if (c && c.janela_horas <= 25 && w.status === 'problema' && w.nome !== 'RD Station - Renovar Token') {\n    alertas.push({ severidade: 'vermelho', texto: `Workflow ${w.nome}: ${w.motivo} (janela de 25h)` });\n  }\n});\n\n// Regra 3 (🔴): cabeçalho da base corrompido\nif (!cabecalhoIntegro) {\n  alertas.push({ severidade: 'vermelho', texto: 'Cabeçalho da base_funil_completo corrompido (coluna A não é lead_id) — possível bug de aba trocada' });\n}\n\n// Regra 4 (🟡): workflow de janela 48h não executou\nstatusWorkflows.forEach(w => {\n  const c = criticos.find(x => x.nome === w.nome);\n  if (c && c.janela_horas > 25 && w.status !== 'ok') {\n    alertas.push({ severidade: 'amarelo', texto: `Workflow ${w.nome}: ${w.motivo} (janela de 48h)` });\n  }\n});\n\n// Regra 5 (🟡): nenhum lead capturado hoje\nif (!leadCapturadoHoje) {\n  alertas.push({ severidade: 'amarelo', texto: 'Nenhum lead capturado hoje' });\n}\n\n// ordena: vermelho antes de amarelo\nalertas.sort((a, b) => (a.severidade === b.severidade ? 0 : a.severidade === 'vermelho' ? -1 : 1));\n\nreturn [{\n  json: {\n    gerado_em: agora.toISOString(),\n    secao1_status_workflows: statusWorkflows,\n    secao2_saude_base: {\n      total_leads: totalLeads,\n      cabecalho_integro: cabecalhoIntegro,\n      ultimo_lead_timestamp: ultimoLeadTimestamp\n    },\n    secao3_funil: {\n      etapas: funilContagem,\n      ultimos_5_leads: ultimos5Leads\n    },\n    secao4_log_erros: {\n      total_erros_24h: erros24h.length,\n      banner_verde: erros24h.length === 0,\n      ultimos_erros: ultimosErros\n    },\n    secao5_alertas: alertas\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        -100
+      ],
+      "id": "p0000000-0000-0000-0000-000000000010",
+      "name": "07_consolida_dados"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('07_consolida_dados').item.json;\n\nconst CORES = {\n  indigo: '#3A34D6',\n  petroleo: '#12786B',\n  ambar: '#D9822B',\n  vermelho: '#DC2626',\n  warmWhite: '#F7F5F1',\n  grafite: '#1B1E27'\n};\n\nconst SHEET_URL_BASE = 'https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007';\n\nfunction escapeHtml(str) {\n  return String(str == null ? '' : str)\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;');\n}\n\nfunction formatDataHora(iso) {\n  if (!iso) return '—';\n  const dt = new Date(iso);\n  if (isNaN(dt)) return String(iso);\n  return dt.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });\n}\n\nfunction iconeStatus(status) {\n  if (status === 'ok') return '🟢';\n  if (status === 'atencao') return '🟡';\n  return '🔴';\n}\n\n// ---------- Seção 1: Status dos Workflows Críticos ----------\nfunction renderSecao1(statusWorkflows) {\n  const linhas = statusWorkflows.map(w => `\n    <tr>\n      <td>${iconeStatus(w.status)}</td>\n      <td><strong>${escapeHtml(w.nome)}</strong></td>\n      <td>${escapeHtml(w.motivo)}</td>\n    </tr>`).join('');\n\n  return `\n  <section class=\"card\">\n    <h2>Status dos Workflows Críticos</h2>\n    <p class=\"subtitulo\">Algum workflow parou?</p>\n    <table>\n      <thead><tr><th></th><th>Workflow</th><th>Situação</th></tr></thead>\n      <tbody>${linhas}</tbody>\n    </table>\n  </section>`;\n}\n\n// ---------- Seção 2: Saúde da Base ----------\nfunction renderSecao2(saude) {\n  return `\n  <section class=\"card\">\n    <h2>Saúde da Base</h2>\n    <p class=\"subtitulo\">Os dados estão íntegros?</p>\n    <div class=\"indicadores-linha\">\n      <div class=\"indicador\">\n        <span class=\"indicador-icone\">${saude.total_leads > 0 ? '🟢' : '🔴'}</span>\n        <span class=\"indicador-valor\">${saude.total_leads}</span>\n        <span class=\"indicador-label\">leads na base</span>\n      </div>\n      <div class=\"indicador\">\n        <span class=\"indicador-icone\">${saude.cabecalho_integro ? '🟢' : '🔴'}</span>\n        <span class=\"indicador-valor\">${saude.cabecalho_integro ? 'OK' : 'Corrompido'}</span>\n        <span class=\"indicador-label\">cabeçalho (coluna A = lead_id)</span>\n      </div>\n      <div class=\"indicador\">\n        <span class=\"indicador-icone\">🕒</span>\n        <span class=\"indicador-valor\">${formatDataHora(saude.ultimo_lead_timestamp)}</span>\n        <span class=\"indicador-label\">último lead capturado</span>\n      </div>\n    </div>\n  </section>`;\n}\n\n// ---------- Seção 3: Funil em Tempo Real ----------\nfunction renderSecao3(funil) {\n  const maxContagem = Math.max(1, ...funil.etapas.map(e => e.contagem));\n  const miniFunil = funil.etapas.map(e => `\n    <div class=\"funil-etapa\">\n      <div class=\"funil-barra\" style=\"height:${8 + (e.contagem / maxContagem) * 60}px;\"></div>\n      <div class=\"funil-contagem\">${e.contagem}</div>\n      <div class=\"funil-label\">${escapeHtml(e.etapa)}</div>\n    </div>`).join('');\n\n  const linhasLeads = funil.ultimos_5_leads.map(l => `\n    <tr class=\"linha-clicavel\" onclick=\"window.open('${SHEET_URL_BASE}', '_blank')\">\n      <td>${escapeHtml(l.nome)}</td>\n      <td>${escapeHtml(l.empresa)}</td>\n      <td>${escapeHtml(l.status)}</td>\n      <td>${formatDataHora(l.ultimo_toque)}</td>\n    </tr>`).join('') || '<tr><td colspan=\"4\">Nenhum lead na base ainda.</td></tr>';\n\n  return `\n  <section class=\"card\">\n    <h2>Funil em Tempo Real</h2>\n    <p class=\"subtitulo\">Como está o pipeline hoje?</p>\n    <div class=\"mini-funil\">${miniFunil}</div>\n    <table>\n      <thead><tr><th>Nome</th><th>Empresa</th><th>Status</th><th>Último toque</th></tr></thead>\n      <tbody>${linhasLeads}</tbody>\n    </table>\n  </section>`;\n}\n\n// ---------- Seção 4: Log de Erros Recentes ----------\nfunction renderSecao4(log) {\n  const banner = log.banner_verde\n    ? `<div class=\"banner banner-verde\">Nenhum erro nas últimas 24h ✅</div>`\n    : `<div class=\"banner banner-vermelho\">${log.total_erros_24h} erro(s) nas últimas 24h 🚨</div>`;\n\n  const linhas = log.ultimos_erros.map(e => `\n    <tr>\n      <td>${formatDataHora(e.timestamp)}</td>\n      <td>${escapeHtml(e.workflow)}</td>\n      <td>${escapeHtml(e.mensagem)}</td>\n      <td>${e.link ? `<a href=\"${escapeHtml(e.link)}\" target=\"_blank\">Ver execução</a>` : '—'}</td>\n    </tr>`).join('') || '<tr><td colspan=\"4\">Sem registros na aba log_erros_producao.</td></tr>';\n\n  return `\n  <section class=\"card\">\n    <h2>Log de Erros Recentes</h2>\n    <p class=\"subtitulo\">Teve algum erro nas últimas 24h?</p>\n    ${banner}\n    <table>\n      <thead><tr><th>Horário</th><th>Workflow</th><th>Erro</th><th>Execução</th></tr></thead>\n      <tbody>${linhas}</tbody>\n    </table>\n  </section>`;\n}\n\n// ---------- Seção 5: Alertas Ativos ----------\nfunction renderSecao5(alertas) {\n  if (!alertas || alertas.length === 0) return '';\n  const linhas = alertas.map(a => `\n    <li class=\"alerta alerta-${a.severidade}\">\n      ${a.severidade === 'vermelho' ? '🔴' : '🟡'} ${escapeHtml(a.texto)}\n    </li>`).join('');\n\n  return `\n  <section class=\"card\">\n    <h2>Alertas Ativos</h2>\n    <p class=\"subtitulo\">Tem algo que preciso resolver agora?</p>\n    <ul class=\"lista-alertas\">${linhas}</ul>\n  </section>`;\n}\n\nconst html = `<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>Painel Operacional — Funil Antere</title>\n<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap\" rel=\"stylesheet\">\n<style>\n  :root {\n    --indigo: ${CORES.indigo};\n    --petroleo: ${CORES.petroleo};\n    --ambar: ${CORES.ambar};\n    --vermelho: ${CORES.vermelho};\n    --warm-white: ${CORES.warmWhite};\n    --grafite: ${CORES.grafite};\n  }\n  * { box-sizing: border-box; }\n  body {\n    margin: 0;\n    font-family: 'Inter', Arial, sans-serif;\n    background: var(--warm-white);\n    color: var(--grafite);\n  }\n  header {\n    background: var(--indigo);\n    color: #fff;\n    padding: 24px 40px;\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    flex-wrap: wrap;\n    gap: 16px;\n  }\n  header .logo-bloco .logo { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }\n  header .logo-bloco .slogan { font-size: 13px; color: #C7C6F5; margin-top: 2px; }\n  header h1 { font-size: 18px; margin: 0; font-weight: 600; }\n  header .meta { text-align: right; font-size: 13px; color: #E5E3FB; }\n  header button {\n    margin-top: 8px;\n    background: #fff;\n    color: var(--indigo);\n    border: none;\n    padding: 8px 18px;\n    border-radius: 6px;\n    font-weight: 600;\n    cursor: pointer;\n    font-family: inherit;\n  }\n  main {\n    max-width: 1100px;\n    margin: 0 auto;\n    padding: 24px 40px 60px;\n    display: flex;\n    flex-direction: column;\n    gap: 24px;\n  }\n  .card {\n    background: #fff;\n    border: 1px solid #E5E1D8;\n    border-radius: 10px;\n    padding: 20px 24px;\n  }\n  .card h2 { margin: 0 0 4px; font-size: 17px; color: var(--grafite); }\n  .card .subtitulo { margin: 0 0 16px; font-size: 13px; color: #8B8F9C; }\n  table { width: 100%; border-collapse: collapse; font-size: 14px; }\n  thead th {\n    background: var(--indigo);\n    color: #fff;\n    text-align: left;\n    padding: 8px 12px;\n    font-weight: 600;\n    font-size: 12px;\n    text-transform: uppercase;\n    letter-spacing: 0.3px;\n  }\n  tbody td { padding: 8px 12px; border-bottom: 1px solid #EFEDE6; }\n  tbody tr:last-child td { border-bottom: none; }\n  .linha-clicavel { cursor: pointer; }\n  .linha-clicavel:hover { background: #F0EFFB; }\n  .indicadores-linha { display: flex; gap: 24px; flex-wrap: wrap; }\n  .indicador {\n    flex: 1;\n    min-width: 200px;\n    background: var(--warm-white);\n    border-radius: 8px;\n    padding: 16px;\n    text-align: center;\n  }\n  .indicador-icone { font-size: 22px; display: block; }\n  .indicador-valor { font-size: 20px; font-weight: 700; display: block; margin-top: 4px; color: var(--petroleo); }\n  .indicador-label { font-size: 12px; color: #8B8F9C; }\n  .mini-funil {\n    display: flex;\n    align-items: flex-end;\n    gap: 24px;\n    padding: 16px 8px 8px;\n    margin-bottom: 16px;\n    border-bottom: 1px solid #EFEDE6;\n  }\n  .funil-etapa { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }\n  .funil-barra { width: 36px; background: var(--petroleo); border-radius: 4px 4px 0 0; }\n  .funil-contagem { font-weight: 700; font-size: 14px; }\n  .funil-label { font-size: 11px; color: #8B8F9C; text-align: center; }\n  .banner { padding: 10px 16px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-bottom: 16px; }\n  .banner-verde { background: #E4F5F1; color: var(--petroleo); }\n  .banner-vermelho { background: #FBE7E7; color: var(--vermelho); }\n  .lista-alertas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }\n  .alerta { padding: 10px 14px; border-radius: 6px; font-size: 14px; }\n  .alerta-vermelho { background: #FBE7E7; color: var(--vermelho); }\n  .alerta-amarelo { background: #FBF0E0; color: var(--ambar); }\n  a { color: var(--indigo); }\n</style>\n</head>\n<body>\n  <header>\n    <div class=\"logo-bloco\">\n      <div class=\"logo\">Antere</div>\n      <div class=\"slogan\">Automação comercial, do caixa ao pagamento.</div>\n    </div>\n    <h1>Painel Operacional — Funil Antere</h1>\n    <div class=\"meta\">\n      Última atualização: ${formatDataHora(d.gerado_em)}<br>\n      <button onclick=\"location.reload()\">Atualizar</button>\n    </div>\n  </header>\n  <main>\n    ${renderSecao1(d.secao1_status_workflows)}\n    ${renderSecao2(d.secao2_saude_base)}\n    ${renderSecao3(d.secao3_funil)}\n    ${renderSecao4(d.secao4_log_erros)}\n    ${renderSecao5(d.secao5_alertas)}\n  </main>\n</body>\n</html>`;\n\nreturn [{ json: { html } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        -100
+      ],
+      "id": "p0000000-0000-0000-0000-000000000011",
+      "name": "08_monta_html"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2040,
+        -100
+      ],
+      "id": "p0000000-0000-0000-0000-000000000012",
+      "name": "09_responde_webhook"
+    }
+  ],
+  "connections": {
+    "01_webhook_get": {
+      "main": [
+        [
+          {
+            "node": "02a_busca_tokens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02a_busca_tokens": {
+      "main": [
+        [
+          {
+            "node": "02b_compara_token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02b_compara_token": {
+      "main": [
+        [
+          {
+            "node": "02_valida_token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02_valida_token": {
+      "main": [
+        [
+          {
+            "node": "03_busca_base_funil",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "04_busca_log_erros",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "06a_workflows_criticos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "02c_nega_acesso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03_busca_base_funil": {
+      "main": [
+        [
+          {
+            "node": "merge_sync",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04_busca_log_erros": {
+      "main": [
+        [
+          {
+            "node": "merge_sync",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "06a_workflows_criticos": {
+      "main": [
+        [
+          {
+            "node": "06_busca_execucoes_n8n",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06_busca_execucoes_n8n": {
+      "main": [
+        [
+          {
+            "node": "merge_sync",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "merge_sync": {
+      "main": [
+        [
+          {
+            "node": "07_consolida_dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07_consolida_dados": {
+      "main": [
+        [
+          {
+            "node": "08_monta_html",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08_monta_html": {
+      "main": [
+        [
+          {
+            "node": "09_responde_webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
