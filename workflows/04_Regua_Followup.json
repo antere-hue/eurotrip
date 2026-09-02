@@ -1620,7 +1620,7 @@
           "conditions": [
             {
               "id": "4095f01e-bfd5-4409-b800-dfb09d847cc1",
-              "leftValue": "={{$json.score}}",
+              "leftValue": "={{ $('04_calcula_dias_corridos').item.json.score_qualificacao }}",
               "rightValue": 50,
               "operator": {
                 "type": "number",
