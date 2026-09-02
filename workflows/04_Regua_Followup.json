@@ -1062,7 +1062,7 @@
           "conditions": [
             {
               "id": "4ce8f94d-770a-46ed-9795-145e6b270163",
-              "leftValue": "={{$json.optin_whatsapp}}",
+              "leftValue": "={{ $('04_calcula_dias_corridos').item.json.optin_whatsapp }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -1131,7 +1131,7 @@
           "conditions": [
             {
               "id": "23ca73ab-221d-4843-9b03-eabf36818bed",
-              "leftValue": "={{ $json.d0_aberto }}",
+              "leftValue": "={{ $('04_calcula_dias_corridos').item.json.d0_aberto }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -1200,7 +1200,7 @@
           "conditions": [
             {
               "id": "d3bf1f3c-520c-4830-ae72-7127d052801b",
-              "leftValue": "={{ $json.optin_whatsapp }}",
+              "leftValue": "={{ $('04_calcula_dias_corridos').item.json.optin_whatsapp }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -1298,7 +1298,7 @@
           "conditions": [
             {
               "id": "f447a338-a8a2-4fb2-a292-d8b1102660d8",
-              "leftValue": "={{$json.optin_whatsapp}}",
+              "leftValue": "={{ $('04_calcula_dias_corridos').item.json.optin_whatsapp }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -1390,7 +1390,7 @@
           "conditions": [
             {
               "id": "1bb450e2-b741-4fbe-b442-2b3ed9c406ba",
-              "leftValue": "={{$json.optin_whatsapp}}",
+              "leftValue": "={{ $('04_calcula_dias_corridos').item.json.optin_whatsapp }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -1459,7 +1459,7 @@
           "conditions": [
             {
               "id": "5034005a-af9e-4661-a5e5-bcb62f9a881a",
-              "leftValue": "={{ $json.isencao }}",
+              "leftValue": "={{ $('04_calcula_dias_corridos').item.json.isencao }}",
               "rightValue": "Sim",
               "operator": {
                 "type": "string",
@@ -1522,7 +1522,7 @@
           "conditions": [
             {
               "id": "52b337be-84a4-454c-8ee8-653868aff275",
-              "leftValue": "={{$json.optin_whatsapp}}",
+              "leftValue": "={{ $('04_calcula_dias_corridos').item.json.optin_whatsapp }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
