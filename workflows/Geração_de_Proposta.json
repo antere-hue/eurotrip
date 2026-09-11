@@ -1,0 +1,2232 @@
+{
+  "name": "Geração de Proposta",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Antere — Vamos montar sua proposta personalizada",
+        "formDescription": "proposta",
+        "formFields": {
+          "values": [
+            {
+              "fieldType": "html"
+            },
+            {
+              "fieldLabel": "Razão Social",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "CNPJ",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Nome Contato",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Sobrenome contato",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "E-mail",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Telefone",
+              "requiredField": true
+            },
+            {
+              "fieldType": "html",
+              "html": "<h3>Soluções de interesse</h3>"
+            },
+            {
+              "fieldLabel": "Soluções",
+              "fieldType": "checkbox",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "TEF"
+                  },
+                  {
+                    "option": "Link de Pagamento/Gateway"
+                  },
+                  {
+                    "option": "C6 Pay"
+                  },
+                  {
+                    "option": "Conta C6 Bank"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldType": "html",
+              "html": "<h3>Se você tem interesse em TEF...</h3>"
+            },
+            {
+              "fieldLabel": "Sistema PDV"
+            },
+            {
+              "fieldLabel": "Qtd Caixas",
+              "fieldType": "number"
+            },
+            {
+              "fieldType": "html",
+              "html": "<h3>Se você tem interesse em Gateway/Link de Pagamento...</h3>"
+            },
+            {
+              "fieldLabel": "Volume transações Link / Gateway",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Até 200"
+                  },
+                  {
+                    "option": "201 a 600"
+                  },
+                  {
+                    "option": "601 a 1000"
+                  },
+                  {
+                    "option": "1001 a 1500"
+                  },
+                  {
+                    "option": "1501 a 3000"
+                  },
+                  {
+                    "option": "3001 a 6000"
+                  },
+                  {
+                    "option": "6001 a 10000"
+                  },
+                  {
+                    "option": "Acima de 10000"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Recorrente ou Avulsa",
+              "fieldType": "radio",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Recorrente (assinatura/mensalidade)"
+                  },
+                  {
+                    "option": "Avulsa (venda única)"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldType": "html",
+              "html": "<h3>Se você tem interesse em C6 Pay...</h3>"
+            },
+            {
+              "fieldLabel": "TPV",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Até R$8 mil"
+                  },
+                  {
+                    "option": "R$8 mil a R$30 mil"
+                  },
+                  {
+                    "option": "Acima de R$30 mil"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Modelo Recebimento",
+              "fieldType": "radio",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "D+1 com antecipação (taxa maior)"
+                  },
+                  {
+                    "option": "D+31 sem antecipação (taxa menor)"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldType": "html",
+              "html": "<h3>Condição comercial</h3>"
+            },
+            {
+              "fieldLabel": "Conta Digital",
+              "fieldType": "radio",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Sim"
+                  },
+                  {
+                    "option": "Não"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Isenção",
+              "fieldType": "radio",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Sim"
+                  },
+                  {
+                    "option": "Não"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldType": "hiddenField",
+              "fieldName": "lead_id"
+            },
+            {
+              "fieldLabel": "Concordo com o uso dos meus dados para elaboração da proposta, conforme a LGPD",
+              "fieldType": "checkbox",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Consentimento"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false,
+          "path": "proposta",
+          "respondWithOptions": {
+            "values": {
+              "formSubmittedText": "Recebemos seus dados! Sua proposta será enviada para o e-mail informado em instantes."
+            }
+          },
+          "ignoreBots": true,
+          "customCss": ".form-container {\n  border-top: 6px solid #085041;\n}\nh1, .form-title {\n  color: #085041 !important;\n}\nbutton[type=\"submit\"], .form-submit-button {\n  background-color: #1D9E75 !important;\n  border-color: #1D9E75 !important;\n}"
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -528,
+        -480
+      ],
+      "id": "65d08a7f-6731-4f22-b86a-174ff448b5cc",
+      "name": "01_form_trigger",
+      "webhookId": "1c5d16b9-b0ef-4950-b8c8-6a899279714c"
+    },
+    {
+      "parameters": {
+        "jsCode": "function pick(obj, ...candidates) {\n  for (const key of Object.keys(obj)) {\n    const clean = key.trim().toLowerCase();\n    if (candidates.includes(clean)) return obj[key];\n  }\n  return undefined;\n}\n\nfunction norm(s) {\n  return (s || '').toString().trim().toLowerCase()\n    .normalize('NFD').replace(/[\\u0300-\\u036f]/g, ''); // remove acentos\n}\n\nfunction pickMapped(map, valorBruto) {\n  const alvo = norm(valorBruto);\n  for (const chave of Object.keys(map)) {\n    if (norm(chave) === alvo) return map[chave];\n  }\n  return '';\n}\n\nconst solucoesBrutas = pick($json, 'soluções', 'solucoes') || [];\nconst solucoes = solucoesBrutas.map(norm);\n\nconst temTEF = solucoes.includes('tef');\nconst temGateway = solucoes.some(s => s.includes('gateway'));\nconst temC6Pay = solucoes.some(s => s.includes('c6 pay'));\n\nconst mapaTpv = {\n  'ate r$8 mil': 'ate_8k',\n  'r$8 mil a r$30 mil': '8k_30k',\n  'acima de r$30 mil': 'acima_30k',\n};\n\nconst mapaRecebimento = {\n  'd+1 com antecipacao (taxa maior)': 'D1_com_antecipacao',\n  'd+31 sem antecipacao (taxa menor)': 'D31_sem_antecipacao',\n};\n\nconst mapaGatewayFaixaMin = {\n  'ate 200': 0,\n  '201 a 600': 201,\n  '601 a 1000': 601,\n  '1001 a 1500': 1001,\n  '1501 a 3000': 1501,\n  '3001 a 6000': 3001,\n  '6001 a 10000': 6001,\n  'acima de 10000': 10001,\n};\n\nconst tpvBruto = pick($json, 'tpv') || '';\nconst recebimentoBruto = pick($json, 'modelo recebimento', 'modelo_recebimento') || '';\nconst gatewayBruto = pick($json, 'volume transações link / gateway', 'volume_transacoes_gateway') || '';\n\nconst gatewayFaixaCalculada = pickMapped(mapaGatewayFaixaMin, gatewayBruto);\n\nreturn {\n  json: {\n    lead_id: pick($json, 'lead_id') || '',\n    razao_social: (pick($json, 'razão social', 'razao social', 'razao_social') || '').trim(),\n    cnpj: (pick($json, 'cnpj') || '').replace(/\\D/g, ''),\n    nome_contato: pick($json, 'nome contato', 'nome_contato') || '',\n    sobrenome_contato: pick($json, 'sobrenome contato', 'sobrenome_contato') || '',\n    email: pick($json, 'e-mail', 'email') || '',\n    telefone: (pick($json, 'telefone') || '').replace(/\\D/g, ''),\n    solucoes: solucoesBrutas,\n    tem_tef: temTEF,\n    tem_gateway: temGateway,\n    tem_c6pay: temC6Pay,\n    sistema_pdv: pick($json, 'sistema pdv', 'sistema_pdv') || '',\n    qtd_caixas: Number(pick($json, 'qtd caixas', 'qtd_caixas', 'qtd caixass')) || 0,\n    volume_transacoes_gateway: gatewayBruto,\n    recorrente_ou_avulsa: pick($json, 'recorrente ou avulsa', 'recorrente_ou_avulsa') || '',\n    tpv: tpvBruto,\n    modelo_recebimento: recebimentoBruto,\n    conta_digital: pick($json, 'conta digital', 'conta_digital') || '',\n    isencao: pick($json, 'isenção', 'isencao') || '',\n    tpv_codigo: pickMapped(mapaTpv, tpvBruto),\n    modelo_recebimento_codigo: pickMapped(mapaRecebimento, recebimentoBruto),\n    gateway_faixa_min: gatewayFaixaCalculada !== '' ? gatewayFaixaCalculada : null,\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        -480
+      ],
+      "id": "622cac56-a593-4eb6-bcd2-2869dd2a3cb8",
+      "name": "02_normalizacao_lead"
+    },
+    {
+      "parameters": {
+        "url": "=https://brasilapi.com.br/api/cnpj/v1/{{ $('02_normalizacao_lead').item.json.cnpj }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -112,
+        -480
+      ],
+      "id": "298301aa-5746-4fef-915d-c2bad6f31cb2",
+      "name": "03_valida_cnpj",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8fd3a4be-08c0-4bcb-bbf6-14de8b627a20",
+              "leftValue": "={{ $json.situacao_cadastral }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        96,
+        -480
+      ],
+      "id": "8795305f-1c9f-425f-83b7-98cb0d281bed",
+      "name": "04_if_cnpj_ativo"
+    },
+    {
+      "parameters": {
+        "jsCode": "const codigos = { 1: 'Nula', 2: 'Ativa', 3: 'Suspensa', 4: 'Inapta', 8: 'Baixada' };\n\nlet motivo;\nif ($json.situacao_cadastral) {\n  motivo = `Situação cadastral: ${codigos[$json.situacao_cadastral] || 'desconhecida'} (código ${$json.situacao_cadastral})`;\n} else {\n  motivo = 'CNPJ não encontrado na Receita Federal — pode ter sido digitado errado';\n}\n\nconst dadosLead = $('02_normalizacao_lead').item.json;\n\nreturn {\n  json: {\n    motivo_revisao: motivo,\n    razao_social: dadosLead.razao_social,\n    cnpj: dadosLead.cnpj,\n    nome_contato: dadosLead.nome_contato,\n    sobrenome_contato: dadosLead.sobrenome_contato,\n    email: dadosLead.email,\n    telefone: dadosLead.telefone,\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        -352
+      ],
+      "id": "59e9d084-bd26-42da-b24d-0a92b637dc2d",
+      "name": "05a_motivo_revisao"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('busca_token_resend').item.json.signing_secret }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"Funil de Vendas <comercial@antere.com.br>\",\n  \"to\": [\"comercial@antere.com.br\"],\n  \"subject\": \"CNPJ requer confirmação — {{ $json.razao_social }}\",\n  \"html\": \"<div style='font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto;'><div style='background:#B25B00; padding:16px 20px; border-radius:8px 8px 0 0;'><p style='color:#fff; margin:0; font-size:16px; font-weight:bold;'>CNPJ requer confirmação manual</p></div><div style='border:1px solid #eee; border-top:none; padding:20px; border-radius:0 0 8px 8px;'><p style='margin:0 0 16px; color:#333;'>Um lead preencheu o Formulário Geração de proposta, mas o CNPJ não passou na validação automática.</p><table style='width:100%; border-collapse:collapse; font-size:14px;'><tr><td style='padding:6px 0; color:#777; width:140px;'>Motivo</td><td style='padding:6px 0; color:#111; font-weight:bold;'>{{ $json.motivo_revisao }}</td></tr><tr><td style='padding:6px 0; color:#777;'>Razão Social</td><td style='padding:6px 0; color:#111;'>{{ $json.razao_social }}</td></tr><tr><td style='padding:6px 0; color:#777;'>CNPJ</td><td style='padding:6px 0; color:#111;'>{{ $json.cnpj }}</td></tr><tr><td style='padding:6px 0; color:#777;'>Contato</td><td style='padding:6px 0; color:#111;'>{{ $json.nome_contato }} {{ $json.sobrenome_contato }}</td></tr><tr><td style='padding:6px 0; color:#777;'>E-mail</td><td style='padding:6px 0; color:#111;'>{{ $json.email }}</td></tr><tr><td style='padding:6px 0; color:#777;'>Telefone</td><td style='padding:6px 0; color:#111;'>{{ $json.telefone }}</td></tr></table><p style='margin-top:20px; padding:12px; background:#FDF2E3; border-radius:6px; font-size:13px; color:#8A5A15;'>A proposta não foi gerada automaticamente. Entre em contato com o lead para confirmar o dado antes de prosseguir.</p></div></div>\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        -304
+      ],
+      "id": "8592bf7c-1947-48e5-8037-afe69c724998",
+      "name": "05b_email_revisao_manual"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1514838753"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "rdstation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        240,
+        -608
+      ],
+      "id": "037dc925-dd73-44cc-995a-cb568f6b0208",
+      "name": "07_token_rdstation",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const dados = $('02_normalizacao_lead').item.json;\n\nconst mensalidadeTef = dados.tem_tef\n  ? 80 + Math.max(0, dados.qtd_caixas - 1) * 10\n  : 0;\n\nreturn {\n  json: {\n    ...dados,\n    mensalidade_tef: mensalidadeTef,\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        -608
+      ],
+      "id": "aa3986a6-4616-4cee-88e6-316d3ab7336c",
+      "name": "08_calculo_tef"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a476c3bc-7f40-4dd1-9998-0f006f79e27e",
+              "leftValue": "={{ $json.tem_gateway }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        576,
+        -480
+      ],
+      "id": "3351e335-9f45-4f39-a877-74e67f9080e6",
+      "name": "09_if_tem_gateway"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1250570699,
+          "mode": "list",
+          "cachedResultName": "gateway_franquia",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1250570699"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        912,
+        -592
+      ],
+      "id": "6dd30daa-2ea8-4f4b-82d9-33e80668ebb4",
+      "name": "09a_gateway_franquia",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8e9d93d2-0269-4b00-af33-938a5d0b2e73",
+              "name": "franquia_mensal",
+              "value": "sem_interesse",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        -304
+      ],
+      "id": "fb3bb1b6-adc8-49c7-bd29-ffb6da7992f4",
+      "name": "09b_gateway_default"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "752c2bcf-3922-48cc-95cd-276f47db6cca",
+              "leftValue": "={{ $('02_normalizacao_lead').item.json.tem_c6pay }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1200,
+        -512
+      ],
+      "id": "9da96b3d-9144-4975-98aa-f25e1043a204",
+      "name": "10_if_tem_c6pay"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1018233910,
+          "mode": "list",
+          "cachedResultName": "c6pay_taxas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1018233910"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1440,
+        -624
+      ],
+      "id": "d6f92e8c-87b8-4553-a5b5-171e80071448",
+      "name": "10a_c6pay_taxas",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6c747c17-36ac-4fdc-b5ee-944f71c40572",
+              "name": "taxas_c6pay",
+              "value": "={{ [] }}",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1408,
+        -320
+      ],
+      "id": "f9139bb4-69c4-42a3-9eec-835e97f0e9bc",
+      "name": "10b_c6pay_default"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b9815507-12a4-44b5-8a42-df294c480713",
+              "leftValue": "={{ $('11_consolidacao_final').item.json.precisa_escalonamento_gateway }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2128,
+        -544
+      ],
+      "id": "34848f25-9d3d-4111-b177-ea70dd985267",
+      "name": "12_if_escalonamento_gateway"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('busca_token_resend').item.json.signing_secret }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"Funil Antere <comercial@antere.com.br>\",\n  \"to\": [\"comercial@antere.com.br\"],\n  \"subject\": \"🔔 Negociar franquia Gateway — {{ $json.razao_social }}\",\n  \"html\": \"<p>Lead com volume de Gateway acima de 10.000 transações/mês — franquia precisa ser negociada manualmente.</p><ul><li><b>Razão Social:</b> {{ $json.razao_social }}</li><li><b>CNPJ:</b> {{ $json.cnpj }}</li><li><b>Contato:</b> {{ $json.nome_contato }} {{ $json.sobrenome_contato }}</li><li><b>E-mail:</b> {{ $json.email }}</li><li><b>WhatsApp:</b> {{ $json.telefone }}</li><li><b>Volume de transações informado:</b> {{ $json.volume_transacoes_gateway }}</li><li><b>Modelo de cobrança:</b> {{ $json.tipo_gateway }}</li></ul><p>A proposta automática seguirá gerada com a franquia do Gateway marcada como \\\"A negociar\\\". Entre em contato para fechar a condição.</p>\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2304,
+        -736
+      ],
+      "id": "e2e6aa45-0e04-49a7-a038-83b67267754f",
+      "name": "13_email_escalonamento"
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "1UoLzPH-1YzmLcRHUMqV0rJbvW3gAzg7R6tfaCk-PUT0",
+          "mode": "list",
+          "cachedResultName": "Proposta_Comercial_2026_dinamica",
+          "cachedResultUrl": "https://docs.google.com/document/d/1UoLzPH-1YzmLcRHUMqV0rJbvW3gAzg7R6tfaCk-PUT0/edit?usp=drivesdk"
+        },
+        "name": "=Proposta - {{ $('11_consolidacao_final').item.json.razao_social }} - {{ $now.format('dd-MM-yyyy') }}",
+        "sameFolder": false,
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1o75AQc3YOSQITuvrq5i7vkbPDiuNY1Qe",
+          "mode": "list",
+          "cachedResultName": "Propostas_n8n",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1o75AQc3YOSQITuvrq5i7vkbPDiuNY1Qe"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2432,
+        -496
+      ],
+      "id": "9a5ad082-b11f-4ebd-8879-d907d0e972dd",
+      "name": "14_duplicar_template",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "kooV1fIIRyDniJLx",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const dados = $('02_normalizacao_lead').item.json;\nconst mensalidadeTef = $('08_calculo_tef').item.json.mensalidade_tef;\n\nlet franquiaGateway = 0;\nlet tipoGateway = '';\ntry {\n  if (dados.tem_gateway) {\n    const todasLinhas = $('09a_gateway_franquia').all().map(item => item.json);\nconst linha = todasLinhas.find(l => Number(l.faixa_min) === Number(dados.gateway_faixa_min));\n    franquiaGateway = linha ? linha.franquia_mensal : 'negociar';\n    tipoGateway = (dados.recorrente_ou_avulsa || '').toLowerCase().includes('recorrente')\n      ? 'Gateway Recorrência'\n      : 'Gateway Padrão';\n  }\n} catch (e) {\n  franquiaGateway = 0;\n}\n\nlet taxasC6Pay = [];\ntry {\n  if (dados.tem_c6pay) {\n    taxasC6Pay = $('10a2_agrupa_c6pay').item.json.taxas_c6pay;\n  }\n} catch (e) {\n  taxasC6Pay = [];\n}\n\nconst precisaEscalonamentoGateway = franquiaGateway === 'negociar';\n\nreturn {\n  json: {\n    ...dados,\n    mensalidade_tef: mensalidadeTef,\n    franquia_gateway: franquiaGateway,\n    tipo_gateway: tipoGateway,\n    taxas_c6pay: taxasC6Pay,\n    precisa_escalonamento_gateway: precisaEscalonamentoGateway,\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1872,
+        -560
+      ],
+      "id": "2ba4a2f9-3c1a-4f7d-b171-7058b5c651a7",
+      "name": "11_consolidacao_final"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filtra as 5 linhas certas (uma por modalidade) para a faixa/recebimento do lead\nconst dados = $('02_normalizacao_lead').item.json;\n\nlet linhas = [];\nif (dados.tem_c6pay) {\n  linhas = $input.all()\n    .map(item => item.json)\n    .filter(l => l.faixa_tpv === dados.tpv_codigo && l.recebimento === dados.modelo_recebimento_codigo);\n}\n\nreturn { json: { taxas_c6pay: linhas } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        -560
+      ],
+      "id": "af205525-6ae6-41c0-a65d-15d0aed0ba8e",
+      "name": "10a2_agrupa_c6pay"
+    },
+    {
+      "parameters": {
+        "jsCode": "const p = $('11_consolidacao_final').item.json;\n\n// --- Contato completo ---\nconst contato = `${p.nome_contato || ''} ${p.sobrenome_contato || ''}`.trim();\n\n// --- Identificação / controle ---\nconst numero_proposta = p.lead_id || String($now.toMillis());\nconst data_proposta = $now.toFormat('dd/MM/yyyy');\nconst validade_dias = '30';\n\n// --- Adesão ---\nconst adesao = p.isencao === 'Sim' ? 'Isenta (conta C6 Bank)' : 'R$ 200,00';\n\n// --- Gateway ---\nlet gateway_franquia;\nif (p.franquia_gateway === 'negociar') {\n  gateway_franquia = 'A negociar com nossa equipe comercial';\n} else if (typeof p.franquia_gateway === 'number' && p.franquia_gateway > 0) {\n  gateway_franquia = `R$ ${p.franquia_gateway.toFixed(2).replace('.', ',')}`;\n} else {\n  gateway_franquia = '-';\n}\n\n// --- C6 Pay ---\nfunction taxaPorModalidade(modalidade) {\n  const linha = (p.taxas_c6pay || []).find(r => r.modalidade === modalidade);\n  return linha ? linha.taxa.replace('.', ',') : '-';\n}\nconst c6pay_taxa_debito            = taxaPorModalidade('Débito');\nconst c6pay_taxa_credito_vista     = taxaPorModalidade('Crédito à vista');\nconst c6pay_taxa_parcelado_2_6     = taxaPorModalidade('Parcelado 2 a 6');\nconst c6pay_taxa_parcelado_7_12    = taxaPorModalidade('Parcelado 7 a 12');\nconst c6pay_taxa_adicional_parcela = taxaPorModalidade('Adicional por parcela');\n\n// --- Mensalidade total e produtos contratados ---\nconst valorGatewayNum = (typeof p.franquia_gateway === 'number') ? p.franquia_gateway : 0;\nconst mensalidade_total = `R$ ${((p.mensalidade_tef || 0) + valorGatewayNum).toFixed(2).replace('.', ',')}`;\n\nconst listaProdutos = [];\nif (p.tem_tef) listaProdutos.push('TEF (PayGo)');\nif (p.tem_gateway) listaProdutos.push(p.tipo_gateway || 'Gateway');\nif (p.tem_c6pay) listaProdutos.push('C6 Pay');\nif (p.conta_digital === 'Sim') listaProdutos.push('Conta Digital C6 Bank');\nconst produtos_contratados = listaProdutos.join(', ') || '-';\n\n// --- Objeto final de valores ---\nconst valores = {\n  numero_proposta,\n  data_proposta,\n  validade_dias,\n  razao_social: p.razao_social || '-',\n  cnpj: p.cnpj || '-',\n  contato: contato || '-',\n  email: p.email || '-',\n  telefone: p.telefone || '-',\n  qtd_caixas: p.tem_tef ? String(p.qtd_caixas) : 'Não contratado',\n  sistema_pdv: p.tem_tef ? (p.sistema_pdv || 'A confirmar') : '-',\n  mensalidade_tef: p.tem_tef ? `R$ ${(p.mensalidade_tef || 0).toFixed(2).replace('.', ',')}` : 'R$ 0,00',\n  gateway_tipo: p.tem_gateway ? (p.tipo_gateway || '-') : '-',\n  gateway_franquia: p.tem_gateway ? gateway_franquia : '-',\n  gateway_volume_transacoes: p.tem_gateway ? (p.volume_transacoes_gateway || '-') : '-',\n  c6pay_faixa_tpv: p.tem_c6pay ? (p.tpv || '-') : '-',\n  c6pay_recebimento: p.tem_c6pay ? (p.modelo_recebimento || '-') : '-',\n  c6pay_taxa_debito: p.tem_c6pay ? c6pay_taxa_debito : '-',\n  c6pay_taxa_credito_vista: p.tem_c6pay ? c6pay_taxa_credito_vista : '-',\n  c6pay_taxa_parcelado_2_6: p.tem_c6pay ? c6pay_taxa_parcelado_2_6 : '-',\n  c6pay_taxa_parcelado_7_12: p.tem_c6pay ? c6pay_taxa_parcelado_7_12 : '-',\n  c6pay_taxa_adicional_parcela: p.tem_c6pay ? c6pay_taxa_adicional_parcela : '-',\n  adesao,\n  mensalidade_total,\n  produtos_contratados,\n};\n\n// --- Monta os requests do batchUpdate ---\nconst requests = Object.entries(valores).map(([campo, valor]) => ({\n  replaceAllText: {\n    containsText: { text: `{{${campo}}}`, matchCase: true },\n    replaceText: String(valor),\n  }\n}));\n\n// Preserva o id do documento (vindo do 14_duplicar_template) e adiciona os requests\nreturn {\n  json: {\n    ...$json,   // id, name, kind, mimeType do Google Drive\n    requests,\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        -496
+      ],
+      "id": "e1a84f4a-7811-40d9-a23d-26d714b80696",
+      "name": "14b_monta_requests_docs"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://docs.googleapis.com/v1/documents/{{ $json.id }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { requests: $json.requests } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2848,
+        -496
+      ],
+      "id": "3e2b7699-335a-46f6-b811-661af5aa07c2",
+      "name": "15_batchupdate_docs",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "10tu5g7i8225cGDH",
+          "name": "RDStation"
+        },
+        "googleDocsOAuth2Api": {
+          "id": "XBidgFMd1vTWdoo7",
+          "name": "Google Docs account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.documentId }}",
+          "mode": "id"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "application/pdf"
+            }
+          },
+          "fileName": "={{ $('14_duplicar_template').item.json.name }}.pdf"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3056,
+        -496
+      ],
+      "id": "74201733-7933-4317-b121-291bc37aea08",
+      "name": "16_export_pdf",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "kooV1fIIRyDniJLx",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{ $('14_duplicar_template').item.json.name }}.pdf",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1uAiGyU45DLjQpQJszS-S6hD3DNmfRkUi",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3264,
+        -496
+      ],
+      "id": "a83cdeac-9bef-48fb-93fa-dba82549d317",
+      "name": "17_upload_pdf",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "kooV1fIIRyDniJLx",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "share",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "reader",
+            "type": "anyone"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3472,
+        -496
+      ],
+      "id": "1c3c0ebd-5c89-46c3-9c1f-62278c3ed095",
+      "name": "17b_compartilhar_pdf",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "kooV1fIIRyDniJLx",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('busca_token_resend').item.json.signing_secret }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  from: \"Fernanda Spahn <comercial@antere.com.br>\",\n  to: [$('02_normalizacao_lead').item.json.email],\n  subject: \"✅ Sua proposta personalizada está pronta — \" + $('02_normalizacao_lead').item.json.razao_social,\n  html: `\n    <div style=\"font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #1B1E27;\">\n      <div style=\"background-color: #3A34D6; padding: 32px 24px; text-align: center;\">\n        <h1 style=\"color: #F7F5F1; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;\">Antere</h1>\n        <p style=\"color: #C7C6F5; margin: 8px 0 0; font-size: 13px; letter-spacing: 0.2px;\">Automação comercial, do caixa ao pagamento</p>\n      </div>\n      <div style=\"padding: 32px 24px; background-color: #ffffff;\">\n        <p style=\"font-size: 16px; line-height: 1.6;\">Olá, <strong>${$('02_normalizacao_lead').item.json.nome_contato}</strong>!</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Sua proposta personalizada já está pronta — preparamos as condições ideais para <strong>${$('02_normalizacao_lead').item.json.razao_social}</strong> com base nas informações que você nos enviou.</p>\n        <div style=\"text-align: center; margin: 32px 0;\">\n          <a href=\"${$('17_upload_pdf').item.json.webViewLink}\" style=\"background-color: #3A34D6; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;\">Ver minha proposta</a>\n        </div>\n        <p style=\"font-size: 14px; line-height: 1.6; color: #5B5F6B;\">A proposta tem validade de <strong style=\"color: #D9822B;\">30 dias</strong> e já reflete as condições comerciais atuais — taxas, mensalidades e franquias calculadas especialmente para o seu negócio.</p>\n        <hr style=\"border: none; border-top: 1px solid #E5E1D8; margin: 24px 0;\">\n        <p style=\"font-size: 14px; line-height: 1.6;\">Ficou alguma dúvida? Estou à disposição para conversar:</p>\n        <p style=\"font-size: 14px; line-height: 1.6;\">📱 WhatsApp: <a href=\"https://wa.me/5511993979324\" style=\"color: #12786B;\">(11) 99397-9324</a></p>\n        <p style=\"font-size: 14px; line-height: 1.6; margin-top: 24px;\">Abraço,<br><strong>Fernanda Spahn</strong><br>Consultoria Comercial — Antere</p>\n      </div>\n      <div style=\"background-color: #F7F5F1; padding: 16px 24px; text-align: center;\">\n        <p style=\"font-size: 11px; color: #8B8F9C; margin: 0;\">Antere Tecnologia (F. de Carvalho Spahn Consultoria em Tecnologia da Informação LTDA)</p>\n        <p style=\"font-size: 11px; color: #8B8F9C; margin: 4px 0 0;\">Seus dados serão usados exclusivamente para elaborar sua proposta comercial, conforme a LGPD.</p>\n      </div>\n    </div>\n  `,\n  tags: [\n    { name: \"lead_id\", value: $('02_normalizacao_lead').item.json.lead_id || \"sem_lead_id\" }\n  ]\n} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3680,
+        -496
+      ],
+      "id": "30b55213-371e-488b-9917-d5953ad34778",
+      "name": "18_email_proposta"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('busca_token_resend').item.json.signing_secret }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  from: \"Funil Antere <comercial@antere.com.br>\",\n  to: [\"comercial@antere.com.br\"],\n  subject: \"📄 Proposta enviada — \" + $('02_normalizacao_lead').item.json.razao_social,\n  html: `\n    <div style=\"font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto;\">\n      <div style=\"background-color: #085041; padding: 20px 24px;\">\n        <h2 style=\"color: #ffffff; margin: 0; font-size: 18px;\">Nova proposta enviada</h2>\n      </div>\n      <div style=\"padding: 24px; background-color: #ffffff; border: 1px solid #d3d1c7; border-top: none;\">\n        <table style=\"width: 100%; font-size: 14px; border-collapse: collapse;\">\n          <tr><td style=\"padding: 6px 0; color: #5f5e5a;\">Razão Social</td><td style=\"padding: 6px 0;\"><strong>${$('02_normalizacao_lead').item.json.razao_social}</strong></td></tr>\n          <tr><td style=\"padding: 6px 0; color: #5f5e5a;\">CNPJ</td><td style=\"padding: 6px 0;\">${$('02_normalizacao_lead').item.json.cnpj}</td></tr>\n          <tr><td style=\"padding: 6px 0; color: #5f5e5a;\">Contato</td><td style=\"padding: 6px 0;\">${$('02_normalizacao_lead').item.json.nome_contato} ${$('02_normalizacao_lead').item.json.sobrenome_contato}</td></tr>\n          <tr><td style=\"padding: 6px 0; color: #5f5e5a;\">E-mail</td><td style=\"padding: 6px 0;\">${$('02_normalizacao_lead').item.json.email}</td></tr>\n          <tr><td style=\"padding: 6px 0; color: #5f5e5a;\">WhatsApp</td><td style=\"padding: 6px 0;\">${$('02_normalizacao_lead').item.json.telefone}</td></tr>\n          <tr><td style=\"padding: 6px 0; color: #5f5e5a;\">Produtos</td><td style=\"padding: 6px 0;\">${$('11_consolidacao_final').item.json.tem_tef ? 'TEF ' : ''}${$('11_consolidacao_final').item.json.tem_gateway ? 'Gateway ' : ''}${$('11_consolidacao_final').item.json.tem_c6pay ? 'C6 Pay' : ''}</td></tr>\n          <tr><td style=\"padding: 6px 0; color: #5f5e5a;\">Status Gateway</td><td style=\"padding: 6px 0;\">${$('11_consolidacao_final').item.json.precisa_escalonamento_gateway ? '⚠️ Escalonado (negociação manual)' : 'Automático'}</td></tr>\n        </table>\n        <div style=\"margin-top: 20px;\">\n          <a href=\"${$('17_upload_pdf').item.json.webViewLink}\" style=\"background-color: #1D9E75; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-size: 14px; display: inline-block;\">Ver PDF enviado</a>\n        </div>\n      </div>\n    </div>\n  `\n} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4208,
+        -672
+      ],
+      "id": "cfdaa2f0-c8e0-4568-986d-fdae3197ef99",
+      "name": "19_notifica_consultora_envio"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8defaad0-e886-4b7b-9620-20f186e6e246",
+              "leftValue": "={{ $('11_consolidacao_final').item.json.precisa_escalonamento_gateway }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3984,
+        -496
+      ],
+      "id": "6bd2a591-9e16-4f5c-80c3-5e61c810ffb2",
+      "name": "19a_if_ja_notificado"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1514838753"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "rdstation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3984,
+        -320
+      ],
+      "id": "ec687e0d-33ca-46cc-88bc-10c983b8f783",
+      "name": "20a_token_rdstation",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.rd.services/crm/v2/organizations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": {\n    \"name\": \"{{ $('02_normalizacao_lead').item.json.razao_social }}\",\n    \"owner_id\": \"63a0f04366d0e60019e9c9d6\",\n    \"custom_fields\": {\n      \"cnpj\": \"{{ $('02_normalizacao_lead').item.json.cnpj }}\",\n      \"estado\": \"{{ $('03_valida_cnpj').item.json.uf }}\"\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4224,
+        -320
+      ],
+      "id": "497a345c-5926-499e-bfc4-341c2aa471f0",
+      "name": "20c3_criar_empresa",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.rd.services/crm/v2/deals/{{ $('02_normalizacao_lead').item.json.lead_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('20a_token_rdstation').item.json.access_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { data: $json.organization_id && $json.organization_id !== '' ? { stage_id: \"63a0f06e85f086001ce207d2\", organization_id: $json.organization_id } : { stage_id: \"63a0f06e85f086001ce207d2\" } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4688,
+        -336
+      ],
+      "id": "50341b92-1508-4242-ae07-678fb36edcde",
+      "name": "20b_atualiza_estagio"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.rd.services/crm/v2/deals/{{ $('02_normalizacao_lead').item.json.lead_id }}/files",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "data[file]",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3600,
+        -240
+      ],
+      "id": "afde44e8-7b92-491d-9660-62abf99cdf76",
+      "name": "20d_anexa_pdf"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1514838753"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "rdstation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3200,
+        -224
+      ],
+      "id": "040bfca3-b1d8-41f3-9203-4bca8f0441ff",
+      "name": "20a2_token_rdstation_pdf",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7e7786fc-7abe-4cbe-8caa-4b0e2811bc81",
+              "name": "organization_id",
+              "value": "={{ $json.data.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4448,
+        -336
+      ],
+      "id": "aebfd8b5-70f1-4a64-bab9-f5fa40d080b1",
+      "name": "20c5_resolve_organization_id"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8504364b-4d75-4446-8611-eb834038e085",
+              "name": "organization_id",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4448,
+        -144
+      ],
+      "id": "23aa43de-dc8d-42a0-8710-d1d5d2d7a78c",
+      "name": "20c1b_erro_empresa_fallback"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3408,
+        -240
+      ],
+      "id": "957852ae-42b7-46a2-b17f-d4b57a741c55",
+      "name": "20d0_merge_pdf_token"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 810524007,
+          "mode": "list",
+          "cachedResultName": "base_funil_completo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_id": "={{ $('01_form_trigger').item.json.lead_id }}",
+            "status_funil": "Proposta Enviada",
+            "data_envio_proposta": "={{ $now.toISO() }}",
+            "razao_social": "={{ $('01_form_trigger').item.json['Razão Social'] }}",
+            "cnpj": "={{ $('01_form_trigger').item.json['CNPJ'] }}",
+            "qtd_caixas": "={{ $('01_form_trigger').item.json['Qtd Caixas'] }}",
+            "produtos_interesse": "={{ $('01_form_trigger').item.json['Soluções'].join(', ') }}",
+            "isencao": "={{ $('01_form_trigger').item.json['Isenção'] }}",
+            "valor_proposta": "={{ (Number($('11_consolidacao_final').item.json.mensalidade_tef) || 0) + (Number($('11_consolidacao_final').item.json.franquia_gateway) || 0) }}",
+            "link_pdf": "={{ $('17_upload_pdf').item.json.webViewLink }}",
+            "cidade": "={{ $('03_valida_cnpj').item.json.municipio }}",
+            "uf": "={{ $('03_valida_cnpj').item.json.uf }}"
+          },
+          "matchingColumns": [
+            "lead_id"
+          ],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nome_contato",
+              "displayName": "nome_contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "primeiro_nome",
+              "displayName": "primeiro_nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "telefone",
+              "displayName": "telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "origem",
+              "displayName": "origem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_primeiro_contato",
+              "displayName": "data_primeiro_contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp",
+              "displayName": "optin_whatsapp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp_data",
+              "displayName": "optin_whatsapp_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp_texto",
+              "displayName": "optin_whatsapp_texto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "razao_social",
+              "displayName": "razao_social",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cnpj",
+              "displayName": "cnpj",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cidade",
+              "displayName": "cidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "uf",
+              "displayName": "uf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "qtd_caixas",
+              "displayName": "qtd_caixas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "produtos_interesse",
+              "displayName": "produtos_interesse",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "isencao",
+              "displayName": "isencao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_envio_proposta",
+              "displayName": "data_envio_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "valor_proposta",
+              "displayName": "valor_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "link_pdf",
+              "displayName": "link_pdf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "score_qualificacao",
+              "displayName": "score_qualificacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status_funil",
+              "displayName": "status_funil",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_resposta_proposta",
+              "displayName": "data_resposta_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_data",
+              "displayName": "ultimo_toque_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_canal",
+              "displayName": "ultimo_toque_canal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_dia_regua",
+              "displayName": "ultimo_toque_dia_regua",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_perda",
+              "displayName": "motivo_perda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nutricao_mensal",
+              "displayName": "nutricao_mensal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "consultor_responsavel",
+              "displayName": "consultor_responsavel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_fechamento_comercial",
+              "displayName": "data_fechamento_comercial",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_fechado",
+              "displayName": "valor_fechado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "produtos_contratados",
+              "displayName": "produtos_contratados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_cadastro_sistema_gestao",
+              "displayName": "data_cadastro_sistema_gestao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sistema_gestao_usado",
+              "displayName": "sistema_gestao_usado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_instalacao_ativacao",
+              "displayName": "data_instalacao_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "mrr_mensal",
+              "displayName": "mrr_mensal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_cancelamento",
+              "displayName": "data_cancelamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_cancelamento",
+              "displayName": "motivo_cancelamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "homologado_paygo",
+              "displayName": "homologado_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_solicitacao_integracao",
+              "displayName": "data_solicitacao_integracao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status_integracao_paygo",
+              "displayName": "status_integracao_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_abertura_conta_c6",
+              "displayName": "data_abertura_conta_c6",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sla_ativacao_dias",
+              "displayName": "sla_ativacao_dias",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_ativacao_real",
+              "displayName": "data_ativacao_real",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_atraso_ativacao",
+              "displayName": "motivo_atraso_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_validacao_pos_ativacao",
+              "displayName": "data_validacao_pos_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nf_paygo_recebida_em",
+              "displayName": "nf_paygo_recebida_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_comissao_esperado",
+              "displayName": "valor_comissao_esperado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_comissao_informado_paygo",
+              "displayName": "valor_comissao_informado_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "divergencia_comissao",
+              "displayName": "divergencia_comissao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nf_faturamento_emitida_em",
+              "displayName": "nf_faturamento_emitida_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3952,
+        -768
+      ],
+      "id": "f8a9b9dd-2c71-4d49-9f94-f2f0deb2d327",
+      "name": "20e_grava_base_funil_proposta",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1514838753"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "resend_api"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -320,
+        -380
+      ],
+      "id": "rk000000-0000-0000-0000-000000000001",
+      "name": "busca_token_resend",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    }
+  ],
+  "connections": {
+    "01_form_trigger": {
+      "main": [
+        [
+          {
+            "node": "02_normalizacao_lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02_normalizacao_lead": {
+      "main": [
+        [
+          {
+            "node": "busca_token_resend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03_valida_cnpj": {
+      "main": [
+        [
+          {
+            "node": "04_if_cnpj_ativo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "04_if_cnpj_ativo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04_if_cnpj_ativo": {
+      "main": [
+        [
+          {
+            "node": "07_token_rdstation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "05a_motivo_revisao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05a_motivo_revisao": {
+      "main": [
+        [
+          {
+            "node": "05b_email_revisao_manual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05b_email_revisao_manual": {
+      "main": [
+        []
+      ]
+    },
+    "07_token_rdstation": {
+      "main": [
+        [
+          {
+            "node": "08_calculo_tef",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08_calculo_tef": {
+      "main": [
+        [
+          {
+            "node": "09_if_tem_gateway",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "09_if_tem_gateway": {
+      "main": [
+        [
+          {
+            "node": "09a_gateway_franquia",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "09b_gateway_default",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "09a_gateway_franquia": {
+      "main": [
+        [
+          {
+            "node": "10_if_tem_c6pay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "09b_gateway_default": {
+      "main": [
+        [
+          {
+            "node": "10_if_tem_c6pay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10_if_tem_c6pay": {
+      "main": [
+        [
+          {
+            "node": "10a_c6pay_taxas",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "10b_c6pay_default",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10a_c6pay_taxas": {
+      "main": [
+        [
+          {
+            "node": "10a2_agrupa_c6pay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10b_c6pay_default": {
+      "main": [
+        [
+          {
+            "node": "10a2_agrupa_c6pay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12_if_escalonamento_gateway": {
+      "main": [
+        [
+          {
+            "node": "13_email_escalonamento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "14_duplicar_template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13_email_escalonamento": {
+      "main": [
+        [
+          {
+            "node": "14_duplicar_template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11_consolidacao_final": {
+      "main": [
+        [
+          {
+            "node": "12_if_escalonamento_gateway",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10a2_agrupa_c6pay": {
+      "main": [
+        [
+          {
+            "node": "11_consolidacao_final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14_duplicar_template": {
+      "main": [
+        [
+          {
+            "node": "14b_monta_requests_docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14b_monta_requests_docs": {
+      "main": [
+        [
+          {
+            "node": "15_batchupdate_docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15_batchupdate_docs": {
+      "main": [
+        [
+          {
+            "node": "16_export_pdf",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "16_export_pdf": {
+      "main": [
+        [
+          {
+            "node": "17_upload_pdf",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "20a2_token_rdstation_pdf",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "20d0_merge_pdf_token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "17_upload_pdf": {
+      "main": [
+        [
+          {
+            "node": "17b_compartilhar_pdf",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "17b_compartilhar_pdf": {
+      "main": [
+        [
+          {
+            "node": "18_email_proposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "18_email_proposta": {
+      "main": [
+        [
+          {
+            "node": "20a_token_rdstation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "19a_if_ja_notificado",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "20e_grava_base_funil_proposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "19a_if_ja_notificado": {
+      "main": [
+        [
+          {
+            "node": "19_notifica_consultora_envio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "19_notifica_consultora_envio": {
+      "main": [
+        []
+      ]
+    },
+    "20a_token_rdstation": {
+      "main": [
+        [
+          {
+            "node": "20c3_criar_empresa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "20b_atualiza_estagio": {
+      "main": [
+        []
+      ]
+    },
+    "20a2_token_rdstation_pdf": {
+      "main": [
+        [
+          {
+            "node": "20d0_merge_pdf_token",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "20c3_criar_empresa": {
+      "main": [
+        [
+          {
+            "node": "20c5_resolve_organization_id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "20c1b_erro_empresa_fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "20c5_resolve_organization_id": {
+      "main": [
+        [
+          {
+            "node": "20b_atualiza_estagio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "20c1b_erro_empresa_fallback": {
+      "main": [
+        [
+          {
+            "node": "20b_atualiza_estagio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "20d0_merge_pdf_token": {
+      "main": [
+        [
+          {
+            "node": "20d_anexa_pdf",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "busca_token_resend": {
+      "main": [
+        [
+          {
+            "node": "03_valida_cnpj",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
