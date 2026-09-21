@@ -215,6 +215,34 @@ HOME_CSS = r"""
 .callout{margin-top:1.25rem;border:1px solid var(--indigo-soft);background:var(--indigo-tint);border-radius:var(--radius);padding:1.2rem 1.4rem;display:grid;gap:.3rem}
 .callout b{font-family:var(--font-display);color:var(--indigo)}
 @media (max-width:760px){.portfolio{grid-template-columns:1fr}}
+/* hero product stack */
+.stack{background:var(--indigo);border-radius:22px;padding:1.4rem;color:var(--on-accent);display:grid;gap:.9rem}
+.stack .label{font-family:var(--font-display);font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+.stack .row{background:var(--surface);color:var(--ink);border-radius:14px;padding:.95rem 1.1rem;display:grid;gap:.5rem}
+.stack .row h3{font-size:1rem}
+.stack .chips{display:flex;flex-wrap:wrap;gap:.4rem}
+.stack .chips span{padding:.22rem .6rem;border-radius:999px;background:var(--indigo-tint);color:var(--indigo);font-size:.8rem;font-family:var(--font-display);font-weight:600}
+.stack .row.alt .chips span{background:var(--petroleo-tint);color:var(--petroleo)}
+.stack .caption{font-size:.9rem;opacity:.9}
+/* product categories */
+.cat{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,2.1fr);gap:clamp(1.5rem,4vw,3.5rem);padding-block:2.2rem;border-top:1px solid var(--line)}
+.cat:first-of-type{border-top:0;padding-top:0}
+.cat-head{display:grid;gap:.6rem;align-content:start;position:sticky;top:90px}
+.cat-head .n{font-family:var(--font-display);font-weight:700;color:var(--indigo);font-size:.85rem;letter-spacing:.06em}
+.cat-head h3{font-size:1.45rem}
+.cat-head p{color:var(--ink-2)}
+.prods{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.1rem}
+.prod{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1.3rem;display:grid;gap:.6rem;align-content:start}
+.prod.hl{border-color:var(--indigo);box-shadow:0 0 0 1px var(--indigo)}
+.prod .tag{font-family:var(--font-display);font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--petroleo)}
+.prod h4{font-size:1.1rem;font-weight:600;margin:0}
+.prod p{color:var(--ink-2);font-size:.97rem}
+.prod ul{margin:.2rem 0 0;padding:0;list-style:none;display:grid;gap:.35rem}
+.prod li{display:flex;gap:.55rem;align-items:flex-start;font-size:.93rem;color:var(--ink-2)}
+.prod li::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:var(--petroleo);margin-top:.5rem}
+@media (max-width:860px){.cat{grid-template-columns:1fr}.cat-head{position:static}}
+/* journey compact (rodapé) */
+.journey-wrap{background:var(--surface);border-block:1px solid var(--line)}
 /* cta band */
 .band{background:var(--ink);color:var(--ground);border-radius:22px;padding:clamp(1.8rem,4vw,3rem);display:grid;grid-template-columns:1.2fr auto;gap:1.5rem;align-items:center}
 .band h2{color:var(--ground)}
@@ -229,88 +257,59 @@ HOME = f"""
   <div class="hero-copy">
     <span class="eyebrow">Consultoria de automação comercial</span>
     <h1>Automação comercial, <em>do caixa ao pagamento.</em></h1>
-    <p class="lede">TEF, PIX, link de pagamento e conta digital integrados ao seu sistema de vendas. Você conta como é sua operação, recebe a proposta em minutos e a ativação acontece em até 10 dias úteis.</p>
+    <p class="lede">TEF, link de pagamento, PIX, adquirência e conta digital integrados ao seu sistema de vendas. Uma operação de pagamentos que acompanha o ritmo do seu negócio, com implantação e suporte de ponta a ponta.</p>
     <div class="hero-ctas">
-      <a class="btn btn-primary" href="{FORM}">Quero minha proposta personalizada</a>
-      <a class="btn btn-ghost" href="como-funciona.html">Ver como funciona</a>
+      <a class="btn btn-primary" href="{FORM}">Quero minha proposta</a>
+      <a class="btn btn-ghost" href="#produtos">Conhecer os produtos</a>
     </div>
-    <div class="hero-meta"><span>Leva menos de 2 minutos</span><span>Sem burocracia</span><span>Sem fidelidade</span></div>
+    <div class="hero-meta"><span>Integração com PDV e ERP</span><span>Multiadquirente</span><span>Acompanhamento técnico</span></div>
   </div>
-  <div class="demo" aria-label="Demonstração da jornada: captação, proposta e ativação">
-    <div class="steps" id="demo-steps"><span class="active"><i></i></span><span><i></i></span><span><i></i></span></div>
-    <div class="label"><span id="demo-step-name">Captação</span><b id="demo-step-title">Você conta sobre a operação</b></div>
-    <div class="stage">
-      <div class="panel show" data-step="0">
-        <h3>Vamos montar sua proposta</h3>
-        <div class="row2"><div class="field">Razão Social<div>Padaria Pão da Serra Ltda</div></div><div class="field">CNPJ<div>12.345.678/0001-90</div></div></div>
-        <div class="row2"><div class="field">Caixas<div>3</div></div><div class="field">Soluções<div>TEF + PIX C6</div></div></div>
-        <div class="field">Volume mensal no link de pagamento<div>201 a 600 transações</div></div>
-        <span class="chip">Enviado</span>
-      </div>
-      <div class="panel" data-step="1">
-        <h3>Proposta gerada automaticamente</h3>
-        <div class="pdf">
-          <div class="t">Proposta comercial · Pão da Serra</div>
-          <div class="l"><span>Mensalidade TEF (3 caixas)</span><b>R$ 100,00</b></div>
-          <div class="l"><span>Franquia gateway (201 a 600)</span><b>R$ 540,00</b></div>
-          <div class="l"><span>Taxa de adesão</span><b>Isenta com conta C6 Bank</b></div>
-          <div class="l"><span>Validade</span><b>30 dias</b></div>
-        </div>
-        <span class="chip">PDF enviado por e-mail em instantes</span>
-      </div>
-      <div class="panel" data-step="2">
-        <h3>Aceite eletrônico e ativação</h3>
-        <div class="ok"><i>✓</i>Aceite confirmado</div>
-        <div class="ok"><i>✓</i>Dados de implantação recebidos</div>
-        <div class="ok"><i>✓</i>Cadastro nas adquirentes concluído</div>
-        <div class="ok"><i>✓</i>PIX e cartão ativos no caixa</div>
-      </div>
+  <div class="stack" aria-label="Ecossistema Antere: automação comercial, meios de pagamento, banking e adquirência">
+    <div class="label">Um ecossistema, três frentes</div>
+    <div class="row"><h3>Automação comercial</h3><div class="chips"><span>Integração PDV / ERP</span><span>Conciliação</span><span>Implantação</span></div></div>
+    <div class="row alt"><h3>Meios de pagamento</h3><div class="chips"><span>TEF PayGo</span><span>Link de pagamento</span><span>Gateway</span><span>PIX</span></div></div>
+    <div class="row"><h3>Banking e adquirência</h3><div class="chips"><span>Conta digital C6 Bank</span><span>C6 Pay</span><span>Multiadquirente</span></div></div>
+    <p class="caption">Tudo conectado ao seu caixa, sem redigitação e sem planilha paralela.</p>
+  </div>
+</div></section>
+
+<section id="produtos"><div class="wrap">
+  <div class="section-head">
+    <span class="eyebrow">Nossos produtos</span>
+    <h2>Três frentes, um ecossistema integrado</h2>
+    <p class="lede">Escolha o que a sua operação precisa hoje. Tudo se conecta ao mesmo caixa e cresce junto com o negócio.</p>
+  </div>
+
+  <div class="cat" id="automacao-comercial">
+    <div class="cat-head"><span class="n">01</span><h3>Automação comercial</h3><p>Soluções que conectam frente de caixa, retaguarda e gestão operacional, para a venda nascer integrada ao pagamento.</p></div>
+    <div class="prods">
+      <div class="prod"><span class="tag">Integração</span><h4>Integração PDV e ERP</h4><p>O pagamento acontece dentro do seu sistema de vendas.</p><ul><li>Captura TEF integrada ao PDV, sem redigitar valores</li><li>Homologação do seu sistema com as adquirentes</li><li>Retaguarda e fechamento de caixa conectados</li></ul></div>
+      <div class="prod"><span class="tag">Gestão</span><h4>Conciliação e recebíveis</h4><p>Cada venda já nasce casada com o recebível.</p><ul><li>Conciliação automática de cartão e PIX</li><li>Agenda de recebíveis por adquirente</li><li>Relatórios para financeiro e gestão</li></ul></div>
+      <div class="prod"><span class="tag">Consultoria</span><h4>Diagnóstico e implantação</h4><p>Acompanhamento técnico do desenho à operação.</p><ul><li>Diagnóstico da operação e dos canais de venda</li><li>Escolha de adquirentes e bancos que fazem sentido</li><li>Cadastro, instalação, treinamento e suporte contínuo</li></ul></div>
     </div>
-    <p class="caption" id="demo-caption">Cada etapa acontece sem planilha, sem ligação de cobrança e sem retrabalho.</p>
   </div>
-</div></section>
 
-<section><div class="wrap">
-  <div class="section-head">
-    <span class="eyebrow">A jornada</span>
-    <h2>Da primeira conversa ao pagamento ativo no caixa, sem etapa manual</h2>
-    <p class="lede">Três momentos que hoje rodam de forma automática para quem entra pelo nosso funil.</p>
+  <div class="cat" id="meios-de-pagamento">
+    <div class="cat-head"><span class="n">02</span><h3>Meios de pagamento</h3><p>Uma jornada de pagamento segura, integrada e preparada para crescer, no balcão e fora dele.</p></div>
+    <div class="prods">
+      <div class="prod hl" id="tef-paygo"><span class="tag">Presencial</span><h4>TEF PayGo</h4><p>Captura TEF integrada ao PDV para uma operação sem atrito.</p><ul><li>Integrado ao sistema de vendas, sem digitação manual</li><li>Multiadquirente e multibandeira no mesmo terminal</li><li>Débito, crédito, voucher e PIX no TEF</li><li>Terminais e caixas ilimitados</li><li>Conciliação automática das transações</li><li>Suporte e homologação de ponta a ponta</li></ul></div>
+      <div class="prod" id="gateway"><span class="tag">Digital</span><h4>Link de pagamento e Gateway</h4><p>Venda fora do balcão com a mesma segurança do caixa.</p><ul><li>Link de pagamento por WhatsApp, e-mail e redes sociais</li><li>Checkout para loja virtual e aplicativos</li><li>Cartão, PIX e boleto com parcelamento</li><li>Antifraude e tokenização</li><li>Integração com ERP e plataformas de cobrança</li><li>Painel de vendas e conciliação unificados</li></ul></div>
+    </div>
   </div>
-  <div class="journey">
-    <div class="j"><h3>Captação</h3><p>Você preenche um formulário curto com o que importa: quantos caixas, quais soluções, qual volume. Nada de reunião de descoberta.</p><span class="t">menos de 2 minutos</span></div>
-    <div class="j"><h3>Proposta</h3><p>A proposta em PDF chega no seu e-mail com os valores da sua faixa, sem esperar retorno de vendedor.</p><span class="t">em instantes</span></div>
-    <div class="j"><h3>Ativação</h3><p>Aceite eletrônico, dados de implantação, cadastro na adquirente e ativação no seu PDV, com acompanhamento em cada passo.</p><span class="t">até 10 dias úteis</span></div>
-  </div>
-</div></section>
 
-<section><div class="wrap">
-  <div class="section-head">
-    <span class="eyebrow">O que muda no seu dia a dia</span>
-    <h2>Menos erro de caixa, conciliação em minutos, taxas que fazem sentido</h2>
-  </div>
-  <div class="grid-3">
-    <div class="card"><span class="k">0</span><h3>redigitação de valor</h3><p>Com TEF integrado ao sistema de vendas, o valor vai direto para a maquininha. Acaba o erro de digitação no fechamento.</p></div>
-    <div class="card"><span class="k">min</span><h3>em vez de horas na conciliação</h3><p>Cada venda já nasce casada com o recebível. Você confere, não reconstrói.</p></div>
-    <div class="card"><span class="k">R$ 0</span><h3>de taxa no PIX pelo C6 Bank</h3><p>PIX sem taxa, ilimitado, e débito a partir de 0,82% e crédito a partir de 1,84% com a adquirência C6 Pay.</p></div>
-  </div>
-</div></section>
-
-<section><div class="wrap">
-  <div class="section-head">
-    <span class="eyebrow">Atuação integrada</span>
-    <h2>Tecnologia de pagamento que acompanha a operação</h2>
-    <p class="lede">Diagnóstico, integração e evolução contínua para canais comerciais que não podem parar.</p>
-  </div>
-  <div class="topics">
-    <a class="card" href="solucoes.html#automacao-comercial"><h3>Automação comercial</h3><p>Soluções que conectam frente de caixa, retaguarda e gestão operacional, sem redigitação de valores.</p><span class="go">Ver detalhes →</span></a>
-    <a class="card" href="solucoes.html#meios-de-pagamento"><h3>Meios de pagamento</h3><p>Uma jornada de pagamento segura, integrada ao PDV e preparada para crescer: TEF, link, PIX e cartão.</p><span class="go">Ver detalhes →</span></a>
-    <a class="card" href="solucoes.html#banking"><h3>Banking e serviços financeiros</h3><p>Conta empresarial, PIX sem taxa e recebíveis na mesma conta, com conciliação em minutos.</p><span class="go">Ver detalhes →</span></a>
+  <div class="cat" id="banking">
+    <div class="cat-head"><span class="n">03</span><h3>Banking e adquirência</h3><p>Conta, recebíveis e adquirência conectados, para vender, receber e controlar no mesmo lugar.</p></div>
+    <div class="prods">
+      <div class="prod" id="c6-bank"><span class="tag">Banking</span><h4>Conta digital C6 Bank</h4><p>Conta empresarial integrada aos recebíveis.</p><ul><li>PIX empresarial e boletos</li><li>Agenda de recebíveis na própria conta</li><li>Crédito e APIs para integração financeira</li></ul></div>
+      <div class="prod" id="c6-pay"><span class="tag">Adquirência</span><h4>C6 Pay</h4><p>Experiência completa de pagamento no ponto de venda.</p><ul><li>Cartão, voucher, aproximação, PIX e link</li><li>PINPad integrado ao TEF PayGo</li><li>Recebíveis direto na conta C6 Bank</li></ul></div>
+      <div class="prod"><span class="tag">Multiadquirência</span><h4>Demais adquirentes e bancos</h4><p>Integramos os parceiros que a sua operação já usa.</p><ul><li>Roteamento por adquirente no mesmo TEF</li><li>Sem forçar troca de fornecedor</li><li>Comparativo de condições na proposta</li></ul></div>
+    </div>
   </div>
 </div></section>
 
 <section class="feature"><div class="wrap">
   <div>
-    <span class="eyebrow">Solução em destaque</span>
+    <span class="eyebrow">Produto em destaque</span>
     <h2>TEF PayGo para uma operação de pagamentos sem atrito</h2>
     <p>Da venda registrada no PDV à autorização da adquirente, a Antere apoia uma jornada integrada, segura e fluida, sem digitação manual de valores.</p>
     <ul>
@@ -329,23 +328,33 @@ HOME = f"""
 
 <section><div class="wrap">
   <div class="section-head">
-    <span class="eyebrow">Portfólio</span>
-    <h2>Um ecossistema para vender, receber e controlar</h2>
-    <p class="lede">Soluções modulares para operações presenciais, digitais e bancárias, conectadas ao ritmo do seu negócio.</p>
+    <span class="eyebrow">O que muda no seu dia a dia</span>
+    <h2>Menos erro de caixa, conciliação em minutos, tudo no mesmo lugar</h2>
   </div>
-  <div class="portfolio">
-    <a class="card hl" href="solucoes.html#tef-paygo"><span class="eyebrow">Plataforma de pagamentos</span><h3>TEF PayGo</h3><p>Captura TEF integrada ao PDV para transações rápidas, conciliação automática e operação multibandeira.</p></a>
-    <a class="card" href="solucoes.html#gateway"><span class="eyebrow">Captura digital</span><h3>Link de pagamento e Gateway</h3><p>Conecte loja virtual, aplicativos, ERPs e plataformas de cobrança às instituições financeiras e adquirentes.</p></a>
-    <a class="card" href="solucoes.html#c6-bank"><span class="eyebrow">Serviços financeiros</span><h3>Soluções bancárias · C6 Bank</h3><p>Conta empresarial, PIX sem taxa, boletos, crédito e APIs para centralizar a gestão financeira do seu negócio.</p></a>
-    <a class="card" href="solucoes.html#c6-pay"><span class="eyebrow">Adquirência</span><h3>C6 Pay</h3><p>Aceite cartão, voucher, aproximação, PIX e link de pagamento com uma experiência completa no ponto de venda.</p></a>
+  <div class="grid-3">
+    <div class="card"><span class="k">0</span><h3>redigitação de valor</h3><p>Com TEF integrado ao sistema de vendas, o valor vai direto para a maquininha. Acaba o erro de digitação no fechamento.</p></div>
+    <div class="card"><span class="k">min</span><h3>em vez de horas na conciliação</h3><p>Cada venda já nasce casada com o recebível. Você confere, não reconstrói.</p></div>
+    <div class="card"><span class="k">1</span><h3>ecossistema para vender e receber</h3><p>PIX, cartão, link de pagamento e conta digital conectados ao mesmo caixa, com um único parceiro acompanhando.</p></div>
   </div>
-  <div class="callout"><b>Caminho rápido: C6 Pay + PIX C6</b><span>Optando por C6 Pay e/ou PIX C6, você fica isento da taxa de adesão do TEF PayGo e já pode agendar a instalação do PINPad logo após o cadastro.</span></div>
-  <p style="margin-top:1.6rem"><a class="btn btn-ghost" href="solucoes.html">Conhecer todas as soluções</a></p>
+</div></section>
+
+<section class="journey-wrap"><div class="wrap">
+  <div class="section-head">
+    <span class="eyebrow">Como funciona</span>
+    <h2>Da primeira conversa ao pagamento ativo no caixa</h2>
+    <p class="lede">Três momentos, todos acompanhados pela Antere.</p>
+  </div>
+  <div class="journey">
+    <div class="j"><h3>Diagnóstico</h3><p>Você conta como é a operação: caixas, canais de venda e soluções de interesse. Um formulário curto, sem reunião de descoberta.</p><span class="t">menos de 2 minutos</span></div>
+    <div class="j"><h3>Proposta</h3><p>A proposta chega no seu e-mail com as condições para a sua operação, sem esperar retorno de vendedor.</p><span class="t">em instantes</span></div>
+    <div class="j"><h3>Ativação</h3><p>Aceite eletrônico, dados de implantação, cadastro nas adquirentes e ativação no seu PDV, com acompanhamento em cada passo.</p><span class="t">até 10 dias úteis</span></div>
+  </div>
+  <p style="margin-top:1.6rem"><a class="btn btn-ghost" href="como-funciona.html">Ver o passo a passo completo</a></p>
 </div></section>
 
 <section><div class="wrap">
   <div class="band">
-    <div><h2>Falta pouco para ver sua proposta personalizada</h2><p>Preencha alguns dados sobre a sua operação e receba a proposta automática com as condições ideais para o seu negócio.</p></div>
+    <div><h2>Vamos simplificar sua operação de pagamentos?</h2><p>Conte como é o seu negócio e receba uma proposta com as condições ideais para a sua operação.</p></div>
     <a class="btn btn-primary" href="{FORM}">Quero minha proposta</a>
   </div>
 </div></section>
@@ -353,24 +362,6 @@ HOME = f"""
 """
 
 HOME_JS = r"""
-<script>
-(function(){
-  var steps=[['Captação','Você conta sobre a operação','Cada etapa acontece sem planilha, sem ligação de cobrança e sem retrabalho.'],
-             ['Proposta','Valores da sua faixa, sem esperar vendedor','A proposta usa as tabelas reais de TEF, gateway e adquirência.'],
-             ['Ativação','Aceite, cadastro e PIX ativo no caixa','Acompanhamos cada passo até o pagamento rodar no seu PDV.']];
-  var bars=document.querySelectorAll('#demo-steps span'),panels=document.querySelectorAll('.panel');
-  var name=document.getElementById('demo-step-name'),title=document.getElementById('demo-step-title'),cap=document.getElementById('demo-caption');
-  var i=0,reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function show(n){
-    i=n;
-    bars.forEach(function(b,k){b.className=k<n?'done':(k===n?'active':'');});
-    panels.forEach(function(p,k){p.classList.toggle('show',k===n);});
-    name.textContent=steps[n][0];title.textContent=steps[n][1];cap.textContent=steps[n][2];
-  }
-  show(0);
-  if(!reduce){setInterval(function(){show((i+1)%steps.length);},3600);}
-})();
-</script>
 """
 
 # ---------------- COMO FUNCIONA ----------------
@@ -380,11 +371,11 @@ COMO = f"""
   <div class="section-head">
     <span class="eyebrow">Como funciona</span>
     <h1>Sete passos, todos acompanhados, nenhum manual</h1>
-    <p class="lede">A mesma sequência que roda hoje para cada cliente. Em linguagem de quem está do lado do caixa.</p>
+    <p class="lede">A mesma sequência para cada cliente, em linguagem de quem está do lado do caixa.</p>
   </div>
   <div class="grid-3">
     <div class="card"><h3>1. Você conta sobre o negócio</h3><p>Um formulário de 2 minutos: caixas, soluções de interesse, volume e faixa de faturamento.</p></div>
-    <div class="card"><h3>2. Proposta no seu e-mail</h3><p>PDF com os valores da sua faixa, gerado na hora. Sem esperar retorno.</p></div>
+    <div class="card"><h3>2. Proposta no seu e-mail</h3><p>PDF com as condições para a sua operação, gerado na hora. Sem esperar retorno.</p></div>
     <div class="card"><h3>3. Acompanhamento sem pressão</h3><p>Se você ainda não decidiu, seguimos com lembretes curtos, e você pode sair quando quiser.</p></div>
     <div class="card"><h3>4. Aceite eletrônico</h3><p>Um clique para confirmar a proposta. Você recebe a confirmação e o próximo passo por e-mail.</p></div>
     <div class="card"><h3>5. Dados de implantação</h3><p>Um formulário guiado explica onde encontrar cada informação da sua empresa e do seu PDV.</p></div>
@@ -399,20 +390,39 @@ COMO = f"""
 SOL = f"""
 <main>
 <section><div class="wrap">
-  <div class="section-head" id="automacao-comercial">
+  <div class="section-head">
     <span class="eyebrow">Soluções</span>
-    <h1>O que a Antere integra ao seu caixa</h1>
-    <p class="lede">Benefício primeiro. Detalhe técnico fica para a implantação.</p>
+    <h1>Produtos por categoria</h1>
+    <p class="lede">O que a Antere integra ao seu caixa, organizado em três frentes. Detalhe técnico e condições ficam para a proposta e a implantação.</p>
   </div>
-  <div class="grid-3" id="meios-de-pagamento">
-    <div class="card" id="c6-pay"><span class="eyebrow">Caminho rápido</span><h3>C6 Pay + PIX C6</h3><p>PIX sem taxa e ilimitado, débito a partir de 0,82% e crédito a partir de 1,84%. Isenção da taxa de adesão do TEF PayGo. Instalação do PINPad logo após o cadastro.</p></div>
-    <div class="card" id="tef-paygo"><h3>TEF PayGo</h3><p>Captura integrada ao seu sistema de vendas, com terminais ilimitados e caixas adicionais por um valor fixo mensal.</p></div>
-    <div class="card" id="gateway"><h3>Link de pagamento e gateway</h3><p>Venda fora do balcão com franquia mensal por faixa de transações. Volumes maiores têm condição negociada.</p></div>
-    <div class="card" id="c6-bank"><span id="banking"></span><h3>Conta digital C6 Bank</h3><p>Recebíveis e PIX na mesma conta, com conciliação que sai de horas para minutos.</p></div>
-    <div class="card"><h3>Demais adquirentes e bancos</h3><p>Quando a sua operação já tem parceiros, integramos o que faz sentido em vez de forçar troca.</p></div>
-    <div class="skeleton"><div class="bar"></div><div class="bar s"></div><p>Espaço reservado para comparativo de planos.</p></div>
+
+  <div class="cat" id="automacao-comercial">
+    <div class="cat-head"><span class="n">01</span><h3>Automação comercial</h3><p>Frente de caixa, retaguarda e gestão operacional conectados ao pagamento.</p></div>
+    <div class="prods">
+      <div class="prod"><span class="tag">Integração</span><h4>Integração PDV e ERP</h4><ul><li>Captura TEF dentro do sistema de vendas</li><li>Homologação do seu PDV com as adquirentes</li><li>Retaguarda e fechamento de caixa conectados</li><li>Sem redigitação de valores</li></ul></div>
+      <div class="prod"><span class="tag">Gestão</span><h4>Conciliação e recebíveis</h4><ul><li>Conciliação automática de cartão e PIX</li><li>Agenda de recebíveis por adquirente</li><li>Relatórios para financeiro e gestão</li></ul></div>
+      <div class="prod"><span class="tag">Consultoria</span><h4>Diagnóstico e implantação</h4><ul><li>Diagnóstico da operação e dos canais de venda</li><li>Escolha de adquirentes e bancos</li><li>Cadastro, instalação, treinamento e suporte contínuo</li></ul></div>
+    </div>
   </div>
-  <p style="margin-top:2rem"><a class="btn btn-primary" href="{FORM}">Quero minha proposta</a></p>
+
+  <div class="cat" id="meios-de-pagamento">
+    <div class="cat-head"><span class="n">02</span><h3>Meios de pagamento</h3><p>Pagamento presencial e digital com a mesma segurança e a mesma conciliação.</p></div>
+    <div class="prods">
+      <div class="prod hl" id="tef-paygo"><span class="tag">Presencial</span><h4>TEF PayGo</h4><ul><li>Integrado ao PDV, sem digitação manual</li><li>Multiadquirente e multibandeira</li><li>Débito, crédito, voucher e PIX no TEF</li><li>Terminais e caixas ilimitados</li><li>Conciliação automática</li><li>Compatível com Windows, Android, Linux e Web/API</li><li>Homologação e suporte de ponta a ponta</li></ul></div>
+      <div class="prod" id="gateway"><span class="tag">Digital</span><h4>Link de pagamento e Gateway</h4><ul><li>Link por WhatsApp, e-mail e redes sociais</li><li>Checkout para loja virtual e aplicativos</li><li>Cartão, PIX e boleto com parcelamento</li><li>Antifraude e tokenização</li><li>Integração com ERP e plataformas de cobrança</li><li>Painel de vendas e conciliação unificados</li></ul></div>
+    </div>
+  </div>
+
+  <div class="cat" id="banking">
+    <div class="cat-head"><span class="n">03</span><h3>Banking e adquirência</h3><p>Conta, recebíveis e adquirência no mesmo lugar.</p></div>
+    <div class="prods">
+      <div class="prod" id="c6-bank"><span class="tag">Banking</span><h4>Conta digital C6 Bank</h4><ul><li>Conta empresarial com PIX e boletos</li><li>Agenda de recebíveis na própria conta</li><li>Crédito e APIs para integração financeira</li></ul></div>
+      <div class="prod" id="c6-pay"><span class="tag">Adquirência</span><h4>C6 Pay</h4><ul><li>Cartão, voucher, aproximação, PIX e link</li><li>PINPad integrado ao TEF PayGo</li><li>Recebíveis direto na conta C6 Bank</li></ul></div>
+      <div class="prod"><span class="tag">Multiadquirência</span><h4>Demais adquirentes e bancos</h4><ul><li>Roteamento por adquirente no mesmo TEF</li><li>Integração com os parceiros que você já usa</li><li>Comparativo de condições na proposta</li></ul></div>
+    </div>
+  </div>
+
+  <p style="margin-top:2.5rem"><a class="btn btn-primary" href="{FORM}">Quero minha proposta</a></p>
 </div></section>
 </main>
 """
@@ -492,9 +502,9 @@ f.addEventListener('submit',function(e){{
 """
 
 pages = {
-  "index.html": ("Antere", "Site institucional da Antere: consultoria de automação comercial para pagamentos, com captação de leads integrada ao funil.", "index.html", HOME, HOME_CSS, HOME_JS),
+  "index.html": ("Antere", "Consultoria de automação comercial: TEF, link de pagamento, PIX, adquirência e conta digital integrados ao seu sistema de vendas.", "index.html", HOME, HOME_CSS, HOME_JS),
   "como-funciona.html": ("Como funciona · Antere", "Os sete passos da jornada Antere, da captação ao pagamento ativo no caixa.", "como-funciona.html", COMO, "", ""),
-  "solucoes.html": ("Soluções · Antere", "TEF PayGo, link de pagamento, C6 Pay, PIX C6 e conta digital integrados ao seu caixa.", "solucoes.html", SOL, "", ""),
+  "solucoes.html": ("Soluções · Antere", "Automação comercial, meios de pagamento (TEF e link), banking e adquirência integrados ao seu caixa.", "solucoes.html", SOL, HOME_CSS, ""),
   "sobre.html": ("Sobre · Antere", "Quem é a Antere e por que somos uma consultoria, não mais um adquirente.", "sobre.html", SOBRE, "", ""),
   "contato.html": ("Contato · Antere", "Fale com a Antere para dúvidas gerais e parcerias.", "contato.html", CONTATO, "", ""),
 }
