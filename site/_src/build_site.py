@@ -432,19 +432,28 @@ SOL = f"""
 """
 
 SOBRE = f"""
+<style>
+.prose{{max-width:68ch;display:grid;gap:1.1rem;font-size:1.08rem;color:var(--ink-2)}}
+.prose p strong{{color:var(--ink)}}
+.prose .destaque{{border-left:4px solid var(--indigo);padding:.6rem 1rem;background:var(--indigo-tint);border-radius:8px;color:var(--ink)}}
+</style>
 <main>
 <section><div class="wrap">
   <div class="section-head">
-    <span class="eyebrow">Sobre</span>
-    <h1>Uma consultoria, não mais um adquirente</h1>
-    <p class="lede">A Antere nasceu da experiência de implantar pagamentos integrados em pequenas e médias empresas e da constatação de que o problema raramente é a maquininha. É o processo em volta dela.</p>
+    <span class="eyebrow">Sobre a Antere</span>
+    <h1>Automação comercial, do caixa ao pagamento.</h1>
   </div>
-  <div class="note"><b>Pendente.</b> A versão pública da história do rebranding ainda precisa ser escrita. O texto acima é provisório e não deve ir ao ar como está.</div>
-  <div class="grid-3" style="margin-top:2rem">
-    <div class="card"><h3>Fernanda Spahn</h3><p>Consultoria comercial. É quem assina as propostas e acompanha cada cliente até a ativação.</p></div>
-    <div class="skeleton"><div class="bar"></div><div class="bar s"></div><p>Espaço para demais integrantes da equipe.</p></div>
-    <div class="skeleton"><div class="bar"></div><div class="bar s"></div><p>Espaço para foto ou marca registrada.</p></div>
+  <div class="prose">
+    <p>A Antere nasceu de uma pergunta simples: por que configurar uma máquina de cartão, aceitar PIX e formalizar uma venda ainda exige tanto trabalho manual?</p>
+    <p>Somos uma consultoria de automação comercial focada em um problema específico: ajudar negócios a aceitar pagamentos de forma integrada. Cartão e PIX, sem retrabalho, sem planilha, sem depender de alguém lembrar de enviar o próximo e-mail.</p>
+    <p>Construímos toda a nossa própria operação em cima da mesma automação que oferecemos aos nossos clientes. Da primeira proposta até a ativação, o processo roda sozinho, liberando tempo para o que realmente importa: entender o negócio de cada cliente e encontrar a melhor condição para ele.</p>
+    <p>Hoje, essa automação comercial já atende parceiros como a <a href="https://pdvet.com.br/" target="_blank" rel="noopener">PDVet</a>, e esse é só o começo. Nosso objetivo é maior: digitalizar o varejo, trazendo controle real sobre vendas e recebimentos para cada vez mais negócios, com os mesmos benefícios que já entregamos todos os dias: automação de ponta a ponta, sem fricção, sem trabalho manual repetido.</p>
+    <p class="destaque">Se você chegou até aqui procurando simplificar como sua empresa recebe pagamentos, é exatamente aí que entramos.</p>
   </div>
+  <div class="grid-3" style="margin-top:2.5rem">
+    <div class="card"><span class="eyebrow">Quem assina</span><h3>Fernanda Spahn</h3><p>Consultoria comercial. É quem assina as propostas e acompanha cada cliente até a ativação.</p></div>
+  </div>
+  <p style="margin-top:2rem"><a class="btn btn-primary" href="{FORM}">Quero minha proposta</a></p>
 </div></section>
 </main>
 """
@@ -509,7 +518,7 @@ pages = {
   "index.html": ("Antere", "Consultoria de automação comercial: TEF, link de pagamento, PIX, adquirência e conta digital integrados ao seu sistema de vendas.", "index.html", HOME, HOME_CSS, HOME_JS),
   "como-funciona.html": ("Como funciona · Antere", "Os sete passos da jornada Antere, da captação ao pagamento ativo no caixa.", "como-funciona.html", COMO, "", ""),
   "solucoes.html": ("Soluções · Antere", "Automação comercial, meios de pagamento (TEF e link), banking e adquirência integrados ao seu caixa.", "solucoes.html", SOL, HOME_CSS, ""),
-  "sobre.html": ("Sobre · Antere", "Quem é a Antere e por que somos uma consultoria, não mais um adquirente.", "sobre.html", SOBRE, "", ""),
+  "sobre.html": ("Sobre · Antere", "A Antere é uma consultoria de automação comercial: pagamentos integrados, do caixa ao pagamento, sem trabalho manual.", "sobre.html", SOBRE, "", ""),
   "contato.html": ("Contato · Antere", "Fale com a Antere para dúvidas gerais e parcerias.", "contato.html", CONTATO, "", ""),
 }
 for fn,(t,d,a,b,eh,es) in pages.items():
