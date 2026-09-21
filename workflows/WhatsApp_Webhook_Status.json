@@ -693,7 +693,7 @@
           "value": "whatsapp-recebidas",
           "mode": "name"
         },
-        "text": "=💬 *Mensagem recebida no WhatsApp — parece precisar de resposta humana*\n*Telefone:* {{ $json.telefone }}\n*Texto:* {{ $json.texto }}\n*Lead:* {{ $json.lead_nome || ($json.lead_encontrado ? '(encontrado, sem nome)' : 'não encontrado na base') }}",
+        "text": "={{ $json.prefixo || '' }}💬 *Mensagem recebida no WhatsApp — parece precisar de resposta humana*\n*Telefone:* {{ $json.telefone }}\n*Texto:* {{ $json.texto }}\n*Lead:* {{ $json.lead_nome || ($json.lead_encontrado ? '(encontrado, sem nome)' : 'não encontrado na base') }}",
         "otherOptions": {}
       },
       "type": "n8n-nodes-base.slack",
@@ -720,7 +720,7 @@
           "value": "funil-erros",
           "mode": "name"
         },
-        "text": "=📩 *Registro de mensagem no WhatsApp (Notificações/Disparos)*\n*Telefone:* {{ $json.telefone }}\n*Texto:* {{ $json.texto }}\n*Opt-out detectado:* {{ $json.eh_optout ? 'Sim' : 'Não' }}\n*Ação:* {{ $json.acao }}\n*Lead:* {{ $json.lead_nome || ($json.lead_encontrado ? '(encontrado, sem nome)' : 'não encontrado na base') }}",
+        "text": "={{ $json.prefixo || '' }}📩 *Registro de mensagem no WhatsApp (Notificações/Disparos)*\n*Telefone:* {{ $json.telefone }}\n*Texto:* {{ $json.texto }}\n*Opt-out detectado:* {{ $json.eh_optout ? 'Sim' : 'Não' }}\n*Ação:* {{ $json.acao }}\n*Lead:* {{ $json.lead_nome || ($json.lead_encontrado ? '(encontrado, sem nome)' : 'não encontrado na base') }}",
         "otherOptions": {}
       },
       "type": "n8n-nodes-base.slack",
@@ -771,6 +771,60 @@
       ],
       "id": "wa000000-0000-0000-0000-00000000000c",
       "name": "16z - IF Precisa Resposta Humana"
+    },
+    {
+      "name": "16y - Classifica Urgencia",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1180,
+        80
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "uyJdJRGS2VnVvPQo",
+          "cachedResultName": "Sub_Classificar_Urgencia_WhatsApp"
+        },
+        "mode": "each",
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "texto": "={{ $json.texto }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "texto",
+              "displayName": "texto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0efdb96b-44c4-4d69-81c9-2301cf2fb549"
+    },
+    {
+      "name": "16y2 - Junta Classificacao",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1390,
+        80
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// une o item original da notificacao com a classificacao de urgencia (prefixo vazio quando nao urgente ou em falha)\nconst base = $('13c - Fanout Notificacao').item.json;\nconst c = $json || {};\nreturn { json: { ...base, urgente: !!c.urgente, palavra_urgencia: c.palavra || '', prefixo: c.prefixo || '' } };"
+      },
+      "id": "f31f9546-4e94-46a5-a762-c53bdba6010f"
     }
   ],
   "connections": {
@@ -956,7 +1010,7 @@
       "main": [
         [
           {
-            "node": "16z - IF Precisa Resposta Humana",
+            "node": "16y - Classifica Urgencia",
             "type": "main",
             "index": 0
           }
@@ -975,6 +1029,28 @@
         [
           {
             "node": "16a - Notifica Slack Registro Erros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "16y - Classifica Urgencia": {
+      "main": [
+        [
+          {
+            "node": "16y2 - Junta Classificacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "16y2 - Junta Classificacao": {
+      "main": [
+        [
+          {
+            "node": "16z - IF Precisa Resposta Humana",
             "type": "main",
             "index": 0
           }

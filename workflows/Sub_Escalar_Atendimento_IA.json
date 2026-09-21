@@ -42,7 +42,7 @@
           "mode": "name",
           "value": "whatsapp-recebidas"
         },
-        "text": "=🔺 *Escalonamento — Atendimento IA (WhatsApp +55 11 95503-2670)*\n*Telefone do cliente:* {{ $json.telefone }}\n*Motivo:* {{ $json.motivo }}\n*Resumo da conversa:* {{ $json.resumo || '(sem resumo)' }}\n*Ação:* responder o cliente neste mesmo WhatsApp em horário comercial.",
+        "text": "={{ $json.prefixo || '' }}🔺 *Escalonamento — Atendimento IA (WhatsApp +55 11 95503-2670)*\n*Telefone do cliente:* {{ $json.telefone }}\n*Motivo:* {{ $json.motivo }}\n*Resumo da conversa:* {{ $json.resumo || '(sem resumo)' }}\n*Ação:* responder o cliente neste mesmo WhatsApp em horário comercial.",
         "otherOptions": {}
       },
       "credentials": {
@@ -66,6 +66,60 @@
         "jsCode": "const s=$input.first().json||{}; return [{ json: { ok: !!s.ok, mensagem: s.ok ? 'Equipe comercial avisada no Slack. Diga ao cliente que alguém responde neste WhatsApp em horário comercial.' : 'Não foi possível avisar a equipe agora; peça ao cliente para aguardar e tente de novo.' } }];"
       },
       "id": "272a8771-1ec1-4eca-ad3e-6d0c854355e3"
+    },
+    {
+      "name": "Classifica Urgencia",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        -180
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "uyJdJRGS2VnVvPQo",
+          "cachedResultName": "Sub_Classificar_Urgencia_WhatsApp"
+        },
+        "mode": "each",
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "texto": "={{ ($json.resumo || '') + ' ' + ($json.motivo || '') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "texto",
+              "displayName": "texto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5ba9629b-18b1-49de-ba1e-fa0fe4a0c69d"
+    },
+    {
+      "name": "Junta Classificacao",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        -180
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const base = $('Trigger').item.json;\nconst c = $json || {};\nreturn { json: { ...base, urgente: !!c.urgente, palavra_urgencia: c.palavra || '', prefixo: c.prefixo || '' } };"
+      },
+      "id": "3e0923a1-e3d0-4e80-b2a4-73b95132121e"
     }
   ],
   "connections": {
@@ -73,7 +127,7 @@
       "main": [
         [
           {
-            "node": "Notificar Slack whatsapp-recebidas",
+            "node": "Classifica Urgencia",
             "type": "main",
             "index": 0
           }
@@ -85,6 +139,28 @@
         [
           {
             "node": "Retorna",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classifica Urgencia": {
+      "main": [
+        [
+          {
+            "node": "Junta Classificacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Junta Classificacao": {
+      "main": [
+        [
+          {
+            "node": "Notificar Slack whatsapp-recebidas",
             "type": "main",
             "index": 0
           }
