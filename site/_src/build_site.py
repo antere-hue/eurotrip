@@ -369,23 +369,35 @@ HOME_JS = r"""
 
 # ---------------- COMO FUNCIONA ----------------
 COMO = f"""
+<style>
+.passos{{display:grid;gap:1rem;max-width:760px;counter-reset:p}}
+.passo{{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1.3rem 1.4rem;display:grid;grid-template-columns:44px 1fr;gap:1rem;align-items:start}}
+.passo .n{{counter-increment:p;font-family:var(--font-display);font-weight:700;color:var(--indigo);background:var(--indigo-tint);width:40px;height:40px;border-radius:50%;display:grid;place-items:center}}
+.passo .n::before{{content:counter(p)}}
+.passo h3{{margin-bottom:.35rem}}
+.passo p{{color:var(--ink-2)}}
+.fecho{{margin-top:2.5rem;display:grid;gap:1rem;justify-items:start}}
+</style>
 <main>
 <section><div class="wrap">
   <div class="section-head">
     <span class="eyebrow">Como funciona</span>
-    <h1>Sete passos, todos acompanhados, nenhum manual</h1>
-    <p class="lede">A mesma sequência para cada cliente, em linguagem de quem está do lado do caixa.</p>
+    <h1>Da primeira conversa até sua operação rodando com cartão e PIX integrados</h1>
+    <p class="lede">Sem burocracia, sem retrabalho, sem você precisar acompanhar cada etapa manualmente.</p>
   </div>
-  <div class="grid-3">
-    <div class="card"><h3>1. Você conta sobre o negócio</h3><p>Um formulário de 2 minutos: caixas, soluções de interesse, volume e faixa de faturamento.</p></div>
-    <div class="card"><h3>2. Proposta no seu e-mail</h3><p>PDF com as condições para a sua operação, gerado na hora. Sem esperar retorno.</p></div>
-    <div class="card"><h3>3. Acompanhamento sem pressão</h3><p>Se você ainda não decidiu, seguimos com lembretes curtos, e você pode sair quando quiser.</p></div>
-    <div class="card"><h3>4. Aceite eletrônico</h3><p>Um clique para confirmar a proposta. Você recebe a confirmação e o próximo passo por e-mail.</p></div>
-    <div class="card"><h3>5. Dados de implantação</h3><p>Um formulário guiado explica onde encontrar cada informação da sua empresa e do seu PDV.</p></div>
-    <div class="card"><h3>6. Cadastro e instalação</h3><p>Cuidamos do cadastro nas adquirentes e bancos escolhidos e agendamos a instalação do PINPad.</p></div>
-    <div class="card"><h3>7. Pagamento ativo</h3><p>PIX e cartão rodando no caixa, integrados ao seu sistema. E a gente continua por perto.</p></div>
+  <div class="passos">
+    <div class="passo"><span class="n" aria-hidden="true"></span><div><h3>Você chega até a gente</h3><p>Pelo site, por indicação de um parceiro ou por um contato direto. O primeiro passo é simples: você nos conta um pouco sobre o seu negócio.</p></div></div>
+    <div class="passo"><span class="n" aria-hidden="true"></span><div><h3>Entendemos o seu perfil</h3><p>Analisamos as informações que você compartilhou para já chegar com uma proposta que faz sentido para a realidade da sua empresa, sem processo genérico.</p></div></div>
+    <div class="passo"><span class="n" aria-hidden="true"></span><div><h3>Boas-vindas</h3><p>Você recebe um contato inicial confirmando que estamos com você, com os próximos passos claros.</p></div></div>
+    <div class="passo"><span class="n" aria-hidden="true"></span><div><h3>Sua proposta, personalizada</h3><p>Preparamos uma proposta comercial sob medida, com as condições certas para o seu volume e perfil de negócio. Pronta em minutos, não em dias.</p></div></div>
+    <div class="passo"><span class="n" aria-hidden="true"></span><div><h3>Acompanhamento, sem você precisar cobrar</h3><p>Se surgir qualquer dúvida no caminho, a gente está por perto: lembretes automáticos para você nunca perder o fio da meada, e uma pessoa de verdade disponível sempre que precisar de uma conversa mais próxima.</p></div></div>
+    <div class="passo"><span class="n" aria-hidden="true"></span><div><h3>Conversa e fechamento</h3><p>Quando faz sentido negociar uma condição especial ou tirar uma dúvida mais específica, alguém do nosso time assume a conversa diretamente com você.</p></div></div>
+    <div class="passo"><span class="n" aria-hidden="true"></span><div><h3>Ativação</h3><p>Formalizamos tudo de forma eletrônica, coletamos os dados técnicos necessários e cuidamos da ativação junto aos nossos parceiros de pagamento. No final, você só precisa se preocupar em vender.</p></div></div>
   </div>
-  <div class="note" style="margin-top:2rem"><b>Esqueleto.</b> Textos de cada passo a detalhar com a equipe comercial. A ordem e os nomes seguem o funil que já opera em produção.</div>
+  <div class="fecho">
+    <h2>Pronto para simplificar como sua empresa recebe pagamentos?</h2>
+    <div class="hero-ctas"><a class="btn btn-primary" href="{FORM}">Quero minha proposta</a><a class="btn btn-ghost" href="contato.html">Fale com a gente</a></div>
+  </div>
 </div></section>
 </main>
 """
@@ -516,7 +528,7 @@ f.addEventListener('submit',function(e){{
 
 pages = {
   "index.html": ("Antere", "Consultoria de automação comercial: TEF, link de pagamento, PIX, adquirência e conta digital integrados ao seu sistema de vendas.", "index.html", HOME, HOME_CSS, HOME_JS),
-  "como-funciona.html": ("Como funciona · Antere", "Os sete passos da jornada Antere, da captação ao pagamento ativo no caixa.", "como-funciona.html", COMO, "", ""),
+  "como-funciona.html": ("Como funciona · Antere", "Sete passos da primeira conversa até sua operação rodando com cartão e PIX integrados, sem burocracia e sem retrabalho.", "como-funciona.html", COMO, HOME_CSS, ""),
   "solucoes.html": ("Soluções · Antere", "Automação comercial, meios de pagamento (TEF e link), banking e adquirência integrados ao seu caixa.", "solucoes.html", SOL, HOME_CSS, ""),
   "sobre.html": ("Sobre · Antere", "A Antere é uma consultoria de automação comercial: pagamentos integrados, do caixa ao pagamento, sem trabalho manual.", "sobre.html", SOBRE, "", ""),
   "contato.html": ("Contato · Antere", "Fale com a Antere para dúvidas gerais e parcerias.", "contato.html", CONTATO, "", ""),
