@@ -91,7 +91,7 @@ footer a:hover{text-decoration:underline}
 """
 
 def nav(active):
-    items = [("index.html","Home"),("como-funciona.html","Como funciona"),("solucoes.html","Soluções"),("sobre.html","Sobre"),("contato.html","Contato")]
+    items = [("index.html","Home"),("como-funciona.html","Como funciona"),("solucoes.html","Soluções"),("calculadora.html","Calculadora"),("sobre.html","Sobre"),("contato.html","Contato")]
     links = "".join('<a href="%s"%s>%s</a>' % (h, ' aria-current="page"' if h==active else '', t) for h,t in items)
     return f"""
 <header class="top"><div class="wrap">
@@ -109,6 +109,7 @@ FOOTER = f"""
     <a href="{FORM}">Solicitar proposta</a>
     <a href="como-funciona.html">Como funciona</a>
     <a href="solucoes.html">Soluções</a>
+    <a href="calculadora.html">Calculadora de economia</a>
     <a href="sobre.html">Sobre</a>
     <a href="contato.html">Contato</a>
   </div>
@@ -262,7 +263,7 @@ HOME = f"""
     <p class="lede">TEF, link de pagamento, PIX, adquirência e conta digital integrados ao seu sistema de vendas. Uma operação de pagamentos que acompanha o ritmo do seu negócio, com implantação e suporte de ponta a ponta.</p>
     <div class="hero-ctas">
       <a class="btn btn-primary" href="{FORM}">Quero minha proposta</a>
-      <a class="btn btn-ghost" href="#produtos">Conhecer os produtos</a>
+      <a class="btn btn-ghost" href="calculadora.html">Simule sua economia</a>
     </div>
     <div class="hero-meta"><span>Integração com PDV e ERP</span><span>Multiadquirente</span><span>Acompanhamento técnico</span></div>
   </div>
@@ -339,6 +340,7 @@ HOME = f"""
     <div class="card"><span class="k">min</span><h3>em vez de horas na conciliação</h3><p>Cada venda já nasce casada com o recebível. Você confere, não reconstrói.</p></div>
     <div class="card"><span class="k">1</span><h3>ecossistema para vender e receber</h3><p>PIX, cartão, link de pagamento e conta digital conectados ao mesmo caixa, com um único parceiro acompanhando.</p></div>
   </div>
+  <div class="callout" style="margin-top:1.5rem;display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between"><div><b>Quanto sua empresa pode economizar?</b><span style="display:block">Compare o que paga hoje em débito, crédito, parcelado e PIX com as condições reais C6 Pay.</span></div><a class="btn btn-primary" href="calculadora.html">Simule sua economia</a></div>
 </div></section>
 
 <section class="journey-wrap"><div class="wrap">
@@ -526,11 +528,167 @@ f.addEventListener('submit',function(e){{
 </script>
 """
 
+CALC = f"""
+<style>
+.calc-wrap{{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:clamp(1.5rem,4vw,3rem);align-items:start}}
+.calc-form{{display:grid;gap:1.1rem}}
+.calc-form .card{{gap:.9rem}}
+.calc-form label{{display:grid;gap:.3rem;font-weight:500;font-size:.95rem}}
+.calc-form input{{font:inherit;padding:.7rem .8rem;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);width:100%}}
+.calc-form input:focus{{border-color:var(--indigo)}}
+.row2{{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}}
+.toggle-group{{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}}
+.toggle-opt{{border:2px solid var(--line);border-radius:12px;padding:.8rem;background:var(--surface);cursor:pointer;text-align:center;font:inherit;font-family:var(--font-display);font-weight:600;color:var(--ink-2)}}
+.toggle-opt .desc{{display:block;font-family:var(--font-body);font-weight:400;font-size:.85rem;color:var(--ink-3);margin-top:.15rem}}
+.toggle-opt.active{{border-color:var(--indigo);background:var(--indigo-tint);color:var(--indigo)}}
+.tier-note{{font-size:.92rem;color:var(--petroleo);font-weight:600;min-height:1.4em}}
+.calc-side{{display:grid;gap:1rem;position:sticky;top:90px}}
+.result{{background:var(--indigo);color:var(--on-accent);border-radius:22px;padding:1.5rem;display:grid;gap:1rem}}
+.result .row{{display:grid;grid-template-columns:1fr 1fr;gap:1rem}}
+.result .label{{font-size:.85rem;opacity:.85}}
+.result .value{{font-family:var(--font-display);font-size:1.9rem;font-weight:700;font-variant-numeric:tabular-nums}}
+.result .annual .value{{font-size:1.5rem}}
+.pix-note{{background:var(--ambar-tint);border-left:4px solid var(--ambar);border-radius:8px;padding:.8rem 1rem;font-size:.95rem;color:var(--ink)}}
+.disclaimer{{font-size:.85rem;color:var(--ink-3);line-height:1.5}}
+.calc-side .btn{{width:100%;justify-content:center}}
+#resultado{{display:none;gap:1rem}}
+#resultado.show{{display:grid}}
+@media (max-width:860px){{.calc-wrap{{grid-template-columns:1fr}}.calc-side{{position:static}}.row2{{grid-template-columns:1fr}}}}
+</style>
+<main>
+<section><div class="wrap">
+  <div class="section-head">
+    <span class="eyebrow">Calculadora de economia</span>
+    <h1>Quanto sua empresa pode economizar?</h1>
+    <p class="lede">Compare o que você paga hoje com as condições reais C6 Pay e PIX grátis pela conta C6 Bank. É só uma simulação: nada é enviado.</p>
+  </div>
+  <div class="calc-wrap">
+    <form class="calc-form" id="calc-form" onsubmit="event.preventDefault();calcular();">
+      <div class="card">
+        <h3>Como você prefere receber suas vendas?</h3>
+        <div class="toggle-group" role="radiogroup" aria-label="Modo de recebimento">
+          <button type="button" class="toggle-opt active" id="opt-d1" role="radio" aria-checked="true" onclick="setRecebimento('D1')">D+1 com antecipação<span class="desc">recebe rápido</span></button>
+          <button type="button" class="toggle-opt" id="opt-d31" role="radio" aria-checked="false" onclick="setRecebimento('D31')">D+31 sem antecipação<span class="desc">taxa menor</span></button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Débito</h3>
+        <div class="row2">
+          <label for="fatDebito">Faturamento mensal<input type="text" id="fatDebito" placeholder="R$ 8.000" inputmode="numeric" oninput="atualizarFaixa()"></label>
+          <label for="taxaDebito">Taxa que você paga hoje<input type="text" id="taxaDebito" placeholder="Ex: 1,9%" inputmode="decimal"></label>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Crédito à vista</h3>
+        <div class="row2">
+          <label for="fatCredito">Faturamento mensal<input type="text" id="fatCredito" placeholder="R$ 10.000" inputmode="numeric" oninput="atualizarFaixa()"></label>
+          <label for="taxaCredito">Taxa que você paga hoje<input type="text" id="taxaCredito" placeholder="Ex: 3,5%" inputmode="decimal"></label>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Crédito parcelado (até 6x)</h3>
+        <div class="row2">
+          <label for="fatParcelado">Faturamento mensal<input type="text" id="fatParcelado" placeholder="R$ 4.000" inputmode="numeric" oninput="atualizarFaixa()"></label>
+          <label for="taxaParcelado">Taxa que você paga hoje<input type="text" id="taxaParcelado" placeholder="Ex: 4,5%" inputmode="decimal"></label>
+        </div>
+      </div>
+      <div class="card">
+        <h3>PIX</h3>
+        <div class="row2">
+          <label for="fatPix">Faturamento mensal recebido via PIX<input type="text" id="fatPix" placeholder="R$ 8.000" inputmode="numeric"></label>
+          <label for="taxaPix">Taxa que você paga hoje (se houver)<input type="text" id="taxaPix" placeholder="Ex: 0,99% ou 0" inputmode="decimal"></label>
+        </div>
+      </div>
+      <div class="tier-note" id="tierNote" aria-live="polite"></div>
+      <div><button class="btn btn-primary" type="submit" id="btn-calcular">Calcular minha economia</button></div>
+    </form>
+    <aside class="calc-side">
+      <div id="resultado" aria-live="polite">
+        <div class="result">
+          <div class="row">
+            <div class="stat"><div class="label">Economia mensal estimada</div><div class="value" id="econMensal">R$ 0</div></div>
+            <div class="stat annual"><div class="label">Economia anual estimada</div><div class="value" id="econAnual">R$ 0</div></div>
+          </div>
+        </div>
+        <div class="pix-note" id="pixNote" style="display:none"></div>
+      </div>
+      <a class="btn btn-primary" href="{FORM}">Quero uma proposta personalizada</a>
+      <p class="disclaimer">Simulação com base na tabela oficial de taxas C6 Pay vigente (débito, crédito à vista e parcelado até 6x), com a faixa de taxa aplicada automaticamente conforme seu volume mensal em cartão (até R$ 8 mil, de R$ 8 mil a R$ 30 mil, ou acima de R$ 30 mil). Vendas parceladas de 7 a 12x têm taxa ligeiramente diferente da usada nesta simulação, e o adicional por parcela do recebimento D+1 será detalhado na sua proposta personalizada. PIX recebido via conta C6 Bank tem tarifa zero, dentro da política vigente do C6 Bank para PJ.</p>
+    </aside>
+  </div>
+</div></section>
+</main>
+<script>
+function parseNumero(str) {{
+  if (!str) return 0;
+  let limpo = str.replace(/[R$\\s]/g, '').replace(/\\./g, '').replace(',', '.').replace('%', '');
+  const num = parseFloat(limpo);
+  return isNaN(num) ? 0 : num;
+}}
+const TABELA_C6 = {{
+  D1: {{ ate_8k: {{ debito: 1.07, credito: 3.20, parcelado: 2.59 }}, "8k_30k": {{ debito: 0.82, credito: 2.95, parcelado: 2.14 }}, acima_30k: {{ debito: 0.82, credito: 2.95, parcelado: 2.14 }} }},
+  D31: {{ ate_8k: {{ debito: 1.07, credito: 2.09, parcelado: 2.59 }}, "8k_30k": {{ debito: 0.94, credito: 1.96, parcelado: 2.46 }}, acima_30k: {{ debito: 0.82, credito: 1.84, parcelado: 2.34 }} }}
+}};
+const NOME_FAIXA = {{ ate_8k: "até R$ 8 mil/mês", "8k_30k": "R$ 8 mil a R$ 30 mil/mês", acima_30k: "acima de R$ 30 mil/mês" }};
+let recebimentoAtual = 'D1';
+function setRecebimento(modo) {{
+  recebimentoAtual = modo;
+  document.getElementById('opt-d1').classList.toggle('active', modo === 'D1');
+  document.getElementById('opt-d31').classList.toggle('active', modo === 'D31');
+  document.getElementById('opt-d1').setAttribute('aria-checked', modo === 'D1');
+  document.getElementById('opt-d31').setAttribute('aria-checked', modo === 'D31');
+  atualizarFaixa();
+}}
+function getFaixa(totalCartao) {{
+  if (totalCartao <= 8000) return 'ate_8k';
+  if (totalCartao <= 30000) return '8k_30k';
+  return 'acima_30k';
+}}
+function atualizarFaixa() {{
+  const totalCartao = parseNumero(document.getElementById('fatDebito').value) + parseNumero(document.getElementById('fatCredito').value) + parseNumero(document.getElementById('fatParcelado').value);
+  const faixa = getFaixa(totalCartao);
+  document.getElementById('tierNote').textContent = totalCartao > 0 ? 'Sua faixa de taxa C6 Pay: ' + NOME_FAIXA[faixa] : '';
+}}
+function calcular() {{
+  const fatDebito = parseNumero(document.getElementById('fatDebito').value);
+  const taxaDebitoAtual = parseNumero(document.getElementById('taxaDebito').value);
+  const fatCredito = parseNumero(document.getElementById('fatCredito').value);
+  const taxaCreditoAtual = parseNumero(document.getElementById('taxaCredito').value);
+  const fatParcelado = parseNumero(document.getElementById('fatParcelado').value);
+  const taxaParceladoAtual = parseNumero(document.getElementById('taxaParcelado').value);
+  const fatPix = parseNumero(document.getElementById('fatPix').value);
+  const taxaPixAtual = parseNumero(document.getElementById('taxaPix').value);
+  const totalCartao = fatDebito + fatCredito + fatParcelado;
+  const faixa = getFaixa(totalCartao);
+  const taxasC6 = TABELA_C6[recebimentoAtual][faixa];
+  const custoAtual = (fatDebito * taxaDebitoAtual / 100) + (fatCredito * taxaCreditoAtual / 100) + (fatParcelado * taxaParceladoAtual / 100) + (fatPix * taxaPixAtual / 100);
+  const custoC6 = (fatDebito * taxasC6.debito / 100) + (fatCredito * taxasC6.credito / 100) + (fatParcelado * taxasC6.parcelado / 100) + (fatPix * 0);
+  const economiaMensal = Math.max(0, custoAtual - custoC6);
+  const economiaAnual = economiaMensal * 12;
+  const fmt = (v) => v.toLocaleString('pt-BR', {{ style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }});
+  document.getElementById('econMensal').textContent = fmt(economiaMensal);
+  document.getElementById('econAnual').textContent = fmt(economiaAnual);
+  const pixNoteEl = document.getElementById('pixNote');
+  if (fatPix > 0 && taxaPixAtual > 0) {{
+    const economiaPixMensal = fatPix * taxaPixAtual / 100;
+    pixNoteEl.textContent = 'Só no PIX, você deixaria de pagar ' + fmt(economiaPixMensal) + '/mês em tarifas, porque com a conta C6 Bank o PIX recebido é isento.';
+    pixNoteEl.style.display = 'block';
+  }} else {{
+    pixNoteEl.style.display = 'none';
+  }}
+  document.getElementById('resultado').classList.add('show');
+  if (window.matchMedia('(max-width:860px)').matches) document.getElementById('resultado').scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+}}
+</script>
+"""
+
+
 pages = {
   "index.html": ("Antere", "Consultoria de automação comercial: TEF, link de pagamento, PIX, adquirência e conta digital integrados ao seu sistema de vendas.", "index.html", HOME, HOME_CSS, HOME_JS),
   "como-funciona.html": ("Como funciona · Antere", "Sete passos da primeira conversa até sua operação rodando com cartão e PIX integrados, sem burocracia e sem retrabalho.", "como-funciona.html", COMO, HOME_CSS, ""),
   "solucoes.html": ("Soluções · Antere", "Automação comercial, meios de pagamento (TEF e link), banking e adquirência integrados ao seu caixa.", "solucoes.html", SOL, HOME_CSS, ""),
   "sobre.html": ("Sobre · Antere", "A Antere é uma consultoria de automação comercial: pagamentos integrados, do caixa ao pagamento, sem trabalho manual.", "sobre.html", SOBRE, "", ""),
+  "calculadora.html": ("Calculadora de economia · Antere", "Simule quanto sua empresa economiza com as taxas C6 Pay e PIX grátis pela conta C6 Bank, comparando com o que paga hoje.", "calculadora.html", CALC, "", ""),
   "contato.html": ("Contato · Antere", "Fale com a Antere para dúvidas gerais e parcerias.", "contato.html", CONTATO, "", ""),
 }
 for fn,(t,d,a,b,eh,es) in pages.items():
