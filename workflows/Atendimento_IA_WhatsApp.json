@@ -2,42 +2,35 @@
   "name": "Atendimento_IA_WhatsApp",
   "nodes": [
     {
-      "name": "WhatsApp Inbound - Verificação (GET)",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [
-        0,
-        -200
-      ],
-      "webhookId": "atendimento-ia-inbound-get",
       "parameters": {
         "path": "atendimento-ia-inbound",
         "responseMode": "responseNode",
         "options": {}
       },
+      "name": "WhatsApp Inbound - Verificação (GET)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        -208
+      ],
+      "webhookId": "atendimento-ia-inbound-get",
       "id": "3420bdbc-b8ae-4c82-b5c3-9c58b1e1e4bf"
     },
     {
+      "parameters": {
+        "jsCode": "const EXPECTED_VERIFY_TOKEN = 'hyfo9876';\nconst q = $input.first().json.query || {};\nconst tokenOk = q['hub.verify_token'] === EXPECTED_VERIFY_TOKEN;\nreturn [{ json: { challenge: q['hub.challenge'], tokenOk } }];"
+      },
       "name": "Validar Token e Preparar Challenge",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
         240,
-        -200
+        -208
       ],
-      "parameters": {
-        "jsCode": "const EXPECTED_VERIFY_TOKEN = 'hyfo9876';\nconst q = $input.first().json.query || {};\nconst tokenOk = q['hub.verify_token'] === EXPECTED_VERIFY_TOKEN;\nreturn [{ json: { challenge: q['hub.challenge'], tokenOk } }];"
-      },
       "id": "507035c3-7fd1-49e7-b097-21a4e150700c"
     },
     {
-      "name": "Responder Challenge (Meta)",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [
-        480,
-        -200
-      ],
       "parameters": {
         "respondWith": "text",
         "responseBody": "={{ $json.tokenOk ? $json.challenge : 'token invalido' }}",
@@ -45,46 +38,45 @@
           "responseCode": "={{ $json.tokenOk ? 200 : 403 }}"
         }
       },
+      "name": "Responder Challenge (Meta)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        -208
+      ],
       "id": "a88b3614-e309-4f87-8394-20c8bb376b48"
     },
     {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "atendimento-ia-inbound",
+        "options": {}
+      },
       "name": "WhatsApp Inbound - Mensagens (POST)",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
         0,
-        100
+        112
       ],
       "webhookId": "atendimento-ia-inbound-post",
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "atendimento-ia-inbound",
-        "responseMode": "onReceived",
-        "options": {}
-      },
       "id": "87d92957-b670-442d-acd9-d6f0eeceaa92"
     },
     {
+      "parameters": {
+        "jsCode": "// Formato do webhook da Meta Cloud API. Statuses (sent/delivered/read) chegam no mesmo webhook sem 'messages'.\nconst body = $input.first().json.body || $input.first().json;\nconst value = body?.entry?.[0]?.changes?.[0]?.value;\nconst msg = value?.messages?.[0];\nconst phone = String(msg?.from || '').replace(/\\D/g, '');\nconst text = msg?.text?.body || (msg?.button?.text) || (msg?.interactive?.button_reply?.title) || (msg?.interactive?.list_reply?.title) || '';\nconst pushName = value?.contacts?.[0]?.profile?.name || '';\nconst phoneNumberId = String(value?.metadata?.phone_number_id || '');\nconst isMessage = Boolean(msg) && Boolean(phone);\nconst isText = isMessage && Boolean(text);\nconst modoTeste = phone.startsWith('5500');\nreturn [{ json: { phone, text, pushName, isMessage, isText, modoTeste, phoneNumberId, messageId: msg?.id || '', messageType: msg?.type || '' } }];"
+      },
       "name": "Normalizar Mensagem",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
         240,
-        100
+        112
       ],
-      "parameters": {
-        "jsCode": "// Formato do webhook da Meta Cloud API. Statuses (sent/delivered/read) chegam no mesmo webhook sem 'messages'.\nconst body = $input.first().json.body || $input.first().json;\nconst value = body?.entry?.[0]?.changes?.[0]?.value;\nconst msg = value?.messages?.[0];\nconst phone = String(msg?.from || '').replace(/\\D/g, '');\nconst text = msg?.text?.body || (msg?.button?.text) || (msg?.interactive?.button_reply?.title) || (msg?.interactive?.list_reply?.title) || '';\nconst pushName = value?.contacts?.[0]?.profile?.name || '';\nconst phoneNumberId = String(value?.metadata?.phone_number_id || '');\nconst isMessage = Boolean(msg) && Boolean(phone);\nconst isText = isMessage && Boolean(text);\nconst modoTeste = phone.startsWith('5500');\nreturn [{ json: { phone, text, pushName, isMessage, isText, modoTeste, phoneNumberId, messageId: msg?.id || '', messageType: msg?.type || '' } }];"
-      },
       "id": "5dd8a1bd-b69a-4089-96c4-ee5898e626ba"
     },
     {
-      "name": "IF é mensagem real (não status)",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        480,
-        100
-      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -109,9 +101,19 @@
         },
         "options": {}
       },
+      "name": "IF é mensagem real (não status)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        112
+      ],
       "id": "cc4b4861-2179-474e-94e4-bdb4dff27909"
     },
     {
+      "parameters": {
+        "jsCode": "const j=$input.first().json;\nconst texto = j.isText ? j.text : '[o cliente enviou uma mensagem do tipo ' + (j.messageType||'desconhecido') + ' sem texto; peça para escrever a dúvida em texto]';\nreturn [{ json: { ...j, entrada: '[Cliente: ' + (j.pushName || 'sem nome') + ' | WhatsApp: ' + j.phone + '] ' + texto } }];"
+      },
       "name": "Preparar Entrada do Agente",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -119,78 +121,68 @@
         720,
         0
       ],
-      "parameters": {
-        "jsCode": "const j=$input.first().json;\nconst texto = j.isText ? j.text : '[o cliente enviou uma mensagem do tipo ' + (j.messageType||'desconhecido') + ' sem texto; peça para escrever a dúvida em texto]';\nreturn [{ json: { ...j, entrada: '[Cliente: ' + (j.pushName || 'sem nome') + ' | WhatsApp: ' + j.phone + '] ' + texto } }];"
-      },
       "id": "0dc5fc81-047a-4925-9817-7a6d1b54d673"
     },
     {
-      "name": "AI Agent - Atendimento Antere",
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 1.7,
-      "position": [
-        980,
-        0
-      ],
-      "onError": "continueRegularOutput",
       "parameters": {
         "promptType": "define",
         "text": "={{ $json.entrada }}",
         "options": {
-          "systemMessage": "Você é o assistente comercial da Antere (Antere Tecnologia — automação comercial, do caixa ao pagamento). Atende pelo WhatsApp +55 11 95503-2670, em português do Brasil, com tom cordial, direto e sem jargão. Este é o primeiro contato reativo: a pessoa perguntou algo simples e você responde, qualifica e encaminha.\n\nCada mensagem do cliente chega no formato \"[Cliente: <nome do perfil> | WhatsApp: <número>] <texto>\". O número de WhatsApp entre colchetes é o telefone da conversa; use-o nas ferramentas quando precisar de telefone.\n\n## O que a Antere oferece\n- TEF PayGo: captura de cartão integrada ao sistema de vendas (PDV/ERP), multiadquirente (C6 Pay, Cielo, Rede, Getnet, Stone, PagSeguro, Safra, Bin, Sipag, Vero, Credishop, Ticket Log, Mercado Pago e outros), mais de 1.300 softwares homologados. Elimina digitação de valor, reduz erro de caixa, concilia automaticamente.\n- Gateway e Link de Pagamento: pagamentos online (loja virtual, app, ERP, cobrança), cartão de crédito e débito, voucher, tokenização para recorrência; link enviado por WhatsApp, e-mail, redes sociais ou SMS.\n- C6 Pay (adquirência do C6 Bank): débito a partir de 0,82% e crédito a partir de 1,84% conforme faixa de faturamento; PIX recebido sem tarifa; ativação rápida (vínculo em cerca de 2 minutos no Web Banking do C6, sem envio de dados técnicos); isenção da taxa de implantação do TEF PayGo ao optar por C6 Pay e/ou PIX C6.\n- Conta PJ C6 Bank (fonte: c6bank.com.br/conta-pj): abertura gratuita; PIX grátis e ilimitado; aluguel da maquininha C6 Pay grátis ao concentrar o faturamento; 200 boletos liquidados e 100 TEDs grátis por mês; Tap to Pay (aceitar cartão por aproximação no celular) sem custo; cartão empresarial sem anuidade; gestão pelo app.\n- Parceria PDVet (fonte: pdvet.com.br): sistema de gestão para pet shops e clínicas, 100% no navegador. Planos: Free R$ 0/mês para sempre (50 vendas e 10 agendamentos/mês, 1 loja, terminais ilimitados, caixa com fechamento cego); Básico R$ 20/mês (200 vendas e 30 agendamentos/mês, relatórios e dashboard, lembretes automáticos); Intermediário R$ 75/mês, o mais escolhido (vendas e agendamentos ilimitados, Pix, cartão e boleto, cobrança recorrente); Avançado R$ 150/mês (tudo do Intermediário, NFC-e, integração com TEF, várias unidades). Anual com 15% de desconto, sem fidelidade. A integração TEF só existe no plano Avançado.\n- Servidor e VPN do TEF são inclusos, sem custo adicional. Implantação média de até 10 dias úteis.\n\n## Regras\n1. Você pode citar livremente os valores e benefícios públicos acima (taxas \"a partir de\", PIX grátis, planos do PDVet). Nunca calcule, estime ou prometa o valor final de uma proposta (adesão, mensalidade do TEF, franquia de gateway, taxa exata da faixa do cliente). Quando perguntarem \"quanto fica\", explique que a proposta é personalizada por volume e quantidade de caixas/lojas e ofereça o formulário de proposta.\n2. Nunca invente recurso, prazo, taxa ou condição que não esteja neste prompt. Se não souber, diga que vai confirmar com a equipe e use a ferramenta Escalar_Atendimento com motivo \"pergunta_fora_escopo\".\n3. Responda de forma objetiva: mensagens curtas, uma pergunta por vez, sem parecer formulário. Emojis com moderação.\n4. Ao longo da conversa, quando houver interesse (quer proposta, quer saber \"quanto fica\", quer contratar, quer ser contatado), colete nome completo e e-mail. Se a pessoa não quiser dar o e-mail, aceite só o telefone da conversa. Assim que tiver nome e pelo menos um contato (e-mail ou telefone), chame a ferramenta Criar_Lead_Antere uma única vez, passando exatamente o que o cliente informou e o telefone da conversa em telefone_conversa. Não chame antes de ter o nome.\n5. Depois que a ferramenta confirmar o lead, ofereça o link do formulário de proposta que ela devolve (campo link_proposta) e explique que a proposta em PDF chega por e-mail em instantes após o preenchimento. Se a ferramenta devolver erro, diga o que faltou e continue a conversa.\n6. Se a pessoa pedir para falar com uma pessoa/humano/atendente, ou se você não entender o pedido depois de duas tentativas, ou se for cliente já ativo com problema técnico, chame Escalar_Atendimento (motivos válidos: pedido_humano, pergunta_fora_escopo, falha_entendimento, suporte_tecnico, interesse_confirmado) com um resumo curto da conversa, e avise que alguém da equipe vai responder neste mesmo WhatsApp em horário comercial.\n7. Não peça CNPJ, faturamento ou dados bancários por WhatsApp; isso é coletado no formulário de proposta e no processo de ativação.\n8. Não fale de concorrentes nem de condições de outros bancos além do que está aqui.\n9. Encerre sempre deixando claro o próximo passo (link do formulário, retorno da equipe ou pergunta de qualificação)."
+          "systemMessage": "## Persona e tom\nVocê é o assistente de atendimento da Antere, consultoria de automação comercial para pagamentos. Slogan da marca: \"Automação comercial, do caixa ao pagamento.\" Seu tom é direto, sem jargão técnico desnecessário, focado no resultado prático pra quem está falando com você. Respostas curtas — WhatsApp não é e-mail, ninguém quer ler um parágrafo longo na tela do celular.\n\n## O que a Antere oferece (sua base de conhecimento)\n\n1. Integração de pagamentos (TEF)\nConecta a máquina/sistema do cliente pra aceitar cartão de forma integrada, com qualquer adquirente (Cielo, Rede, Getnet, Stone, PagSeguro, Mercado Pago, Banrisul, e outros — mais de 15 adquirentes homologados).\n\n2. PIX integrado\nRecebimento de PIX direto no sistema do cliente, com C6 Bank, Sicredi, Sicoob, Cielo e outros bancos.\n\n3. Caminho rápido C6 Pay + PIX C6 (o mais indicado quando o cliente não tem preferência definida)\nVantagens reais da conta PJ C6 Bank, direto da fonte oficial (c6bank.com.br/conta-pj):\n* Conta PJ sem mensalidade.\n* Cartão de crédito sem anuidade (sujeito a análise de crédito).\n* PIX grátis e ilimitado — sem limite de quantidade, sem tarifa por transação.\n* Maquininha C6 Pay com aluguel grátis ao concentrar o faturamento na conta C6 Bank.\n* 200 boletos de cobrança grátis por mês, 100 TEDs grátis por mês.\n* Domicílio bancário — dá pra concentrar recebimentos de qualquer maquininha na conta C6, mesmo sem trocar de adquirente agora.\n* Tap to Pay: o próprio celular vira maquininha, sem custo de adesão ou mensalidade.\n\nVocê pode citar esses valores/benefícios livremente — são públicos e vêm direto do C6 Bank. O que você NÃO pode fazer é calcular ou prometer o valor final da proposta personalizada do cliente (isso depende de volume, adquirente e modalidade — direcione pro formulário ou pra calculadora do site).\n\n4. Homologação de software/ERP como software house\nSe o cliente já tem um sistema próprio de frente de loja e quer integrá-lo oficialmente à rede de pagamentos, a Antere cuida do processo de homologação junto aos parceiros (ex.: PayGo).\n\n5. Redes com múltiplas lojas\nA Antere atende desde um único caixa até redes com várias lojas e CNPJs diferentes, com proposta única cobrindo toda a operação.\n\n6. Parceria PDVet (se o cliente perguntar, ou se for um lead vindo do canal do PDVet)\nO PDVet é um sistema de frente de loja focado em petshops (caixa, agenda de banho e tosa, cobrança recorrente) — a Antere é a integradora de TEF para os clientes PDVet que estão no plano Avançado. Se o cliente perguntar sobre o PDVet em si (não sobre a integração de pagamento), explique brevemente e direcione para o site oficial (pdvet.com.br) ou pro contato deles (contato@pdvet.com.br) — você não é o suporte do PDVet, só integra o TEF pra quem já usa o sistema deles.\n* Planos do PDVet, se o cliente perguntar (dado público do site oficial): Free (R$0, até 50 vendas/mês), Básico (R$20/mês), Intermediário (R$75/mês), Avançado (R$150/mês, com nota fiscal e TEF incluso). Se o cliente ainda não está no Avançado e quer TEF, ele precisa migrar de plano dentro do próprio painel do PDVet antes.\n\n## Seu objetivo em toda conversa\n1. Tirar a dúvida da pessoa sobre qualquer um dos produtos acima, de forma objetiva.\n2. Ao longo da conversa, tentar coletar nome, e-mail e telefone — não precisa ser tudo de uma vez nem de forma forçada; peça naturalmente, no contexto.\n3. Assim que tiver informação suficiente pra saber que a pessoa tem interesse real, direcione pro formulário de proposta: `https://raregoat-n8n.cloudfy.live/form/proposta?ref=whatsapp_ia`\n4. Se coletar nome + (e-mail OU telefone), registre o lead usando a ferramenta disponível — não espere ter os 3 dados completos pra registrar.\n\n## O que você NUNCA deve fazer\n* Nunca invente ou calcule o valor final de uma proposta personalizada. Você pode citar benefícios e valores públicos reais (ex.: \"PIX é grátis e ilimitado no C6\", \"o aluguel da maquininha C6 Pay é grátis se concentrar o faturamento lá\") — mas o valor final da mensalidade/adesão do cliente depende de volume e modalidade, e só sai calculado na proposta real. Se quiser dar uma ideia de economia, mencione a calculadora do site (`www.antere.com.br`), mas não declare o número você mesmo.\n* Nunca prometa prazo técnico específico (ex.: \"sua homologação sai em X dias\") — depende do parceiro (PayGo, adquirente, banco), não da Antere.\n* Nunca se apresente como suporte do PDVet — você é da Antere, integradora de pagamento; dúvidas sobre o sistema PDVet em si (caixa, agenda, cobrança recorrente) vão para o contato deles.\n* Nunca continue a conversa indefinidamente sem objetivo — se a pessoa já demonstrou interesse claro e você já tem os dados de contato, direcione pro formulário e encerre com clareza.\n\n## Quando escalar para atendimento humano\n* Se a pessoa pedir explicitamente para falar com uma pessoa.\n* Se a pergunta for sobre uma negociação já em andamento.\n* Se envolver reclamação, problema técnico já em produção, ou qualquer situação fora do escopo de \"tirar dúvida e capturar lead\".\n* Se depois de 2-3 tentativas você não conseguir entender o que a pessoa precisa.\n\n## Exemplo de abertura de conversa\nOi! Aqui é da Antere 👋 A gente ajuda negócios a aceitar cartão e PIX de forma integrada, sem complicação. Me conta rapidinho: você já tem máquina de cartão hoje, ou está começando do zero?\n\n## Notas operacionais (como as ferramentas funcionam neste canal)\n* Cada mensagem do cliente chega no formato \"[Cliente: <nome do perfil> | WhatsApp: <número>] <texto>\". O número entre colchetes é o telefone da conversa; use-o como telefone_conversa nas ferramentas. O nome do perfil não substitui o nome que o cliente informa.\n* Ferramenta Criar_Lead_Antere: chame uma única vez por conversa, assim que tiver nome + (e-mail OU telefone). Passe nome, email (vazio se não informado), telefone (vazio se o cliente não deu outro além do WhatsApp), telefone_conversa (obrigatório) e um resumo curto em interesse. Ela devolve link_proposta já vinculado ao lead; ao direcionar pro formulário depois do registro, prefira esse link ao genérico.\n* Ferramenta Escalar_Atendimento: passe telefone_conversa, motivo (pedido_humano, negociacao_em_andamento, reclamacao_ou_problema_tecnico, pergunta_fora_escopo, falha_entendimento) e um resumo curto. Depois avise que alguém da equipe responde neste mesmo WhatsApp em horário comercial.\n* Se uma ferramenta devolver erro, diga o que faltou e continue a conversa; não repita a chamada com dados inventados."
         }
       },
-      "id": "f754e643-faa4-4fa6-aa4e-27b61e0c1236"
+      "name": "AI Agent - Atendimento Antere",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        992,
+        0
+      ],
+      "id": "f754e643-faa4-4fa6-aa4e-27b61e0c1236",
+      "onError": "continueRegularOutput"
     },
     {
+      "parameters": {
+        "options": {}
+      },
       "name": "Google Gemini Chat Model",
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        900,
-        250
+        912,
+        256
       ],
-      "parameters": {
-        "options": {}
-      },
+      "id": "5878031b-5a26-4e61-a2af-3b9642f841db",
       "credentials": {
         "googlePalmApi": {
           "id": "OEknq8PxQlCzAYw1",
           "name": "Gemini"
         }
-      },
-      "id": "5878031b-5a26-4e61-a2af-3b9642f841db"
+      }
     },
     {
-      "name": "Postgres Chat Memory",
-      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
-      "typeVersion": 1.2,
-      "position": [
-        1060,
-        250
-      ],
       "parameters": {
         "sessionIdType": "customKey",
         "sessionKey": "={{ $('Normalizar Mensagem').item.json.phone }}",
         "tableName": "atendimento_ia_chat_memory",
         "contextWindowLength": 20
       },
+      "name": "Postgres Chat Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.2,
+      "position": [
+        1072,
+        256
+      ],
+      "id": "c970e40b-340c-49d7-963f-7295ba158b59",
       "credentials": {
         "postgres": {
           "id": "ESsOJiJVbTZ5O5Ux",
           "name": "postgres_cloudfy"
         }
-      },
-      "id": "c970e40b-340c-49d7-963f-7295ba158b59"
+      }
     },
     {
-      "name": "Criar_Lead_Antere",
-      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
-      "typeVersion": 2.1,
-      "position": [
-        1220,
-        250
-      ],
       "parameters": {
         "name": "Criar_Lead_Antere",
         "description": "Registra (ou atualiza) o lead no RD Station CRM da Antere com origem 'Lead WhatsApp IA' e devolve o link do formulário de proposta. Chame UMA vez, somente depois de ter o nome completo do cliente e pelo menos um contato (e-mail OU telefone). Passe cada parâmetro exatamente como o cliente informou; se o cliente não deu e-mail, envie email vazio (não invente). telefone_conversa é obrigatório: é o número de WhatsApp desta conversa, informado no início de cada mensagem.",
@@ -267,16 +259,16 @@
           "convertFieldsToString": true
         }
       },
-      "id": "53bc4b27-0931-4b46-abd4-feba9fdf59c4"
-    },
-    {
-      "name": "Escalar_Atendimento",
+      "name": "Criar_Lead_Antere",
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.1,
       "position": [
-        1400,
-        250
+        1232,
+        256
       ],
+      "id": "53bc4b27-0931-4b46-abd4-feba9fdf59c4"
+    },
+    {
       "parameters": {
         "name": "Escalar_Atendimento",
         "description": "Aciona um humano da equipe comercial da Antere (notificação no Slack). Use quando o cliente pedir atendente/pessoa, quando a pergunta estiver fora do escopo, quando não entender o pedido após 2 tentativas, ou quando for cliente ativo com problema técnico. Todos os parâmetros são obrigatórios.",
@@ -291,7 +283,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "telefone": "={{ $fromAI('telefone', 'Número de WhatsApp desta conversa, apenas dígitos com DDI e DDD, copiado do cabeçalho [Cliente: ... | WhatsApp: ...]', 'string') }}",
-            "motivo": "={{ $fromAI('motivo', 'Motivo do escalonamento, exatamente um destes valores: pedido_humano, pergunta_fora_escopo, falha_entendimento, suporte_tecnico, interesse_confirmado', 'string') }}",
+            "motivo": "={{ $fromAI('motivo', 'Motivo do escalonamento, exatamente um destes valores: pedido_humano, negociacao_em_andamento, reclamacao_ou_problema_tecnico, pergunta_fora_escopo, falha_entendimento', 'string') }}",
             "resumo": "={{ $fromAI('resumo', 'Resumo curto (até 300 caracteres) do que o cliente quer e do que já foi respondido', 'string') }}"
           },
           "matchingColumns": [],
@@ -331,29 +323,29 @@
           "convertFieldsToString": true
         }
       },
+      "name": "Escalar_Atendimento",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.1,
+      "position": [
+        1408,
+        256
+      ],
       "id": "cde0fd57-145e-4921-a7cf-bc27861fdd03"
     },
     {
+      "parameters": {
+        "jsCode": "const j=$input.first().json||{}; const norm=$('Normalizar Mensagem').item.json;\nlet out = (typeof j.output === 'string' && j.output.trim()) ? j.output.trim() : '';\nif (!out) out = 'Desculpe, tive um probleminha técnico para responder agora. Pode repetir sua mensagem? Se preferir, nossa equipe responde aqui mesmo em horário comercial.';\nreturn [{ json: { phone: norm.phone, modoTeste: norm.modoTeste, resposta: out, agente_erro: j.error ? String(j.error.message || j.error).slice(0,200) : '' } }];"
+      },
       "name": "Preparar Resposta",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1260,
+        1264,
         0
       ],
-      "parameters": {
-        "jsCode": "const j=$input.first().json||{}; const norm=$('Normalizar Mensagem').item.json;\nlet out = (typeof j.output === 'string' && j.output.trim()) ? j.output.trim() : '';\nif (!out) out = 'Desculpe, tive um probleminha técnico para responder agora. Pode repetir sua mensagem? Se preferir, nossa equipe responde aqui mesmo em horário comercial.';\nreturn [{ json: { phone: norm.phone, modoTeste: norm.modoTeste, resposta: out, agente_erro: j.error ? String(j.error.message || j.error).slice(0,200) : '' } }];"
-      },
       "id": "fd91432a-1bdb-4da5-b91f-52f9e77e95ad"
     },
     {
-      "name": "IF modo teste (5500…)",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        1500,
-        0
-      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -379,17 +371,16 @@
         "looseTypeValidation": true,
         "options": {}
       },
+      "name": "IF modo teste (5500…)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1504,
+        0
+      ],
       "id": "8f0eea21-af6d-4009-af46-12923d1d3df5"
     },
     {
-      "name": "Enviar Resposta WhatsApp (Meta Cloud API)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1760,
-        100
-      ],
-      "onError": "continueRegularOutput",
       "parameters": {
         "method": "POST",
         "url": "https://graph.facebook.com/v21.0/1271767229359186/messages",
@@ -409,34 +400,34 @@
         "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.phone, type: 'text', text: { body: $json.resposta } }) }}",
         "options": {}
       },
+      "name": "Enviar Resposta WhatsApp (Meta Cloud API)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        112
+      ],
+      "id": "ea5f21e8-f678-4aba-89ea-a8905a851362",
       "credentials": {
         "httpHeaderAuth": {
           "id": "NiP693Xn0WiMNm84",
           "name": "Meta_PDVet_Token"
         }
       },
-      "id": "ea5f21e8-f678-4aba-89ea-a8905a851362"
+      "onError": "continueRegularOutput"
     },
     {
+      "parameters": {},
       "name": "Modo teste: não envia",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
         1760,
-        -100
+        -96
       ],
-      "parameters": {},
       "id": "e82036e0-487c-4ac5-ab1e-9d722fe53c59"
     },
     {
-      "name": "Encaminhar Status p/ WhatsApp_Webhook_Status",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        720,
-        300
-      ],
-      "onError": "continueRegularOutput",
       "parameters": {
         "method": "POST",
         "url": "https://raregoat-n8n.cloudfy.live/webhook/whatsapp-status",
@@ -460,7 +451,15 @@
           "timeout": 5000
         }
       },
-      "id": "b219caba-1edd-4524-bbf4-bb9f90abd282"
+      "name": "Encaminhar Status p/ WhatsApp_Webhook_Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        704,
+        368
+      ],
+      "id": "b219caba-1edd-4524-bbf4-bb9f90abd282",
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -624,6 +623,7 @@
   },
   "settings": {
     "executionOrder": "v1",
-    "errorWorkflow": "MAvApEDIanoBGJPE"
+    "errorWorkflow": "MAvApEDIanoBGJPE",
+    "binaryMode": "separate"
   }
 }
