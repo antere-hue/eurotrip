@@ -506,6 +506,77 @@
         }
       },
       "id": "94de90e0-c030-4aca-8a3a-de0ae4bac713"
+    },
+    {
+      "name": "Roteia: é o número de Notificações (WhatsApp_Webhook_Status)?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        950,
+        -30
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "pdvet-roteia-notif",
+              "leftValue": "={{ String($('WhatsApp Inbound - Mensagens (POST)').item.json.body.entry[0].changes[0].value.metadata.phone_number_id || '') }}",
+              "rightValue": "1335430412979767",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "f63d80dc-8306-4ad2-90cc-84ec9164b69b"
+    },
+    {
+      "name": "Encaminhar Mensagem p/ WhatsApp_Webhook_Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        -180
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "parameters": {
+        "method": "POST",
+        "url": "https://raregoat-n8n.cloudfy.live/webhook/whatsapp-status",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Hub-Signature-256",
+              "value": "={{ $('WhatsApp Inbound - Mensagens (POST)').item.json.headers['x-hub-signature-256'] || '' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('WhatsApp Inbound - Mensagens (POST)').item.json.body) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "c0d9982a-4ad9-4e1f-9d70-e7fcb9938369"
     }
   ],
   "connections": {
@@ -670,7 +741,7 @@
         ],
         [
           {
-            "node": "AI Agent - Comercial PDVet",
+            "node": "Roteia: é o número de Notificações (WhatsApp_Webhook_Status)?",
             "type": "main",
             "index": 0
           }
@@ -678,6 +749,35 @@
       ]
     },
     "Encaminhar p/ Atendimento_IA_WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roteia: é o número de Notificações (WhatsApp_Webhook_Status)?": {
+      "main": [
+        [
+          {
+            "node": "Encaminhar Mensagem p/ WhatsApp_Webhook_Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent - Comercial PDVet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Encaminhar Mensagem p/ WhatsApp_Webhook_Status": {
       "main": [
         [
           {
