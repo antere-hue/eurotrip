@@ -207,8 +207,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        304,
-        -16
+        624,
+        224
       ],
       "retryOnFail": false
     },
@@ -329,15 +329,17 @@
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
-        "options": {}
+        "options": {
+          "useAppend": true
+        }
       },
       "id": "41c2bc50-5e24-4adf-9430-d637170ed23d",
       "name": "7 - Grava whatsapp_status",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        544,
-        -16
+        864,
+        224
       ],
       "retryOnFail": true,
       "maxTries": 5,
@@ -347,7 +349,8 @@
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "notes": "21/09/2026: useAppend=true (API values:append, atomica) — corrige corrida entre execucoes simultaneas (sent/delivered do mesmo wamid chegavam com 5ms de diferenca e a 2a sobrescrevia a 1a linha; execs 7856/7857)."
     },
     {
       "parameters": {},
@@ -356,7 +359,7 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        304,
+        320,
         224
       ]
     },
@@ -388,8 +391,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        900,
-        300
+        320,
+        48
       ],
       "id": "wa000000-0000-0000-0000-000000000001",
       "name": "9a - IF Tipo Evento"
@@ -401,8 +404,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1140,
-        460
+        624,
+        32
       ],
       "id": "wa000000-0000-0000-0000-000000000002",
       "name": "10 - Extrai Mensagens Recebidas"
@@ -428,20 +431,21 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        1380,
-        460
+        864,
+        32
       ],
       "id": "wa000000-0000-0000-0000-000000000003",
       "name": "11 - Busca Base Funil",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
       },
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -450,8 +454,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1620,
-        460
+        1120,
+        32
       ],
       "id": "wa000000-0000-0000-0000-000000000004",
       "name": "12 - Processa Optout"
@@ -463,8 +467,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1860,
-        320
+        1360,
+        -192
       ],
       "id": "wa000000-0000-0000-0000-000000000005",
       "name": "13a - Fanout Atualiza Optin"
@@ -533,20 +537,20 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        2100,
-        320
+        1600,
+        -192
       ],
       "id": "wa000000-0000-0000-0000-000000000006",
       "name": "14 - Atualiza Optin Whatsapp",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000
+      }
     },
     {
       "parameters": {
@@ -555,8 +559,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1860,
-        460
+        1360,
+        32
       ],
       "id": "wa000000-0000-0000-0000-000000000007",
       "name": "13b - Fanout Log Mensagens"
@@ -653,20 +657,20 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        2100,
-        460
+        1600,
+        32
       ],
       "id": "wa000000-0000-0000-0000-000000000008",
       "name": "15 - Grava Log Mensagens",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000
+      }
     },
     {
       "parameters": {
@@ -675,8 +679,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1860,
-        600
+        1360,
+        240
       ],
       "id": "wa000000-0000-0000-0000-000000000009",
       "name": "13c - Fanout Notificacao"
@@ -695,18 +699,18 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.3,
       "position": [
-        2100,
-        600
+        1808,
+        112
       ],
       "id": "wa000000-0000-0000-0000-00000000000a",
       "name": "16b - Notifica Slack Whatsapp Recebidas",
+      "webhookId": "fd58e998-5703-4a04-9bfb-e95909e5574c",
       "credentials": {
         "slackApi": {
           "id": "8Qwkl6tupIvuM69K",
           "name": "Slack - Funil Antere"
         }
-      },
-      "webhookId": "fd58e998-5703-4a04-9bfb-e95909e5574c"
+      }
     },
     {
       "parameters": {
@@ -722,18 +726,18 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.3,
       "position": [
-        2340,
-        540
+        1808,
+        352
       ],
       "id": "wa000000-0000-0000-0000-00000000000b",
       "name": "16a - Notifica Slack Registro Erros",
+      "webhookId": "72d0594f-30d6-4bd2-9db4-5a05f831d342",
       "credentials": {
         "slackApi": {
           "id": "8Qwkl6tupIvuM69K",
           "name": "Slack - Funil Antere"
         }
-      },
-      "webhookId": "72d0594f-30d6-4bd2-9db4-5a05f831d342"
+      }
     },
     {
       "parameters": {
@@ -762,8 +766,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        2100,
-        600
+        1600,
+        240
       ],
       "id": "wa000000-0000-0000-0000-00000000000c",
       "name": "16z - IF Precisa Resposta Humana"
@@ -979,6 +983,9 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "errorWorkflow": "MAvApEDIanoBGJPE",
+    "availableInMCP": true
   }
 }
