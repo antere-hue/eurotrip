@@ -240,6 +240,8 @@ HOME_CSS = r"""
 .prod ul{margin:.2rem 0 0;padding:0;list-style:none;display:grid;gap:.35rem}
 .prod li{display:flex;gap:.55rem;align-items:flex-start;font-size:.93rem;color:var(--ink-2)}
 .prod li::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:var(--petroleo);margin-top:.5rem}
+.prod p a{color:var(--indigo);font-weight:600;text-decoration:none}
+.prod p a:hover{text-decoration:underline}
 @media (max-width:860px){.cat{grid-template-columns:1fr}.cat-head{position:static}}
 /* journey compact (rodapé) */
 .journey-wrap{background:var(--surface);border-block:1px solid var(--line)}
@@ -266,7 +268,7 @@ HOME = f"""
   </div>
   <div class="stack" aria-label="Ecossistema Antere: automação comercial, meios de pagamento, banking e adquirência">
     <div class="label">Um ecossistema, três frentes</div>
-    <div class="row"><h3>Automação comercial</h3><div class="chips"><span>Integração PDV / ERP</span><span>Conciliação</span><span>Implantação</span></div></div>
+    <div class="row"><h3>Automação comercial</h3><div class="chips"><span>PDVet (pet shops)</span><span>Integração PDV / ERP</span><span>Conciliação</span><span>Implantação</span></div></div>
     <div class="row alt"><h3>Meios de pagamento</h3><div class="chips"><span>TEF PayGo</span><span>Link de pagamento</span><span>Gateway</span><span>PIX</span></div></div>
     <div class="row"><h3>Banking e adquirência</h3><div class="chips"><span>Conta digital C6 Bank</span><span>C6 Pay</span><span>Multiadquirente</span></div></div>
     <p class="caption">Tudo conectado ao seu caixa, sem redigitação e sem planilha paralela.</p>
@@ -281,8 +283,9 @@ HOME = f"""
   </div>
 
   <div class="cat" id="automacao-comercial">
-    <div class="cat-head"><span class="n">01</span><h3>Automação comercial</h3><p>Soluções que conectam frente de caixa, retaguarda e gestão operacional, para a venda nascer integrada ao pagamento.</p></div>
+    <div class="cat-head"><span class="n">01</span><h3>Automação comercial</h3><p>Sistema de gestão para o balcão, integração com PDV e ERP e conciliação, para a venda nascer integrada ao pagamento.</p></div>
     <div class="prods">
+      <div class="prod hl" id="pdvet"><span class="tag">Sistema de gestão · Pet shops</span><h4>PDVet</h4><p>Caixa, agenda de banho e tosa e cobrança recorrente em um tablet. Revenda e implantação Antere.</p><ul><li>Venda offline: fecha sem internet e sincroniza sozinha</li><li>Caixa com fechamento cego e auditoria de tudo</li><li>Agenda de banho e tosa por profissional, com histórico do pet</li><li>Lembretes automáticos e cobrança recorrente (assinaturas e pacotes)</li><li>Estoque por movimento, venda por peso ou unidade</li><li>NFC-e, integração com TEF e várias unidades na mesma conta</li><li>Roda no navegador do tablet, sem instalar; terminais ilimitados</li></ul><p><a href="https://pdvet.com.br/" target="_blank" rel="noopener">Conhecer o PDVet →</a></p></div>
       <div class="prod"><span class="tag">Integração</span><h4>Integração PDV e ERP</h4><p>O pagamento acontece dentro do seu sistema de vendas.</p><ul><li>Captura TEF integrada ao PDV, sem redigitar valores</li><li>Homologação do seu sistema com as adquirentes</li><li>Retaguarda e fechamento de caixa conectados</li></ul></div>
       <div class="prod"><span class="tag">Gestão</span><h4>Conciliação e recebíveis</h4><p>Cada venda já nasce casada com o recebível.</p><ul><li>Conciliação automática de cartão e PIX</li><li>Agenda de recebíveis por adquirente</li><li>Relatórios para financeiro e gestão</li></ul></div>
       <div class="prod"><span class="tag">Consultoria</span><h4>Diagnóstico e implantação</h4><p>Acompanhamento técnico do desenho à operação.</p><ul><li>Diagnóstico da operação e dos canais de venda</li><li>Escolha de adquirentes e bancos que fazem sentido</li><li>Cadastro, instalação, treinamento e suporte contínuo</li></ul></div>
@@ -399,6 +402,7 @@ SOL = f"""
   <div class="cat" id="automacao-comercial">
     <div class="cat-head"><span class="n">01</span><h3>Automação comercial</h3><p>Frente de caixa, retaguarda e gestão operacional conectados ao pagamento.</p></div>
     <div class="prods">
+      <div class="prod hl" id="pdvet"><span class="tag">Sistema de gestão · Pet shops</span><h4>PDVet</h4><p>Sistema de venda e gestão para pet shops, clínicas e banho e tosa, revendido e implantado pela Antere.</p><ul><li>Venda offline com sincronização automática</li><li>Caixa com fechamento cego e auditoria com autor e data</li><li>Agenda de banho e tosa por profissional, com histórico do pet</li><li>Lembretes automáticos com confirmação pelo link</li><li>Cobrança recorrente: assinatura de banho, ração programada, pacotes</li><li>Controle de estoque por movimento; venda por peso ou unidade</li><li>Relatórios, dashboard e permissões por usuário</li><li>NFC-e, integração com TEF e várias unidades na mesma conta</li><li>Sua marca nas telas; roda no navegador, sem instalação; terminais ilimitados</li></ul><p><a href="https://pdvet.com.br/" target="_blank" rel="noopener">Conhecer o PDVet →</a></p></div>
       <div class="prod"><span class="tag">Integração</span><h4>Integração PDV e ERP</h4><ul><li>Captura TEF dentro do sistema de vendas</li><li>Homologação do seu PDV com as adquirentes</li><li>Retaguarda e fechamento de caixa conectados</li><li>Sem redigitação de valores</li></ul></div>
       <div class="prod"><span class="tag">Gestão</span><h4>Conciliação e recebíveis</h4><ul><li>Conciliação automática de cartão e PIX</li><li>Agenda de recebíveis por adquirente</li><li>Relatórios para financeiro e gestão</li></ul></div>
       <div class="prod"><span class="tag">Consultoria</span><h4>Diagnóstico e implantação</h4><ul><li>Diagnóstico da operação e dos canais de venda</li><li>Escolha de adquirentes e bancos</li><li>Cadastro, instalação, treinamento e suporte contínuo</li></ul></div>
