@@ -1,0 +1,507 @@
+# -*- coding: utf-8 -*-
+import os
+FORM = "https://raregoat-n8n.cloudfy.live/form/proposta?ref=site_institucional"
+SITE = "https://www.antere.com.br"
+CONTATO_WEBHOOK = "https://raregoat-n8n.cloudfy.live/webhook/site-contato"
+
+CSS = r"""
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png"><link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png"><meta name="theme-color" content="#3A34D6">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+:root{
+  --indigo:#3A34D6; --indigo-ink:#2B27A8; --indigo-tint:#EDEBFC; --indigo-soft:#C7C6F5;
+  --petroleo:#12786B; --petroleo-tint:#E4F5F1; --ambar:#D9822B; --ambar-tint:#FBF0E0;
+  --ground:#F7F5F1; --surface:#FFFFFF; --line:#E5E1D8; --ink:#1B1E27; --ink-2:#4A4E5B; --ink-3:#8B8F9C;
+  --on-accent:#F7F5F1;
+  --font-display:'Sora',ui-sans-serif,system-ui,sans-serif; --font-body:'Source Sans 3',ui-sans-serif,system-ui,sans-serif;
+  --radius:14px; --gutter:clamp(16px,4vw,48px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --indigo:#7B76F0; --indigo-ink:#A3A0F5; --indigo-tint:#23244A; --indigo-soft:#3C3A7A;
+  --petroleo:#3FB39F; --petroleo-tint:#123530; --ambar:#E39A4E; --ambar-tint:#3A2A14;
+  --ground:#12131A; --surface:#1C1E2A; --line:#2C2F3E; --ink:#F1EFEA; --ink-2:#C4C6D0; --ink-3:#8B8F9C; --on-accent:#0F1020;
+}}
+:root[data-theme="dark"]{
+  --indigo:#7B76F0; --indigo-ink:#A3A0F5; --indigo-tint:#23244A; --indigo-soft:#3C3A7A;
+  --petroleo:#3FB39F; --petroleo-tint:#123530; --ambar:#E39A4E; --ambar-tint:#3A2A14;
+  --ground:#12131A; --surface:#1C1E2A; --line:#2C2F3E; --ink:#F1EFEA; --ink-2:#C4C6D0; --ink-3:#8B8F9C; --on-accent:#0F1020;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.55}
+h1,h2,h3{font-family:var(--font-display);line-height:1.12;letter-spacing:-0.015em;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,5.2vw,3.4rem);font-weight:700}
+h2{font-size:clamp(1.5rem,3.2vw,2.2rem);font-weight:600}
+h3{font-size:1.15rem;font-weight:600}
+p{margin:0}
+a{color:var(--indigo)}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:var(--gutter)}
+.eyebrow{font-family:var(--font-display);font-size:.78rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--petroleo)}
+.lede{font-size:1.15rem;color:var(--ink-2);max-width:60ch}
+.btn{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--font-display);font-weight:600;font-size:.98rem;padding:.85rem 1.35rem;border-radius:999px;text-decoration:none;border:2px solid transparent;transition:transform .15s ease,background .15s ease}
+.btn:focus-visible,a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--ambar);outline-offset:2px}
+.btn-primary{background:var(--indigo);color:var(--on-accent)}
+.btn-primary:hover{background:var(--indigo-ink);transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--indigo);border-color:var(--indigo-soft)}
+.btn-ghost:hover{background:var(--indigo-tint)}
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--ground) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:1rem;min-height:68px}
+.brand{display:flex;align-items:center;gap:.6rem;text-decoration:none;color:var(--ink)}
+.brand img{display:block;height:38px;width:auto}
+.brand img.logo-dark,.slogan img.logo-dark{display:none}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .brand img.logo-light,:root:not([data-theme="light"]) .slogan img.logo-light{display:none} :root:not([data-theme="light"]) .brand img.logo-dark,:root:not([data-theme="light"]) .slogan img.logo-dark{display:block} }
+:root[data-theme="dark"] .brand img.logo-light,:root[data-theme="dark"] .slogan img.logo-light{display:none}
+:root[data-theme="dark"] .brand img.logo-dark,:root[data-theme="dark"] .slogan img.logo-dark{display:block}
+@media (max-width:480px){ .brand img{height:32px} }
+nav.menu{display:flex;gap:1.3rem;align-items:center}
+nav.menu a{color:var(--ink-2);text-decoration:none;font-weight:500;font-size:.98rem;padding:.3rem 0;border-bottom:2px solid transparent}
+nav.menu a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--indigo)}
+nav.menu a:hover{color:var(--ink)}
+.top .btn{padding:.6rem 1.05rem;font-size:.9rem}
+.menu-toggle{display:none;background:none;border:1px solid var(--line);border-radius:10px;padding:.45rem .6rem;color:var(--ink);font:inherit}
+@media (max-width:760px){
+  nav.menu{display:none;position:absolute;left:0;right:0;top:100%;background:var(--surface);border-bottom:1px solid var(--line);flex-direction:column;align-items:stretch;padding:.5rem var(--gutter) 1rem;gap:.2rem}
+  nav.menu.open{display:flex}
+  nav.menu a{padding:.7rem 0;border-bottom:1px solid var(--line)}
+  .menu-toggle{display:inline-block}
+  .top .btn-primary{display:none}
+}
+/* sections */
+section{padding-block:clamp(3rem,7vw,5.5rem)}
+.section-head{display:grid;gap:.75rem;max-width:64ch;margin-bottom:2.2rem}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.25rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1.5rem;display:grid;gap:.6rem;align-content:start}
+.card h3{color:var(--ink)}
+.card p{color:var(--ink-2)}
+.card .k{font-family:var(--font-display);font-size:1.7rem;font-weight:700;color:var(--indigo);font-variant-numeric:tabular-nums}
+footer{border-top:1px solid var(--line);padding-block:2.5rem;color:var(--ink-3);font-size:.92rem}
+footer .wrap{display:grid;gap:1.2rem}
+footer .slogan img{display:block;height:auto;width:min(100%,360px)}
+footer .cols{display:flex;flex-wrap:wrap;gap:1.5rem 2.5rem}
+footer a{color:var(--ink-2);text-decoration:none}
+footer a:hover{text-decoration:underline}
+.note{display:flex;gap:.6rem;align-items:flex-start;background:var(--ambar-tint);border-left:4px solid var(--ambar);border-radius:8px;padding:.85rem 1rem;color:var(--ink);font-size:.95rem}
+.note b{font-family:var(--font-display);font-weight:600}
+.skeleton{border:2px dashed var(--line);border-radius:var(--radius);padding:1.5rem;color:var(--ink-3);display:grid;gap:.6rem}
+.skeleton .bar{height:12px;border-radius:6px;background:var(--line);width:78%}
+.skeleton .bar.s{width:46%}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+"""
+
+def nav(active):
+    items = [("index.html","Home"),("como-funciona.html","Como funciona"),("solucoes.html","Soluções"),("sobre.html","Sobre"),("contato.html","Contato")]
+    links = "".join('<a href="%s"%s>%s</a>' % (h, ' aria-current="page"' if h==active else '', t) for h,t in items)
+    return f"""
+<header class="top"><div class="wrap">
+  <a class="brand" href="index.html" aria-label="Antere, página inicial"><img class="logo-light" src="assets/logo-h-light.png" alt="Antere" width="560" height="178"><img class="logo-dark" src="assets/logo-h-dark.png" alt="" aria-hidden="true" width="560" height="178"></a>
+  <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="menu">Menu</button>
+  <nav class="menu" id="menu" aria-label="Principal">{links}</nav>
+  <a class="btn btn-primary" href="{FORM}">Quero minha proposta</a>
+</div></header>
+"""
+
+FOOTER = f"""
+<footer><div class="wrap">
+  <div class="slogan"><img class="logo-light" src="assets/logo-slogan-light.png" alt="Antere. Automação comercial, do caixa ao pagamento." width="720" height="186" loading="lazy"><img class="logo-dark" src="assets/logo-slogan-dark.png" alt="" aria-hidden="true" width="720" height="186" loading="lazy"></div>
+  <div class="cols">
+    <a href="{FORM}">Solicitar proposta</a>
+    <a href="como-funciona.html">Como funciona</a>
+    <a href="solucoes.html">Soluções</a>
+    <a href="sobre.html">Sobre</a>
+    <a href="contato.html">Contato</a>
+  </div>
+  <div>Antere Tecnologia (F. de Carvalho Spahn Consultoria em Tecnologia da Informação LTDA). Seus dados são usados exclusivamente para elaborar sua proposta comercial, conforme a LGPD.</div>
+</div></footer>
+<script>
+(function(){{var b=document.getElementById('menu-toggle'),m=document.getElementById('menu');if(!b)return;b.addEventListener('click',function(){{var o=m.classList.toggle('open');b.setAttribute('aria-expanded',o?'true':'false');}});}})();
+</script>
+"""
+
+def page(title, description, active, body, extra_head="", extra_script="", standalone=True):
+    canon = SITE + "/" + ("" if active == "index.html" else active)
+    head = (f"<title>{title}</title>\n<meta name=\"description\" content=\"{description}\">\n"
+            f"<link rel=\"canonical\" href=\"{canon}\">\n"
+            f"<meta property=\"og:type\" content=\"website\"><meta property=\"og:site_name\" content=\"Antere\"><meta property=\"og:locale\" content=\"pt_BR\">\n"
+            f"<meta property=\"og:title\" content=\"{title}\"><meta property=\"og:description\" content=\"{description}\"><meta property=\"og:url\" content=\"{canon}\">\n"
+            f"<meta property=\"og:image\" content=\"{SITE}/assets/og-image.png\"><meta name=\"twitter:card\" content=\"summary_large_image\">\n"
+            + CSS + extra_head)
+    content = head + nav(active) + body + FOOTER + extra_script
+    if standalone:
+        return "<!doctype html>\n<html lang=\"pt-BR\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\">\n" + head + "</head>\n<body>\n" + nav(active) + body + FOOTER + extra_script + "\n</body>\n</html>\n"
+    return content
+
+# ---------------- HOME ----------------
+HOME_CSS = r"""
+<style>
+.hero{padding-block:clamp(2.5rem,6vw,5rem) clamp(2rem,5vw,4rem)}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(2rem,5vw,4.5rem);align-items:center}
+.hero-copy{display:grid;gap:1.3rem}
+.hero-copy h1 em{font-style:normal;color:var(--indigo)}
+.hero-ctas{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
+.hero-meta{display:flex;flex-wrap:wrap;gap:.5rem 1.4rem;color:var(--ink-3);font-size:.92rem}
+.hero-meta span::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--petroleo);margin-right:.5rem;vertical-align:middle}
+@media (max-width:860px){.hero .wrap{grid-template-columns:1fr}}
+/* demo */
+.demo{background:var(--indigo);border-radius:22px;padding:1.4rem;color:var(--on-accent);display:grid;gap:1rem;position:relative;overflow:hidden}
+.demo .steps{display:flex;gap:.4rem}
+.demo .steps span{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.28);position:relative;overflow:hidden}
+.demo .steps span i{position:absolute;inset:0;background:var(--on-accent);transform:scaleX(0);transform-origin:left}
+.demo .steps span.done i{transform:scaleX(1)}
+.demo .steps span.active i{animation:fill 3.6s linear forwards}
+@keyframes fill{to{transform:scaleX(1)}}
+.demo .label{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--font-display);font-size:.85rem;letter-spacing:.06em;text-transform:uppercase;opacity:.85}
+.demo .label b{font-size:1rem;letter-spacing:0;text-transform:none;opacity:1}
+.stage{display:grid}
+.panel{grid-area:1/1;background:var(--surface);color:var(--ink);border-radius:16px;padding:1.2rem;display:grid;gap:.7rem;align-content:start;opacity:0;transform:translateY(10px);transition:opacity .45s ease,transform .45s ease;pointer-events:none}
+.panel.show{opacity:1;transform:none}
+.panel h3{font-size:1rem}
+.field{display:grid;gap:.25rem;font-size:.85rem;color:var(--ink-3)}
+.field div{border:1px solid var(--line);border-radius:8px;padding:.45rem .6rem;color:var(--ink);background:var(--ground);min-height:2.1rem;font-variant-numeric:tabular-nums}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.pdf{border:1px solid var(--line);border-radius:10px;padding:.9rem;display:grid;gap:.4rem;background:var(--ground)}
+.pdf .t{font-family:var(--font-display);font-weight:600}
+.pdf .l{display:flex;justify-content:space-between;font-size:.92rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.pdf .l b{color:var(--ink)}
+.ok{display:flex;align-items:center;gap:.7rem;padding:.7rem .8rem;border-radius:10px;background:var(--petroleo-tint);color:var(--petroleo);font-weight:600}
+.ok i{width:22px;height:22px;border-radius:50%;background:var(--petroleo);display:inline-grid;place-items:center;color:#fff;font-style:normal;font-size:.8rem}
+.chip{display:inline-block;padding:.2rem .6rem;border-radius:999px;background:var(--indigo-tint);color:var(--indigo);font-size:.8rem;font-family:var(--font-display);font-weight:600}
+.demo .caption{font-size:.9rem;opacity:.9}
+/* journey */
+.journey{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;counter-reset:j}
+.journey .j{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1.4rem;display:grid;gap:.5rem;position:relative}
+.journey .j::before{counter-increment:j;content:counter(j);font-family:var(--font-display);font-weight:700;color:var(--indigo);font-size:.9rem;background:var(--indigo-tint);width:28px;height:28px;border-radius:50%;display:grid;place-items:center}
+.journey .j p{color:var(--ink-2)}
+.journey .j .t{font-size:.85rem;color:var(--petroleo);font-weight:600}
+@media (max-width:760px){.journey{grid-template-columns:1fr}}
+/* solutions strip */
+.strip{background:var(--surface);border-block:1px solid var(--line)}
+.strip .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:2.5rem;align-items:center}
+.strip ul{margin:0;padding:0;list-style:none;display:grid;gap:.6rem}
+.strip li{display:flex;gap:.7rem;align-items:flex-start;color:var(--ink-2)}
+.strip li::before{content:"";flex:none;width:9px;height:9px;border-radius:50%;background:var(--petroleo);margin-top:.55rem}
+.fast{border:1px solid var(--indigo-soft);background:var(--indigo-tint);border-radius:var(--radius);padding:1.4rem;display:grid;gap:.6rem}
+.fast .k{font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--indigo);font-variant-numeric:tabular-nums}
+@media (max-width:860px){.strip .wrap{grid-template-columns:1fr}}
+/* topics (atuação integrada) */
+.topics{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem}
+.topics a.card{text-decoration:none;color:inherit;transition:border-color .2s,transform .2s}
+.topics a.card:hover{border-color:var(--indigo-soft);transform:translateY(-2px)}
+.topics .card .go{color:var(--indigo);font-weight:600;font-size:.92rem}
+@media (max-width:760px){.topics{grid-template-columns:1fr}}
+/* feature (solução em destaque) */
+.feature{background:#1B1E27;color:#F1EFEA}
+.feature .wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:clamp(2rem,5vw,4rem);align-items:center}
+.feature .eyebrow{color:#A3A0F5;display:block;margin-bottom:.6rem}
+.feature h2{color:#F1EFEA;margin-bottom:.9rem}
+.feature p{color:#C4C6D0}
+.feature ul{margin:1.2rem 0 0;padding:0;list-style:none;display:grid;gap:.6rem}
+.feature li{display:flex;gap:.7rem;align-items:flex-start;font-weight:600;color:#F1EFEA}
+.feature li::before{content:"";flex:none;width:9px;height:9px;border-radius:50%;background:var(--petroleo);margin-top:.55rem}
+.feature .eco{background:var(--ground);color:var(--ink);border-radius:22px;padding:1.8rem;display:grid;gap:.9rem}
+.feature .eco h3{font-size:1.5rem;font-family:var(--font-display)}
+.feature .eco .pills{display:flex;flex-wrap:wrap;gap:.5rem}
+.feature .eco .pills span{padding:.35rem .75rem;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:.88rem;font-weight:600;color:var(--ink-2)}
+:root[data-theme="dark"] .feature{background:#1C1E2A;border-block:1px solid var(--line)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .feature{background:#1C1E2A;border-block:1px solid var(--line)}}
+@media (max-width:860px){.feature .wrap{grid-template-columns:1fr}}
+/* portfolio */
+.portfolio{display:grid;grid-template-columns:repeat(2,1fr);gap:1.25rem}
+.portfolio a.card{text-decoration:none;color:inherit;transition:border-color .2s,transform .2s}
+.portfolio a.card:hover{border-color:var(--indigo-soft);transform:translateY(-2px)}
+.portfolio .card .eyebrow{color:var(--indigo)}
+.portfolio .card.hl{border-color:var(--indigo);box-shadow:0 0 0 1px var(--indigo)}
+.callout{margin-top:1.25rem;border:1px solid var(--indigo-soft);background:var(--indigo-tint);border-radius:var(--radius);padding:1.2rem 1.4rem;display:grid;gap:.3rem}
+.callout b{font-family:var(--font-display);color:var(--indigo)}
+@media (max-width:760px){.portfolio{grid-template-columns:1fr}}
+/* cta band */
+.band{background:var(--ink);color:var(--ground);border-radius:22px;padding:clamp(1.8rem,4vw,3rem);display:grid;grid-template-columns:1.2fr auto;gap:1.5rem;align-items:center}
+.band h2{color:var(--ground)}
+.band p{color:var(--ink-3)}
+@media (max-width:760px){.band{grid-template-columns:1fr}}
+</style>
+"""
+
+HOME = f"""
+<main>
+<section class="hero"><div class="wrap">
+  <div class="hero-copy">
+    <span class="eyebrow">Consultoria de automação comercial</span>
+    <h1>Automação comercial, <em>do caixa ao pagamento.</em></h1>
+    <p class="lede">TEF, PIX, link de pagamento e conta digital integrados ao seu sistema de vendas. Você conta como é sua operação, recebe a proposta em minutos e a ativação acontece em até 10 dias úteis.</p>
+    <div class="hero-ctas">
+      <a class="btn btn-primary" href="{FORM}">Quero minha proposta personalizada</a>
+      <a class="btn btn-ghost" href="como-funciona.html">Ver como funciona</a>
+    </div>
+    <div class="hero-meta"><span>Leva menos de 2 minutos</span><span>Sem burocracia</span><span>Sem fidelidade</span></div>
+  </div>
+  <div class="demo" aria-label="Demonstração da jornada: captação, proposta e ativação">
+    <div class="steps" id="demo-steps"><span class="active"><i></i></span><span><i></i></span><span><i></i></span></div>
+    <div class="label"><span id="demo-step-name">Captação</span><b id="demo-step-title">Você conta sobre a operação</b></div>
+    <div class="stage">
+      <div class="panel show" data-step="0">
+        <h3>Vamos montar sua proposta</h3>
+        <div class="row2"><div class="field">Razão Social<div>Padaria Pão da Serra Ltda</div></div><div class="field">CNPJ<div>12.345.678/0001-90</div></div></div>
+        <div class="row2"><div class="field">Caixas<div>3</div></div><div class="field">Soluções<div>TEF + PIX C6</div></div></div>
+        <div class="field">Volume mensal no link de pagamento<div>201 a 600 transações</div></div>
+        <span class="chip">Enviado</span>
+      </div>
+      <div class="panel" data-step="1">
+        <h3>Proposta gerada automaticamente</h3>
+        <div class="pdf">
+          <div class="t">Proposta comercial · Pão da Serra</div>
+          <div class="l"><span>Mensalidade TEF (3 caixas)</span><b>R$ 100,00</b></div>
+          <div class="l"><span>Franquia gateway (201 a 600)</span><b>R$ 540,00</b></div>
+          <div class="l"><span>Taxa de adesão</span><b>Isenta com conta C6 Bank</b></div>
+          <div class="l"><span>Validade</span><b>30 dias</b></div>
+        </div>
+        <span class="chip">PDF enviado por e-mail em instantes</span>
+      </div>
+      <div class="panel" data-step="2">
+        <h3>Aceite eletrônico e ativação</h3>
+        <div class="ok"><i>✓</i>Aceite confirmado</div>
+        <div class="ok"><i>✓</i>Dados de implantação recebidos</div>
+        <div class="ok"><i>✓</i>Cadastro nas adquirentes concluído</div>
+        <div class="ok"><i>✓</i>PIX e cartão ativos no caixa</div>
+      </div>
+    </div>
+    <p class="caption" id="demo-caption">Cada etapa acontece sem planilha, sem ligação de cobrança e sem retrabalho.</p>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="section-head">
+    <span class="eyebrow">A jornada</span>
+    <h2>Da primeira conversa ao pagamento ativo no caixa, sem etapa manual</h2>
+    <p class="lede">Três momentos que hoje rodam de forma automática para quem entra pelo nosso funil.</p>
+  </div>
+  <div class="journey">
+    <div class="j"><h3>Captação</h3><p>Você preenche um formulário curto com o que importa: quantos caixas, quais soluções, qual volume. Nada de reunião de descoberta.</p><span class="t">menos de 2 minutos</span></div>
+    <div class="j"><h3>Proposta</h3><p>A proposta em PDF chega no seu e-mail com os valores da sua faixa, sem esperar retorno de vendedor.</p><span class="t">em instantes</span></div>
+    <div class="j"><h3>Ativação</h3><p>Aceite eletrônico, dados de implantação, cadastro na adquirente e ativação no seu PDV, com acompanhamento em cada passo.</p><span class="t">até 10 dias úteis</span></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="section-head">
+    <span class="eyebrow">O que muda no seu dia a dia</span>
+    <h2>Menos erro de caixa, conciliação em minutos, taxas que fazem sentido</h2>
+  </div>
+  <div class="grid-3">
+    <div class="card"><span class="k">0</span><h3>redigitação de valor</h3><p>Com TEF integrado ao sistema de vendas, o valor vai direto para a maquininha. Acaba o erro de digitação no fechamento.</p></div>
+    <div class="card"><span class="k">min</span><h3>em vez de horas na conciliação</h3><p>Cada venda já nasce casada com o recebível. Você confere, não reconstrói.</p></div>
+    <div class="card"><span class="k">R$ 0</span><h3>de taxa no PIX pelo C6 Bank</h3><p>PIX sem taxa, ilimitado, e débito a partir de 0,82% e crédito a partir de 1,84% com a adquirência C6 Pay.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="section-head">
+    <span class="eyebrow">Atuação integrada</span>
+    <h2>Tecnologia de pagamento que acompanha a operação</h2>
+    <p class="lede">Diagnóstico, integração e evolução contínua para canais comerciais que não podem parar.</p>
+  </div>
+  <div class="topics">
+    <a class="card" href="solucoes.html#automacao-comercial"><h3>Automação comercial</h3><p>Soluções que conectam frente de caixa, retaguarda e gestão operacional, sem redigitação de valores.</p><span class="go">Ver detalhes →</span></a>
+    <a class="card" href="solucoes.html#meios-de-pagamento"><h3>Meios de pagamento</h3><p>Uma jornada de pagamento segura, integrada ao PDV e preparada para crescer: TEF, link, PIX e cartão.</p><span class="go">Ver detalhes →</span></a>
+    <a class="card" href="solucoes.html#banking"><h3>Banking e serviços financeiros</h3><p>Conta empresarial, PIX sem taxa e recebíveis na mesma conta, com conciliação em minutos.</p><span class="go">Ver detalhes →</span></a>
+  </div>
+</div></section>
+
+<section class="feature"><div class="wrap">
+  <div>
+    <span class="eyebrow">Solução em destaque</span>
+    <h2>TEF PayGo para uma operação de pagamentos sem atrito</h2>
+    <p>Da venda registrada no PDV à autorização da adquirente, a Antere apoia uma jornada integrada, segura e fluida, sem digitação manual de valores.</p>
+    <ul>
+      <li>Integração com o ecossistema comercial: PDV, ERP e retaguarda</li>
+      <li>Terminais e caixas ilimitados, multibandeira e multiadquirente</li>
+      <li>Acompanhamento técnico de ponta a ponta, da homologação à ativação</li>
+    </ul>
+  </div>
+  <div class="eco">
+    <span class="eyebrow">Ecossistema conectado</span>
+    <h3>Preparado para integrar.</h3>
+    <div class="pills"><span>Windows</span><span>Android</span><span>Linux</span><span>Web / API</span></div>
+    <p style="color:var(--ink-2)">Compatível com os principais sistemas de PDV do mercado. Se o seu ainda não estiver homologado, a homologação faz parte da implantação.</p>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="section-head">
+    <span class="eyebrow">Portfólio</span>
+    <h2>Um ecossistema para vender, receber e controlar</h2>
+    <p class="lede">Soluções modulares para operações presenciais, digitais e bancárias, conectadas ao ritmo do seu negócio.</p>
+  </div>
+  <div class="portfolio">
+    <a class="card hl" href="solucoes.html#tef-paygo"><span class="eyebrow">Plataforma de pagamentos</span><h3>TEF PayGo</h3><p>Captura TEF integrada ao PDV para transações rápidas, conciliação automática e operação multibandeira.</p></a>
+    <a class="card" href="solucoes.html#gateway"><span class="eyebrow">Captura digital</span><h3>Link de pagamento e Gateway</h3><p>Conecte loja virtual, aplicativos, ERPs e plataformas de cobrança às instituições financeiras e adquirentes.</p></a>
+    <a class="card" href="solucoes.html#c6-bank"><span class="eyebrow">Serviços financeiros</span><h3>Soluções bancárias · C6 Bank</h3><p>Conta empresarial, PIX sem taxa, boletos, crédito e APIs para centralizar a gestão financeira do seu negócio.</p></a>
+    <a class="card" href="solucoes.html#c6-pay"><span class="eyebrow">Adquirência</span><h3>C6 Pay</h3><p>Aceite cartão, voucher, aproximação, PIX e link de pagamento com uma experiência completa no ponto de venda.</p></a>
+  </div>
+  <div class="callout"><b>Caminho rápido: C6 Pay + PIX C6</b><span>Optando por C6 Pay e/ou PIX C6, você fica isento da taxa de adesão do TEF PayGo e já pode agendar a instalação do PINPad logo após o cadastro.</span></div>
+  <p style="margin-top:1.6rem"><a class="btn btn-ghost" href="solucoes.html">Conhecer todas as soluções</a></p>
+</div></section>
+
+<section><div class="wrap">
+  <div class="band">
+    <div><h2>Falta pouco para ver sua proposta personalizada</h2><p>Preencha alguns dados sobre a sua operação e receba a proposta automática com as condições ideais para o seu negócio.</p></div>
+    <a class="btn btn-primary" href="{FORM}">Quero minha proposta</a>
+  </div>
+</div></section>
+</main>
+"""
+
+HOME_JS = r"""
+<script>
+(function(){
+  var steps=[['Captação','Você conta sobre a operação','Cada etapa acontece sem planilha, sem ligação de cobrança e sem retrabalho.'],
+             ['Proposta','Valores da sua faixa, sem esperar vendedor','A proposta usa as tabelas reais de TEF, gateway e adquirência.'],
+             ['Ativação','Aceite, cadastro e PIX ativo no caixa','Acompanhamos cada passo até o pagamento rodar no seu PDV.']];
+  var bars=document.querySelectorAll('#demo-steps span'),panels=document.querySelectorAll('.panel');
+  var name=document.getElementById('demo-step-name'),title=document.getElementById('demo-step-title'),cap=document.getElementById('demo-caption');
+  var i=0,reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function show(n){
+    i=n;
+    bars.forEach(function(b,k){b.className=k<n?'done':(k===n?'active':'');});
+    panels.forEach(function(p,k){p.classList.toggle('show',k===n);});
+    name.textContent=steps[n][0];title.textContent=steps[n][1];cap.textContent=steps[n][2];
+  }
+  show(0);
+  if(!reduce){setInterval(function(){show((i+1)%steps.length);},3600);}
+})();
+</script>
+"""
+
+# ---------------- COMO FUNCIONA ----------------
+COMO = f"""
+<main>
+<section><div class="wrap">
+  <div class="section-head">
+    <span class="eyebrow">Como funciona</span>
+    <h1>Sete passos, todos acompanhados, nenhum manual</h1>
+    <p class="lede">A mesma sequência que roda hoje para cada cliente. Em linguagem de quem está do lado do caixa.</p>
+  </div>
+  <div class="grid-3">
+    <div class="card"><h3>1. Você conta sobre o negócio</h3><p>Um formulário de 2 minutos: caixas, soluções de interesse, volume e faixa de faturamento.</p></div>
+    <div class="card"><h3>2. Proposta no seu e-mail</h3><p>PDF com os valores da sua faixa, gerado na hora. Sem esperar retorno.</p></div>
+    <div class="card"><h3>3. Acompanhamento sem pressão</h3><p>Se você ainda não decidiu, seguimos com lembretes curtos, e você pode sair quando quiser.</p></div>
+    <div class="card"><h3>4. Aceite eletrônico</h3><p>Um clique para confirmar a proposta. Você recebe a confirmação e o próximo passo por e-mail.</p></div>
+    <div class="card"><h3>5. Dados de implantação</h3><p>Um formulário guiado explica onde encontrar cada informação da sua empresa e do seu PDV.</p></div>
+    <div class="card"><h3>6. Cadastro e instalação</h3><p>Cuidamos do cadastro nas adquirentes e bancos escolhidos e agendamos a instalação do PINPad.</p></div>
+    <div class="card"><h3>7. Pagamento ativo</h3><p>PIX e cartão rodando no caixa, integrados ao seu sistema. E a gente continua por perto.</p></div>
+  </div>
+  <div class="note" style="margin-top:2rem"><b>Esqueleto.</b> Textos de cada passo a detalhar com a equipe comercial. A ordem e os nomes seguem o funil que já opera em produção.</div>
+</div></section>
+</main>
+"""
+
+SOL = f"""
+<main>
+<section><div class="wrap">
+  <div class="section-head" id="automacao-comercial">
+    <span class="eyebrow">Soluções</span>
+    <h1>O que a Antere integra ao seu caixa</h1>
+    <p class="lede">Benefício primeiro. Detalhe técnico fica para a implantação.</p>
+  </div>
+  <div class="grid-3" id="meios-de-pagamento">
+    <div class="card" id="c6-pay"><span class="eyebrow">Caminho rápido</span><h3>C6 Pay + PIX C6</h3><p>PIX sem taxa e ilimitado, débito a partir de 0,82% e crédito a partir de 1,84%. Isenção da taxa de adesão do TEF PayGo. Instalação do PINPad logo após o cadastro.</p></div>
+    <div class="card" id="tef-paygo"><h3>TEF PayGo</h3><p>Captura integrada ao seu sistema de vendas, com terminais ilimitados e caixas adicionais por um valor fixo mensal.</p></div>
+    <div class="card" id="gateway"><h3>Link de pagamento e gateway</h3><p>Venda fora do balcão com franquia mensal por faixa de transações. Volumes maiores têm condição negociada.</p></div>
+    <div class="card" id="c6-bank"><span id="banking"></span><h3>Conta digital C6 Bank</h3><p>Recebíveis e PIX na mesma conta, com conciliação que sai de horas para minutos.</p></div>
+    <div class="card"><h3>Demais adquirentes e bancos</h3><p>Quando a sua operação já tem parceiros, integramos o que faz sentido em vez de forçar troca.</p></div>
+    <div class="skeleton"><div class="bar"></div><div class="bar s"></div><p>Espaço reservado para comparativo de planos.</p></div>
+  </div>
+  <p style="margin-top:2rem"><a class="btn btn-primary" href="{FORM}">Quero minha proposta</a></p>
+</div></section>
+</main>
+"""
+
+SOBRE = f"""
+<main>
+<section><div class="wrap">
+  <div class="section-head">
+    <span class="eyebrow">Sobre</span>
+    <h1>Uma consultoria, não mais um adquirente</h1>
+    <p class="lede">A Antere nasceu da experiência de implantar pagamentos integrados em pequenas e médias empresas e da constatação de que o problema raramente é a maquininha. É o processo em volta dela.</p>
+  </div>
+  <div class="note"><b>Pendente.</b> A versão pública da história do rebranding ainda precisa ser escrita. O texto acima é provisório e não deve ir ao ar como está.</div>
+  <div class="grid-3" style="margin-top:2rem">
+    <div class="card"><h3>Fernanda Spahn</h3><p>Consultoria comercial. É quem assina as propostas e acompanha cada cliente até a ativação.</p></div>
+    <div class="skeleton"><div class="bar"></div><div class="bar s"></div><p>Espaço para demais integrantes da equipe.</p></div>
+    <div class="skeleton"><div class="bar"></div><div class="bar s"></div><p>Espaço para foto ou marca registrada.</p></div>
+  </div>
+</div></section>
+</main>
+"""
+
+CONTATO = f"""
+<style>
+.form{{display:grid;gap:1rem;max-width:560px}}
+.form label{{display:grid;gap:.3rem;font-weight:500}}
+.form input,.form textarea{{font:inherit;padding:.7rem .8rem;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}}
+.form textarea{{min-height:120px;resize:vertical}}
+.form .hp{{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}}
+.form.sent{{opacity:.6}}
+.contact-grid{{display:grid;grid-template-columns:1.1fr .9fr;gap:2.5rem;align-items:start}}
+@media (max-width:860px){{.contact-grid{{grid-template-columns:1fr}}}}
+</style>
+<main>
+<section><div class="wrap">
+  <div class="section-head">
+    <span class="eyebrow">Contato</span>
+    <h1>Dúvidas gerais? Fale com a gente</h1>
+    <p class="lede">Este formulário é para perguntas e parcerias. Para pedir uma proposta, use o botão "Quero minha proposta": ela chega em minutos.</p>
+  </div>
+  <div class="contact-grid">
+    <form class="form" id="contact-form" novalidate>
+      <label for="c-nome">Nome<input id="c-nome" name="nome" type="text" autocomplete="name" required maxlength="120"></label>
+      <label for="c-email">E-mail<input id="c-email" name="email" type="email" autocomplete="email" required maxlength="160"></label>
+      <label for="c-tel">Telefone (opcional)<input id="c-tel" name="telefone" type="tel" autocomplete="tel" maxlength="40"></label>
+      <label for="c-msg">Mensagem<textarea id="c-msg" name="mensagem" required maxlength="2000"></textarea></label>
+      <label class="hp" aria-hidden="true">Site<input name="website" type="text" tabindex="-1" autocomplete="off"></label>
+      <div><button class="btn btn-primary" type="submit" id="c-btn">Enviar mensagem</button></div>
+      <p id="c-status" role="status" aria-live="polite" style="color:var(--ink-2)"></p>
+    </form>
+    <div style="display:grid;gap:1rem">
+      <div class="card"><h3>WhatsApp comercial</h3><p><a href="https://wa.me/5511993979324">(11) 99397-9324</a></p></div>
+      <div class="card"><h3>E-mail</h3><p><a href="mailto:comercial@antere.com.br">comercial@antere.com.br</a></p></div>
+      <div class="note"><b>Resposta manual.</b> Mensagens enviadas por aqui são registradas e respondidas pela equipe, normalmente em até 1 dia útil.</div>
+    </div>
+  </div>
+</div></section>
+</main>
+<script>
+(function(){{
+var f=document.getElementById('contact-form'),s=document.getElementById('c-status'),b=document.getElementById('c-btn');
+f.addEventListener('submit',function(e){{
+  e.preventDefault();
+  if(!f.checkValidity()){{s.textContent='Preencha nome, e-mail e mensagem para enviar.';return;}}
+  var d={{nome:f.nome.value.trim(),email:f.email.value.trim(),telefone:f.telefone.value.trim(),mensagem:f.mensagem.value.trim(),website:f.website.value}};
+  b.disabled=true;s.textContent='Enviando…';
+  fetch('{CONTATO_WEBHOOK}',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(d)}})
+   .then(function(r){{return r.json().catch(function(){{return {{ok:r.ok}};}});}})
+   .then(function(j){{
+     if(j&&j.ok){{s.textContent='Recebemos sua mensagem. Retornaremos em breve.';f.reset();f.classList.add('sent');}}
+     else{{s.textContent='Não foi possível enviar: '+((j&&j.erros)?j.erros.join(', '):'tente novamente em instantes.');b.disabled=false;}}
+   }})
+   .catch(function(){{s.textContent='Falha de conexão. Tente novamente ou escreva para comercial@antere.com.br.';b.disabled=false;}});
+}});
+}})();
+</script>
+"""
+
+pages = {
+  "index.html": ("Antere", "Site institucional da Antere: consultoria de automação comercial para pagamentos, com captação de leads integrada ao funil.", "index.html", HOME, HOME_CSS, HOME_JS),
+  "como-funciona.html": ("Como funciona · Antere", "Os sete passos da jornada Antere, da captação ao pagamento ativo no caixa.", "como-funciona.html", COMO, "", ""),
+  "solucoes.html": ("Soluções · Antere", "TEF PayGo, link de pagamento, C6 Pay, PIX C6 e conta digital integrados ao seu caixa.", "solucoes.html", SOL, "", ""),
+  "sobre.html": ("Sobre · Antere", "Quem é a Antere e por que somos uma consultoria, não mais um adquirente.", "sobre.html", SOBRE, "", ""),
+  "contato.html": ("Contato · Antere", "Fale com a Antere para dúvidas gerais e parcerias.", "contato.html", CONTATO, "", ""),
+}
+for fn,(t,d,a,b,eh,es) in pages.items():
+    open(fn,"w",encoding="utf-8").write(page(t,d,a,b,eh,es, standalone=(fn!="index.html")))
+    print(fn, os.path.getsize(fn))
+
+open("sitemap.xml","w",encoding="utf-8").write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "".join('  <url><loc>%s/%s</loc><changefreq>monthly</changefreq><priority>%s</priority></url>\n' % (SITE, "" if fn=="index.html" else fn, "1.0" if fn=="index.html" else "0.7") for fn in pages) + '</urlset>\n')
+open("robots.txt","w",encoding="utf-8").write("User-agent: *\nAllow: /\nSitemap: %s/sitemap.xml\n" % SITE)
+print("sitemap.xml, robots.txt")
