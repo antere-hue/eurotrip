@@ -7,57 +7,20 @@
           "interval": [
             {
               "field": "cronExpression",
-              "expression": "0 8 * * *"
+              "expression": "10 8 * * *"
             }
           ]
         }
       },
-      "id": "a3997ad9-9405-4da9-a45d-d63652e098b7",
+      "id": "d4efe5fa-fe01-46f7-9f3a-7416eec8879a",
       "name": "01_schedule_trigger",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        -2416,
-        656
-      ]
-    },
-    {
-      "parameters": {
-        "documentId": {
-          "__rl": true,
-          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
-          "mode": "list",
-          "cachedResultName": "Leads Site",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": 810524007,
-          "mode": "list",
-          "cachedResultName": "base_funil_completo",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007"
-        },
-        "options": {}
-      },
-      "id": "f24f6710-0940-433f-9a9d-c0ef9d7f7015",
-      "name": "02_le_base_funil",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
-      "position": [
-        -2000,
-        656
+        -2912,
+        432
       ],
-      "notesInFlow": true,
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "FxBskF4AkCQnf6JT",
-          "name": "Google Sheets account"
-        }
-      },
-      "notes": "TODO: preencher documentId e credencial do Google Sheets",
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000
+      "notes": "\n21/09/2026: horario escalonado para nao colidir com os demais workflows que leem a planilha no mesmo minuto (cota Sheets 'Read requests per minute'). Antes: {\"interval\": [{\"field\": \"cronExpression\", \"expression\": \"0 8 * * *\"}]}"
     },
     {
       "parameters": {
@@ -77,25 +40,25 @@
         },
         "options": {}
       },
-      "id": "13b7c25b-9d67-4148-932f-75062a9b790b",
+      "id": "d1f65515-500d-43c6-957f-226810200a17",
       "name": "02b_le_email_status",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        -2208,
-        656
+        -2688,
+        432
       ],
       "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
       },
-      "notes": "Lido em paralelo; referenciado dentro do Code node 04 via $('02b_le_email_status').all() -- NAO conectar diretamente ao 04",
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000
+      "notes": "Lido em paralelo; referenciado dentro do Code node 04 via $('02b_le_email_status').all() -- NAO conectar diretamente ao 04"
     },
     {
       "parameters": {
@@ -121,26 +84,26 @@
         },
         "options": {}
       },
-      "id": "e7106057-d58a-4344-bd12-a271021ed6e7",
+      "id": "f5c84197-0f69-4875-bcea-3b9a8d807e35",
       "name": "03_filtra_leads_ativos",
       "type": "n8n-nodes-base.filter",
       "typeVersion": 2.2,
       "position": [
-        -1776,
-        656
+        -528,
+        416
       ]
     },
     {
       "parameters": {
         "jsCode": "// Le status de abertura do e-mail (D0), gravado pelo Resend_Webhook_Status\nconst emailStatus = $('02b_le_email_status').all().map(i => i.json);\n\nconst hoje = new Date();\nhoje.setHours(0,0,0,0);\n\nconst out = [];\n\nfor (const item of $input.all()) {\n  const lead = item.json;\n\n  if (!lead.data_envio_proposta) continue;\n\n  const dataProposta = new Date(lead.data_envio_proposta);\n  dataProposta.setHours(0,0,0,0);\n\n  const diffMs = hoje - dataProposta;\n  const dias_corridos = Math.round(diffMs / (1000 * 60 * 60 * 24));\n\n  const dataValidade = new Date(dataProposta);\n  dataValidade.setDate(dataValidade.getDate() + 30);\n\n  const statusDoLead = emailStatus.filter(e => e.lead_id === lead.lead_id);\n  const d0_aberto = statusDoLead.some(e => e.evento === 'opened');\n\n  out.push({\n    json: {\n      ...lead,\n      dias_corridos,\n      d0_aberto,\n      data_validade: dataValidade.toISOString().split('T')[0]\n    }\n  });\n}\n\nreturn out;"
       },
-      "id": "d0bf6e34-a2f6-4383-b41b-98ca34852659",
+      "id": "e434bfc1-33ea-4223-9103-c96285c6cbf7",
       "name": "04_calcula_dias_corridos",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1536,
-        656
+        -256,
+        416
       ]
     },
     {
@@ -239,13 +202,13 @@
         },
         "options": {}
       },
-      "id": "826971be-b32c-44d0-870b-5170bb4c9244",
+      "id": "2b3cb165-2818-4b1b-bf4c-f1eee875b3a8",
       "name": "05_filtra_dia_gatilho",
       "type": "n8n-nodes-base.filter",
       "typeVersion": 2.2,
       "position": [
-        -1296,
-        656
+        -16,
+        416
       ]
     },
     {
@@ -474,13 +437,13 @@
           "fallbackOutput": "none"
         }
       },
-      "id": "89e6d27e-39ed-42df-adfa-a02c6358180c",
+      "id": "5a27127a-2297-4548-aea3-b313c92d8e44",
       "name": "06_switch_dia",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
       "position": [
-        -704,
-        560
+        704,
+        320
       ]
     },
     {
@@ -1036,25 +999,25 @@
         },
         "options": {}
       },
-      "id": "1aaf1f27-9b2b-470d-9e06-8aea86b7bb4c",
+      "id": "c4612e05-b863-4c10-bbcb-caab09fa44e6",
       "name": "99_atualiza_base_funil",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        896,
-        560
+        4256,
+        416
       ],
       "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
       },
-      "notes": "Todos os ramos convergem aqui. Usa referencia explicita: $('04_calcula_dias_corridos').item.json.lead_id -- NUNCA $json cru, pois quase todo ramo passou por um HTTP Request antes.",
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000
+      "notes": "Todos os ramos convergem aqui. Usa referencia explicita: $('04_calcula_dias_corridos').item.json.lead_id -- NUNCA $json cru, pois quase todo ramo passou por um HTTP Request antes."
     },
     {
       "parameters": {
@@ -1081,12 +1044,12 @@
         },
         "options": {}
       },
-      "id": "62f0f313-115a-4704-8671-57e70436fb11",
+      "id": "fd9a9eea-2cb2-4358-bdb1-5a43b20446de",
       "name": "07_d1_if_optin",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -464,
+        1680,
         -256
       ]
     },
@@ -1101,13 +1064,13 @@
         "jsonBody": "={{ {\n  \"messaging_product\": \"whatsapp\",\n  \"to\": $('04_calcula_dias_corridos').item.json.telefone,\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"confirmacao_envio_proposta\",\n    \"language\": { \"code\": \"pt_BR\" },\n    \"components\": [\n      { \"type\": \"body\", \"parameters\": [\n        { \"type\": \"text\", \"text\": $('04_calcula_dias_corridos').item.json.primeiro_nome }\n      ]},\n      { \"type\": \"button\", \"sub_type\": \"url\", \"index\": \"0\", \"parameters\": [\n        { \"type\": \"text\", \"text\": $('04_calcula_dias_corridos').item.json.link_pdf.replace('https://drive.google.com/file/d/', '') }\n      ]}\n    ]\n  }\n} }}",
         "options": {}
       },
-      "id": "d87236db-8759-4959-9838-65d4983b2ef3",
+      "id": "158dc6de-0358-4ddc-a338-fe262ff032b9",
       "name": "08_d1_whatsapp_confirmacao",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -224,
-        -288
+        2864,
+        -672
       ],
       "notesInFlow": true,
       "credentials": {
@@ -1116,8 +1079,8 @@
           "name": "Header Auth account"
         }
       },
-      "notes": "Template: confirmacao_envio_proposta (Utility, Anexo I.6). D+1, sempre disparada se optin=true.",
-      "onError": "continueErrorOutput"
+      "onError": "continueErrorOutput",
+      "notes": "Template: confirmacao_envio_proposta (Utility, Anexo I.6). D+1, sempre disparada se optin=true."
     },
     {
       "parameters": {
@@ -1144,20 +1107,19 @@
         },
         "options": {}
       },
-      "id": "cb5bb9f6-569e-478a-b7f0-c409ce775b7b",
+      "id": "f4c7923f-fa5c-47ec-8254-89f62606cb5d",
       "name": "09_d3_if_d0_aberto",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -464,
-        16
+        1664,
+        -64
       ]
     },
     {
       "parameters": {
         "method": "POST",
         "url": "https://api.resend.com/emails",
-        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1176,17 +1138,17 @@
         "jsonBody": "={{ {\n  from: \"Fernanda Spahn <comercial@antere.com.br>\",\n  to: [$('04_calcula_dias_corridos').item.json.email],\n  subject: $('04_calcula_dias_corridos').item.json.primeiro_nome + \", o PIX grátis da proposta\",\n  html: `\n    <div style=\"font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #1B1E27;\">\n      <div style=\"background-color: #3A34D6; padding: 32px 24px; text-align: center;\">\n        <h1 style=\"color: #F7F5F1; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;\">Antere</h1>\n        <p style=\"color: #C7C6F5; margin: 8px 0 0; font-size: 13px; letter-spacing: 0.2px;\">Automação comercial, do caixa ao pagamento</p>\n      </div>\n      <div style=\"padding: 32px 24px; background-color: #ffffff;\">\n        <p style=\"font-size: 16px; line-height: 1.6;\">Oi, <strong>${$('04_calcula_dias_corridos').item.json.primeiro_nome}</strong>!</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Rapidinho: um ponto da proposta que vale destacar é o <strong>PIX 100% gratuito</strong> e a <strong>conciliação de caixa automática</strong> — sem precisar fechar o caixa manualmente no fim do dia.</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Costuma ser o que mais economiza tempo do time logo no primeiro mês.</p>\n        <div style=\"text-align: center; margin: 32px 0;\">\n          <a href=\"${$('04_calcula_dias_corridos').item.json.link_pdf}\" style=\"background-color: #3A34D6; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;\">Rever minha proposta</a>\n        </div>\n        <p style=\"font-size: 14px; line-height: 1.6; color: #5B5F6B;\">Faz sentido pro fluxo de vocês? Se sim, é só responder este e-mail que já sigo com os próximos passos.</p>\n        <hr style=\"border: none; border-top: 1px solid #E5E1D8; margin: 24px 0;\">\n        <p style=\"font-size: 14px; line-height: 1.6;\">📱 WhatsApp: <a href=\"https://wa.me/5511993979324\" style=\"color: #12786B;\">(11) 99397-9324</a></p>\n        <p style=\"font-size: 14px; line-height: 1.6; margin-top: 24px;\">Abraço,<br><strong>Fernanda Spahn</strong><br>Consultoria Comercial — Antere</p>\n      </div>\n      <div style=\"background-color: #F7F5F1; padding: 16px 24px; text-align: center;\">\n        <p style=\"font-size: 11px; color: #8B8F9C; margin: 0;\">Antere Tecnologia (F. de Carvalho Spahn Consultoria em Tecnologia da Informação LTDA)</p>\n      </div>\n    </div>\n  `,\n  tags: [\n    { name: \"lead_id\", value: $('04_calcula_dias_corridos').item.json.lead_id || \"sem_lead_id\" }\n  ]\n} }}",
         "options": {}
       },
-      "id": "c5c9a097-9b5b-4162-9375-2ec1498f6492",
+      "id": "383731fd-b3ff-47ce-9159-f34b49565ba4",
       "name": "10_d3_email_reforco",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -224,
-        -96
+        2096,
+        -192
       ],
       "notesInFlow": true,
-      "notes": "E-mail D+3: reforco de beneficio nao destacado antes. Disparado quando D0 FOI aberto.",
-      "onError": "continueErrorOutput"
+      "onError": "continueErrorOutput",
+      "notes": "E-mail D+3: reforco de beneficio nao destacado antes. Disparado quando D0 FOI aberto."
     },
     {
       "parameters": {
@@ -1213,13 +1175,13 @@
         },
         "options": {}
       },
-      "id": "599d1244-e623-4497-865a-0d72da45d7c8",
+      "id": "a6e83563-2695-4382-bd05-b05c0d9bc0d1",
       "name": "11_d3_if_optin",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -224,
-        80
+        2064,
+        112
       ]
     },
     {
@@ -1233,13 +1195,13 @@
         "jsonBody": "={{ {\n  \"messaging_product\": \"whatsapp\",\n  \"to\": $('04_calcula_dias_corridos').item.json.telefone,\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"regua_d3_lembrete_pdf\",\n    \"language\": { \"code\": \"pt_BR\" },\n    \"components\": [\n      {\n        \"type\": \"body\",\n        \"parameters\": [\n          { \"type\": \"text\", \"parameter_name\": \"primeiro_nome\", \"text\": $('04_calcula_dias_corridos').item.json.primeiro_nome }\n        ]\n      },\n      {\n        \"type\": \"button\",\n        \"sub_type\": \"url\",\n        \"index\": \"0\",\n        \"parameters\": [\n          { \"type\": \"text\", \"text\": $('04_calcula_dias_corridos').item.json.link_pdf.replace('https://drive.google.com/file/",
         "options": {}
       },
-      "id": "e9af94aa-4b0d-403a-85f7-a62e431da85a",
+      "id": "66298cca-c1a0-4084-9e17-08774894849d",
       "name": "12_d3_whatsapp_prioritario",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        16,
-        32
+        2624,
+        -128
       ],
       "notesInFlow": true,
       "credentials": {
@@ -1248,14 +1210,13 @@
           "name": "Header Auth account"
         }
       },
-      "notes": "WhatsApp priorizado: D0 nao aberto + optin=true.",
-      "onError": "continueErrorOutput"
+      "onError": "continueErrorOutput",
+      "notes": "WhatsApp priorizado: D0 nao aberto + optin=true."
     },
     {
       "parameters": {
         "method": "POST",
         "url": "https://api.resend.com/emails",
-        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1274,17 +1235,17 @@
         "jsonBody": "={{ {\n  from: \"Fernanda Spahn <comercial@antere.com.br>\",\n  to: [$('04_calcula_dias_corridos').item.json.email],\n  subject: \"Ainda vale a conversa, \" + $('04_calcula_dias_corridos').item.json.primeiro_nome + \"?\",\n  html: `\n    <div style=\"font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #1B1E27;\">\n      <div style=\"background-color: #3A34D6; padding: 32px 24px; text-align: center;\">\n        <h1 style=\"color: #F7F5F1; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;\">Antere</h1>\n        <p style=\"color: #C7C6F5; margin: 8px 0 0; font-size: 13px; letter-spacing: 0.2px;\">Automação comercial, do caixa ao pagamento</p>\n      </div>\n      <div style=\"padding: 32px 24px; background-color: #ffffff;\">\n        <p style=\"font-size: 16px; line-height: 1.6;\">Oi, <strong>${$('04_calcula_dias_corridos').item.json.primeiro_nome}</strong>!</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Não sei se chegou a ver o e-mail com a proposta da Antere — às vezes cai no spam ou passa batido na correria.</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Deixo o link direto aqui, pra garantir:</p>\n        <div style=\"text-align: center; margin: 32px 0;\">\n          <a href=\"${$('04_calcula_dias_corridos').item.json.link_pdf}\" style=\"background-color: #3A34D6; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;\">Ver minha proposta</a>\n        </div>\n        <p style=\"font-size: 14px; line-height: 1.6; color: #5B5F6B;\">Se ainda fizer sentido pro seu negócio, é só responder este e-mail que sigo com você.</p>\n        <hr style=\"border: none; border-top: 1px solid #E5E1D8; margin: 24px 0;\">\n        <p style=\"font-size: 14px; line-height: 1.6;\">📱 WhatsApp: <a href=\"https://wa.me/5511993979324\" style=\"color: #12786B;\">(11) 99397-9324</a></p>\n        <p style=\"font-size: 14px; line-height: 1.6; margin-top: 24px;\">Abraço,<br><strong>Fernanda Spahn</strong><br>Consultoria Comercial — Antere</p>\n      </div>\n      <div style=\"background-color: #F7F5F1; padding: 16px 24px; text-align: center;\">\n        <p style=\"font-size: 11px; color: #8B8F9C; margin: 0;\">Antere Tecnologia (F. de Carvalho Spahn Consultoria em Tecnologia da Informação LTDA)</p>\n      </div>\n    </div>\n  `,\n  tags: [\n    { name: \"lead_id\", value: $('04_calcula_dias_corridos').item.json.lead_id || \"sem_lead_id\" }\n  ]\n} }}",
         "options": {}
       },
-      "id": "9e19133d-5473-463a-a180-c23793aba702",
+      "id": "8534683a-e943-49e0-ab8d-86bb11ce3825",
       "name": "13_d3_email_fallback",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        16,
-        192
+        2608,
+        128
       ],
       "notesInFlow": true,
-      "notes": "Fallback: D0 nao aberto mas sem optin de WhatsApp -> mantem e-mail mesmo assim.",
-      "onError": "continueErrorOutput"
+      "onError": "continueErrorOutput",
+      "notes": "Fallback: D0 nao aberto mas sem optin de WhatsApp -> mantem e-mail mesmo assim."
     },
     {
       "parameters": {
@@ -1311,13 +1272,13 @@
         },
         "options": {}
       },
-      "id": "645cbad0-3184-4a1b-9420-88b74daa632c",
+      "id": "e8152483-1596-4ba4-a4dc-cc6fb09cd0c6",
       "name": "14_d5_if_optin",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -464,
-        256
+        1664,
+        128
       ]
     },
     {
@@ -1331,13 +1292,13 @@
         "jsonBody": "={{ {\n  \"messaging_product\": \"whatsapp\",\n  \"to\": $('04_calcula_dias_corridos').item.json.telefone,\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"regua_d5_duvida_produto\",\n    \"language\": { \"code\": \"pt_BR\" },\n    \"components\": [\n      {\n        \"type\": \"body\",\n        \"parameters\": [\n          { \"type\": \"text\", \"parameter_name\": \"primeiro_nome\", \"text\": $('04_calcula_dias_corridos').item.json.primeiro_nome },\n          { \"type\": \"text\", \"parameter_name\": \"produtos_interesse\", \"text\": $('04_calcula_dias_corridos').item.json.produtos_interesse }\n        ]\n      }\n    ]\n  }\n} }}",
         "options": {}
       },
-      "id": "1428f4fd-5bfd-42e5-845a-8b138a4b76f8",
+      "id": "2ab85ac8-dce4-4dcb-9eba-56871fce830f",
       "name": "15_d5_whatsapp_pergunta",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -224,
-        240
+        2624,
+        336
       ],
       "notesInFlow": true,
       "credentials": {
@@ -1346,14 +1307,13 @@
           "name": "Header Auth account"
         }
       },
-      "notes": "D+5: pergunta objetiva sobre produto de interesse (produtos_contratados).",
-      "onError": "continueErrorOutput"
+      "onError": "continueErrorOutput",
+      "notes": "D+5: pergunta objetiva sobre produto de interesse (produtos_contratados)."
     },
     {
       "parameters": {
         "method": "POST",
         "url": "https://api.resend.com/emails",
-        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1372,17 +1332,17 @@
         "jsonBody": "={{ {\n  from: \"Fernanda Spahn <comercial@antere.com.br>\",\n  to: [$('04_calcula_dias_corridos').item.json.email],\n  subject: \"Proposta válida até \" + $('04_calcula_dias_corridos').item.json.data_validade,\n  html: `\n    <div style=\"font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #1B1E27;\">\n      <div style=\"background-color: #3A34D6; padding: 32px 24px; text-align: center;\">\n        <h1 style=\"color: #F7F5F1; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;\">Antere</h1>\n        <p style=\"color: #C7C6F5; margin: 8px 0 0; font-size: 13px; letter-spacing: 0.2px;\">Automação comercial, do caixa ao pagamento</p>\n      </div>\n      <div style=\"padding: 32px 24px; background-color: #ffffff;\">\n        <p style=\"font-size: 16px; line-height: 1.6;\">Oi, <strong>${$('04_calcula_dias_corridos').item.json.primeiro_nome}</strong>!</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Lembrete rápido: as condições da proposta — taxas e mensalidade fixadas hoje — valem até <strong style=\"color: #D9822B;\">${$('04_calcula_dias_corridos').item.json.data_validade}</strong>.</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Depois disso, preciso recalcular com base na tabela vigente na época.</p>\n        <div style=\"text-align: center; margin: 32px 0;\">\n          <a href=\"${$('04_calcula_dias_corridos').item.json.link_pdf}\" style=\"background-color: #3A34D6; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;\">Rever minha proposta</a>\n        </div>\n        <p style=\"font-size: 14px; line-height: 1.6; color: #5B5F6B;\">Pra garantir as condições atuais, é só responder este e-mail que já sigo com os próximos passos.</p>\n        <hr style=\"border: none; border-top: 1px solid #E5E1D8; margin: 24px 0;\">\n        <p style=\"font-size: 14px; line-height: 1.6;\">📱 WhatsApp: <a href=\"https://wa.me/5511993979324\" style=\"color: #12786B;\">(11) 99397-9324</a></p>\n        <p style=\"font-size: 14px; line-height: 1.6; margin-top: 24px;\">Abraço,<br><strong>Fernanda Spahn</strong><br>Consultoria Comercial — Antere</p>\n      </div>\n      <div style=\"background-color: #F7F5F1; padding: 16px 24px; text-align: center;\">\n        <p style=\"font-size: 11px; color: #8B8F9C; margin: 0;\">Antere Tecnologia (F. de Carvalho Spahn Consultoria em Tecnologia da Informação LTDA)</p>\n      </div>\n    </div>\n  `,\n  tags: [\n    { name: \"lead_id\", value: $('04_calcula_dias_corridos').item.json.lead_id || \"sem_lead_id\" }\n  ]\n} }}",
         "options": {}
       },
-      "id": "a2ccd7dd-e944-4855-bdce-c6b909bddf95",
+      "id": "8b94d4f3-5990-46bc-878d-b01e560d66ad",
       "name": "16_d8_email_urgencia",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -464,
-        512
+        1664,
+        384
       ],
       "notesInFlow": true,
-      "notes": "D+8: urgencia real -- validade da proposta (data_proposta + 30 dias). Sempre disparado.",
-      "onError": "continueErrorOutput"
+      "onError": "continueErrorOutput",
+      "notes": "D+8: urgencia real -- validade da proposta (data_proposta + 30 dias). Sempre disparado."
     },
     {
       "parameters": {
@@ -1409,13 +1369,13 @@
         },
         "options": {}
       },
-      "id": "5798a275-aeaf-4088-b534-e26ccfbae12a",
+      "id": "f88ec372-e8b6-4f17-bd1c-02414b5cee1e",
       "name": "17_d12_if_optin",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -464,
-        752
+        1664,
+        624
       ]
     },
     {
@@ -1429,13 +1389,13 @@
         "jsonBody": "={{ {\n  \"messaging_product\": \"whatsapp\",\n  \"to\": $('04_calcula_dias_corridos').item.json.telefone,\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"regua_d12_prova_social\",\n    \"language\": { \"code\": \"pt_BR\" },\n    \"components\": [\n      {\n        \"type\": \"body\",\n        \"parameters\": [\n          { \"type\": \"text\", \"parameter_name\": \"primeiro_nome\", \"text\": $('04_calcula_dias_corridos').item.json.primeiro_nome },\n          { \"type\": \"text\", \"parameter_name\": \"data_validade\", \"text\": $('04_calcula_dias_corridos').item.json.data_validade }\n        ]\n      }\n    ]\n  }\n} }}",
         "options": {}
       },
-      "id": "8bee28a4-38eb-40c0-93ce-05c6a7a37051",
+      "id": "ab92729c-0dfa-4bfd-ae88-7a7ccf134492",
       "name": "18_d12_whatsapp_prova_social",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -224,
-        720
+        3216,
+        -304
       ],
       "notesInFlow": true,
       "credentials": {
@@ -1444,8 +1404,8 @@
           "name": "Header Auth account"
         }
       },
-      "notes": "D+12: prova social leve (caso de uso do setor do lead).",
-      "onError": "continueErrorOutput"
+      "onError": "continueErrorOutput",
+      "notes": "D+12: prova social leve (caso de uso do setor do lead)."
     },
     {
       "parameters": {
@@ -1472,20 +1432,19 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "053e3ec3-d131-4f86-9cbf-295f5924d584",
+      "id": "36822005-050b-40f8-a90f-b83ad3e50f0a",
       "name": "19_d16_if_isencao",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -464,
-        1008
+        1664,
+        880
       ]
     },
     {
       "parameters": {
         "method": "POST",
         "url": "https://api.resend.com/emails",
-        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1504,17 +1463,17 @@
         "jsonBody": "={{ {\n  from: \"Fernanda Spahn <comercial@antere.com.br>\",\n  to: [$('04_calcula_dias_corridos').item.json.email],\n  subject: \"Isenção da taxa de implantação, \" + $('04_calcula_dias_corridos').item.json.primeiro_nome,\n  html: `\n    <div style=\"font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #1B1E27;\">\n      <div style=\"background-color: #3A34D6; padding: 32px 24px; text-align: center;\">\n        <h1 style=\"color: #F7F5F1; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;\">Antere</h1>\n        <p style=\"color: #C7C6F5; margin: 8px 0 0; font-size: 13px; letter-spacing: 0.2px;\">Automação comercial, do caixa ao pagamento</p>\n      </div>\n      <div style=\"padding: 32px 24px; background-color: #ffffff;\">\n        <p style=\"font-size: 16px; line-height: 1.6;\">Oi, <strong>${$('04_calcula_dias_corridos').item.json.primeiro_nome}</strong>!</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Um detalhe que pode ajudar a fechar a conta: abrindo uma <strong>conta digital C6 Bank</strong> e direcionando os recebíveis pra lá, a <strong style=\"color: #D9822B;\">taxa de implantação (R$ 200) sai isenta</strong>.</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">É simples de configurar e reduz o investimento inicial.</p>\n        <div style=\"text-align: center; margin: 32px 0;\">\n          <a href=\"${$('04_calcula_dias_corridos').item.json.link_pdf}\" style=\"background-color: #3A34D6; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;\">Rever minha proposta</a>\n        </div>\n        <p style=\"font-size: 14px; line-height: 1.6; color: #5B5F6B;\">Quer que eu te explique como funciona esse passo? É só responder este e-mail.</p>\n        <hr style=\"border: none; border-top: 1px solid #E5E1D8; margin: 24px 0;\">\n        <p style=\"font-size: 14px; line-height: 1.6;\">📱 WhatsApp: <a href=\"https://wa.me/5511993979324\" style=\"color: #12786B;\">(11) 99397-9324</a></p>\n        <p style=\"font-size: 14px; line-height: 1.6; margin-top: 24px;\">Abraço,<br><strong>Fernanda Spahn</strong><br>Consultoria Comercial — Antere</p>\n      </div>\n      <div style=\"background-color: #F7F5F1; padding: 16px 24px; text-align: center;\">\n        <p style=\"font-size: 11px; color: #8B8F9C; margin: 0;\">Antere Tecnologia (F. de Carvalho Spahn Consultoria em Tecnologia da Informação LTDA)</p>\n      </div>\n    </div>\n  `,\n  tags: [\n    { name: \"lead_id\", value: $('04_calcula_dias_corridos').item.json.lead_id || \"sem_lead_id\" }\n  ]\n} }}",
         "options": {}
       },
-      "id": "639d05c1-81c0-4d59-be62-03462e0bf14c",
+      "id": "16edc8e6-db43-4b7d-a35c-094644ea5181",
       "name": "20_d16_email_isencao",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -224,
-        912
+        2608,
+        864
       ],
       "notesInFlow": true,
-      "notes": "D+16: reforco da isencao da taxa de implantacao. So dispara se isencao != Sim.",
-      "onError": "continueErrorOutput"
+      "onError": "continueErrorOutput",
+      "notes": "D+16: reforco da isencao da taxa de implantacao. So dispara se isencao != Sim."
     },
     {
       "parameters": {
@@ -1541,13 +1500,13 @@
         },
         "options": {}
       },
-      "id": "7c1b5bef-ae4d-4edb-a9b8-d52db3fce602",
+      "id": "285bf4d3-153b-4293-a3f9-32d744ff20f2",
       "name": "21_d20_if_optin",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -464,
-        1264
+        1664,
+        1136
       ]
     },
     {
@@ -1561,13 +1520,13 @@
         "jsonBody": "={{ {\n  \"messaging_product\": \"whatsapp\",\n  \"to\": $('04_calcula_dias_corridos').item.json.telefone,\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"regua_d20_ultima_tentativa\",\n    \"language\": { \"code\": \"pt_BR\" },\n    \"components\": [\n      {\n        \"type\": \"body\",\n        \"parameters\": [\n          { \"type\": \"text\", \"parameter_name\": \"primeiro_nome\", \"text\": $('04_calcula_dias_corridos').item.json.primeiro_nome }\n        ]\n      }\n    ]\n  }\n} }}",
         "options": {}
       },
-      "id": "d6fbde1b-a49d-4fda-9832-2ad96a552dd7",
+      "id": "024291e5-f1b4-41f5-a096-baa4c407abb0",
       "name": "22_d20_whatsapp_ultima_tentativa",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -224,
-        1216
+        3952,
+        640
       ],
       "notesInFlow": true,
       "credentials": {
@@ -1576,14 +1535,13 @@
           "name": "Header Auth account"
         }
       },
-      "notes": "D+20: ultima tentativa automatizada + CTA de agendamento.",
-      "onError": "continueErrorOutput"
+      "onError": "continueErrorOutput",
+      "notes": "D+20: ultima tentativa automatizada + CTA de agendamento."
     },
     {
       "parameters": {
         "method": "POST",
         "url": "https://api.resend.com/emails",
-        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1602,17 +1560,17 @@
         "jsonBody": "={{ {\n  from: \"Fernanda Spahn <comercial@antere.com.br>\",\n  to: [$('04_calcula_dias_corridos').item.json.email],\n  subject: \"Faltam 5 dias, \" + $('04_calcula_dias_corridos').item.json.primeiro_nome,\n  html: `\n    <div style=\"font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #1B1E27;\">\n      <div style=\"background-color: #3A34D6; padding: 32px 24px; text-align: center;\">\n        <h1 style=\"color: #F7F5F1; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;\">Antere</h1>\n        <p style=\"color: #C7C6F5; margin: 8px 0 0; font-size: 13px; letter-spacing: 0.2px;\">Automação comercial, do caixa ao pagamento</p>\n      </div>\n      <div style=\"padding: 32px 24px; background-color: #ffffff;\">\n        <p style=\"font-size: 16px; line-height: 1.6;\">Oi, <strong>${$('04_calcula_dias_corridos').item.json.primeiro_nome}</strong>!</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Sua proposta da Antere expira em <strong style=\"color: #D9822B;\">5 dias</strong> (${$('04_calcula_dias_corridos').item.json.data_validade}).</p>\n        <div style=\"text-align: center; margin: 32px 0;\">\n          <a href=\"${$('04_calcula_dias_corridos').item.json.link_pdf}\" style=\"background-color: #3A34D6; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;\">Rever minha proposta</a>\n        </div>\n        <p style=\"font-size: 14px; line-height: 1.6; color: #5B5F6B;\">Se quiser seguir com as condições atuais ou tiver qualquer dúvida de última hora, me chama por aqui que resolvemos rápido.</p>\n        <hr style=\"border: none; border-top: 1px solid #E5E1D8; margin: 24px 0;\">\n        <p style=\"font-size: 14px; line-height: 1.6;\">📱 WhatsApp: <a href=\"https://wa.me/5511993979324\" style=\"color: #12786B;\">(11) 99397-9324</a></p>\n        <p style=\"font-size: 14px; line-height: 1.6; margin-top: 24px;\">Abraço,<br><strong>Fernanda Spahn</strong><br>Consultoria Comercial — Antere</p>\n      </div>\n      <div style=\"background-color: #F7F5F1; padding: 16px 24px; text-align: center;\">\n        <p style=\"font-size: 11px; color: #8B8F9C; margin: 0;\">Antere Tecnologia (F. de Carvalho Spahn Consultoria em Tecnologia da Informação LTDA)</p>\n      </div>\n    </div>\n  `,\n  tags: [\n    { name: \"lead_id\", value: $('04_calcula_dias_corridos').item.json.lead_id || \"sem_lead_id\" }\n  ]\n} }}",
         "options": {}
       },
-      "id": "28787b37-0499-4c11-b848-be9c71007063",
+      "id": "73ad99f3-da6d-4499-b016-3273b35d130c",
       "name": "23_d25_email_expiracao",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -464,
-        1504
+        1664,
+        1376
       ],
       "notesInFlow": true,
-      "notes": "D+25: aviso de expiracao proxima (faltam 5 dias).",
-      "onError": "continueErrorOutput"
+      "onError": "continueErrorOutput",
+      "notes": "D+25: aviso de expiracao proxima (faltam 5 dias)."
     },
     {
       "parameters": {
@@ -1638,13 +1596,13 @@
         },
         "options": {}
       },
-      "id": "2da7b375-2ba6-43a0-a44d-c1d40d8d044b",
+      "id": "6292ec40-1b98-4ab4-82dc-0920e4811320",
       "name": "24_d30_if_escalona",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -464,
-        1760
+        1664,
+        1632
       ]
     },
     {
@@ -2203,20 +2161,20 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        240,
-        1584
+        2368,
+        1456
       ],
-      "id": "ea700610-b923-4c5a-bf47-51be9b504223",
+      "id": "01dd9054-987a-498e-b98d-078f73230717",
       "name": "26_d30_atualiza_status_escalonado",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000
+      }
     },
     {
       "parameters": {
@@ -2774,20 +2732,20 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -256,
-        1856
+        1872,
+        1728
       ],
-      "id": "e871e572-e145-4e30-b18d-b5231d12f940",
+      "id": "9a244604-091f-4fb6-a75f-de8dbba5e455",
       "name": "27_d30_atualiza_status_perdido",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000
+      }
     },
     {
       "parameters": {
@@ -2818,20 +2776,20 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -240,
-        1584
+        1888,
+        1456
       ],
-      "id": "684093e8-c0f7-48ae-966c-39090ab56a84",
+      "id": "b8966d33-f432-403e-8109-a0c4e7ffdf30",
       "name": "25a_token_rdstation",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000
+      }
     },
     {
       "parameters": {
@@ -2858,38 +2816,39 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        0,
-        1584
+        2128,
+        1456
       ],
-      "id": "0ee37978-1404-4383-9a30-c409a36980e8",
-      "name": "25b_cria_tarefa_rdstation"
+      "id": "0fc26c52-43f4-4de4-b33a-e8b920ad0fa3",
+      "name": "25b_cria_tarefa_rdstation",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
-        "batchSize": 1,
         "options": {}
       },
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        -992,
-        656
+        240,
+        416
       ],
-      "id": "21ef6ff8-cf57-4d9f-8b41-2a4be11d5ea9",
+      "id": "78dc6a75-488e-4a52-a5cb-7da9962dbaa1",
       "name": "Loop Over Items"
     },
     {
       "parameters": {
-        "amount": 4,
-        "unit": "seconds"
+        "amount": 4
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        560,
-        1584
+        2832,
+        1456
       ],
-      "id": "wt-throttle-0000-0000-000000000001",
+      "id": "ee5ba0f6-0f27-44b6-9f73-8481eb1b1d15",
       "name": "wait_throttle_4s",
       "webhookId": "46c7bb9d-ad67-463f-8a14-95e3a43fe960"
     },
@@ -2922,20 +2881,20 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        -848,
-        656
+        496,
+        432
       ],
-      "id": "rk000000-0000-0000-0000-000000000004",
+      "id": "eb3b505f-b2c9-40d9-abc3-245809ab6c18",
       "name": "busca_token_resend",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000
+      }
     },
     {
       "parameters": {
@@ -2966,20 +2925,20 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        -1856,
-        -424
+        1872,
+        -656
       ],
-      "id": "rc-d1-0000-0000-000000000001",
+      "id": "1511216b-f7f8-4276-b7f3-56dcb2fdeddb",
       "name": "releitura_optin_d1",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000
+      }
     },
     {
       "parameters": {
@@ -2988,10 +2947,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1676,
-        -364
+        2096,
+        -656
       ],
-      "id": "rc-d1-0000-0000-000000000002",
+      "id": "e0d125df-75f4-4202-92c5-a940b4137cb9",
       "name": "normaliza_releitura_d1"
     },
     {
@@ -3022,10 +2981,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -1496,
-        -364
+        2320,
+        -656
       ],
-      "id": "rc-d1-0000-0000-000000000003",
+      "id": "ebbe0d97-bfd1-4440-b2ee-95970f40a9e6",
       "name": "if_optin_ainda_valido_d1"
     },
     {
@@ -3057,20 +3016,20 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        -1216,
-        -520
+        2320,
+        -48
       ],
-      "id": "rc-d3-0000-0000-000000000001",
+      "id": "9010007f-9236-4cd6-bd0d-2e36b9a56b81",
       "name": "releitura_optin_d3",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000
+      }
     },
     {
       "parameters": {
@@ -3079,10 +3038,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1036,
-        -460
+        832,
+        -592
       ],
-      "id": "rc-d3-0000-0000-000000000002",
+      "id": "d82a62dc-e3de-46ba-9147-9e070017d150",
       "name": "normaliza_releitura_d3"
     },
     {
@@ -3113,10 +3072,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -856,
-        -460
+        1280,
+        -592
       ],
-      "id": "rc-d3-0000-0000-000000000003",
+      "id": "e2e00409-b2ba-4d8f-81fd-c9c85261a092",
       "name": "if_optin_ainda_valido_d3"
     },
     {
@@ -3148,20 +3107,20 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        -576,
-        -296
+        1888,
+        -448
       ],
-      "id": "rc-d5-0000-0000-000000000001",
+      "id": "a4946658-7a09-4b57-a613-65a617db357d",
       "name": "releitura_optin_d5",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000
+      }
     },
     {
       "parameters": {
@@ -3170,10 +3129,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -396,
-        -236
+        2096,
+        -448
       ],
-      "id": "rc-d5-0000-0000-000000000002",
+      "id": "2f996077-e85d-4ec6-8f7b-48c5c72e4e41",
       "name": "normaliza_releitura_d5"
     },
     {
@@ -3204,10 +3163,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -216,
-        -236
+        2320,
+        -464
       ],
-      "id": "rc-d5-0000-0000-000000000003",
+      "id": "fd6bc0d6-6b5c-4802-a76b-cd76250092ca",
       "name": "if_optin_ainda_valido_d5"
     },
     {
@@ -3239,20 +3198,20 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        64,
-        -40
+        2320,
+        -288
       ],
-      "id": "rc-d12-0000-0000-000000000001",
+      "id": "e4cc3414-4327-460d-8348-84e6c4d42d65",
       "name": "releitura_optin_d12",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000
+      }
     },
     {
       "parameters": {
@@ -3261,10 +3220,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        244,
-        20
+        2624,
+        -288
       ],
-      "id": "rc-d12-0000-0000-000000000002",
+      "id": "5e2d8f22-12f4-46f7-adf1-112ef299d6f8",
       "name": "normaliza_releitura_d12"
     },
     {
@@ -3295,10 +3254,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        424,
-        20
+        2880,
+        -288
       ],
-      "id": "rc-d12-0000-0000-000000000003",
+      "id": "1927a065-a03e-4f62-abf8-f1cc260b0874",
       "name": "if_optin_ainda_valido_d12"
     },
     {
@@ -3330,20 +3289,20 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        704,
-        280
+        3024,
+        416
       ],
-      "id": "rc-d20-0000-0000-000000000001",
+      "id": "396ee3ea-2a8a-4244-8890-25e56759eb0c",
       "name": "releitura_optin_d20",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000
+      }
     },
     {
       "parameters": {
@@ -3352,10 +3311,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        884,
-        340
+        3248,
+        416
       ],
-      "id": "rc-d20-0000-0000-000000000002",
+      "id": "dbe786c2-8ec5-4356-b5bb-2b5aaaabbb01",
       "name": "normaliza_releitura_d20"
     },
     {
@@ -3386,10 +3345,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1064,
-        340
+        3520,
+        416
       ],
-      "id": "rc-d20-0000-0000-000000000003",
+      "id": "510b549f-1362-4c96-af1b-2d556aaa9dd0",
       "name": "if_optin_ainda_valido_d20"
     },
     {
@@ -3399,10 +3358,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1000,
-        1856
+        992,
+        1728
       ],
-      "id": "e2000000-0000-0000-0000-000000000001",
+      "id": "adc83665-3ce3-4f2e-8eb4-74b146501f67",
       "name": "prepara_erro_envio_regua",
       "notes": "Fan-in dos outputs de erro dos 10 nos de envio (onError=continueErrorOutput). $prevNode.name identifica dinamicamente qual no falhou."
     },
@@ -3479,15 +3438,613 @@
           "waitForSubWorkflow": true
         }
       },
-      "id": "e2000000-0000-0000-0000-000000000002",
+      "id": "e3f33080-f5d9-49c5-81b6-1f658dd5b88c",
       "name": "notifica_mission_control_regua",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        -780,
-        1856
+        1360,
+        1728
       ],
       "notes": "Chama Mission_Control_Error_Handler para registrar o erro (log_erros_producao + notificacao) e depois segue para 99_atualiza_base_funil para o loop continuar no proximo item."
+    },
+    {
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo!A1:AY1",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "valueRenderOption",
+              "value": "UNFORMATTED_VALUE"
+            },
+            {
+              "name": "dateTimeRenderOption",
+              "value": "FORMATTED_STRING"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2256,
+        432
+      ],
+      "id": "5a30689d-61ed-4aa0-ab66-a0cd2b3147af",
+      "name": "busca_cabecalho_base_funil",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo!A2:AY21",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "valueRenderOption",
+              "value": "UNFORMATTED_VALUE"
+            },
+            {
+              "name": "dateTimeRenderOption",
+              "value": "FORMATTED_STRING"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2032,
+        432
+      ],
+      "id": "fc34b4f4-364b-41c8-a28b-045c8a06e008",
+      "name": "lote1_le_base_funil",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const headerRow = $('busca_cabecalho_base_funil').item.json.values[0];\nconst raw = ($('lote1_le_base_funil').item.json.values) || [];\nreturn raw.map(row => {\n  const obj = {};\n  headerRow.forEach((h, i) => { obj[h] = row[i] !== undefined ? row[i] : ''; });\n  return { json: obj };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1472,
+        -16
+      ],
+      "id": "b5eb3ca4-ae9f-4e66-a3f6-9cfb0188394c",
+      "name": "zip_lote1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-gate_lote2",
+              "leftValue": "={{ ($('lote1_le_base_funil').item.json.values || []).length }}",
+              "rightValue": 20,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1760,
+        432
+      ],
+      "id": "c54f2128-cf53-46af-b411-e5e21c5eafcf",
+      "name": "gate_lote2"
+    },
+    {
+      "parameters": {
+        "amount": 2.5
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1488,
+        416
+      ],
+      "id": "a2ac90b4-4a73-405e-b87d-f0393772f8df",
+      "name": "wait_entre_lotes_1",
+      "webhookId": "39fa3db0-a012-4780-a338-79541cb5f73c"
+    },
+    {
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo!A22:AY41",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "valueRenderOption",
+              "value": "UNFORMATTED_VALUE"
+            },
+            {
+              "name": "dateTimeRenderOption",
+              "value": "FORMATTED_STRING"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1216,
+        416
+      ],
+      "id": "b1945e4f-0201-415e-bd41-99ca81561e29",
+      "name": "lote2_le_base_funil",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const headerRow = $('busca_cabecalho_base_funil').item.json.values[0];\nconst raw = ($('lote2_le_base_funil').item.json.values) || [];\nreturn raw.map(row => {\n  const obj = {};\n  headerRow.forEach((h, i) => { obj[h] = row[i] !== undefined ? row[i] : ''; });\n  return { json: obj };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -912,
+        416
+      ],
+      "id": "f47ea219-1abf-44fe-86bc-9345d5abf46d",
+      "name": "zip_lote2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-gate_lote3",
+              "leftValue": "={{ ($('lote2_le_base_funil').item.json.values || []).length }}",
+              "rightValue": 20,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -928,
+        688
+      ],
+      "id": "3299d2f0-89da-4f23-9cc8-8c2ddf7cc55d",
+      "name": "gate_lote3"
+    },
+    {
+      "parameters": {
+        "amount": 2.5
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -528,
+        672
+      ],
+      "id": "9ca88325-c363-4216-920e-f32d5357bf04",
+      "name": "wait_entre_lotes_2",
+      "webhookId": "659832b1-45a3-499e-97cd-25944b7c1a30"
+    },
+    {
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo!A42:AY61",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "valueRenderOption",
+              "value": "UNFORMATTED_VALUE"
+            },
+            {
+              "name": "dateTimeRenderOption",
+              "value": "FORMATTED_STRING"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -736,
+        1104
+      ],
+      "id": "3a0a4105-2ad3-4e60-8e15-4fb79dd08dd5",
+      "name": "lote3_le_base_funil",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const headerRow = $('busca_cabecalho_base_funil').item.json.values[0];\nconst raw = ($('lote3_le_base_funil').item.json.values) || [];\nreturn raw.map(row => {\n  const obj = {};\n  headerRow.forEach((h, i) => { obj[h] = row[i] !== undefined ? row[i] : ''; });\n  return { json: obj };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1296,
+        1072
+      ],
+      "id": "c2c3fd88-6903-4c5f-97f0-c151341468f3",
+      "name": "zip_lote3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-gate_lote4",
+              "leftValue": "={{ ($('lote3_le_base_funil').item.json.values || []).length }}",
+              "rightValue": 20,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        1104
+      ],
+      "id": "8ffb125b-2aca-40e2-8d11-4c63977f4d01",
+      "name": "gate_lote4"
+    },
+    {
+      "parameters": {
+        "amount": 2.5
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        1088
+      ],
+      "id": "1086154c-0a4f-4cc7-99f6-0525377459dd",
+      "name": "wait_entre_lotes_3",
+      "webhookId": "121298cb-b660-42c7-b92a-8cc98ebb1133"
+    },
+    {
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo!A62:AY81",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "valueRenderOption",
+              "value": "UNFORMATTED_VALUE"
+            },
+            {
+              "name": "dateTimeRenderOption",
+              "value": "FORMATTED_STRING"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        336,
+        1088
+      ],
+      "id": "05e739d6-8209-4255-96a6-f33cbc47bee4",
+      "name": "lote4_le_base_funil",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const headerRow = $('busca_cabecalho_base_funil').item.json.values[0];\nconst raw = ($('lote4_le_base_funil').item.json.values) || [];\nreturn raw.map(row => {\n  const obj = {};\n  headerRow.forEach((h, i) => { obj[h] = row[i] !== undefined ? row[i] : ''; });\n  return { json: obj };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        1088
+      ],
+      "id": "739e0a6e-33ea-477e-a0dc-37b78a12a75c",
+      "name": "zip_lote4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-gate_lote5",
+              "leftValue": "={{ ($('lote4_le_base_funil').item.json.values || []).length }}",
+              "rightValue": 20,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        688,
+        1408
+      ],
+      "id": "d3cf2e29-36e8-47de-9455-ed957d040e9f",
+      "name": "gate_lote5"
+    },
+    {
+      "parameters": {
+        "amount": 2.5
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -208,
+        1344
+      ],
+      "id": "b1c4e00d-1bdb-4ae3-a7f2-ae1967c973fb",
+      "name": "wait_entre_lotes_4",
+      "webhookId": "3fd9d9ec-bbc7-474a-b08c-8f71e0221f6b"
+    },
+    {
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo!A82:AY101",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "valueRenderOption",
+              "value": "UNFORMATTED_VALUE"
+            },
+            {
+              "name": "dateTimeRenderOption",
+              "value": "FORMATTED_STRING"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -960,
+        -208
+      ],
+      "id": "0e5f7c81-6ee4-479b-b240-70f928c866b3",
+      "name": "lote5_le_base_funil",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const headerRow = $('busca_cabecalho_base_funil').item.json.values[0];\nconst raw = ($('lote5_le_base_funil').item.json.values) || [];\nreturn raw.map(row => {\n  const obj = {};\n  headerRow.forEach((h, i) => { obj[h] = row[i] !== undefined ? row[i] : ''; });\n  return { json: obj };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        80
+      ],
+      "id": "ebd747b7-f89f-47d8-a4f0-4767469fce40",
+      "name": "zip_lote5"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 02b_le_email_status devolve 1 item POR LINHA da aba email_status (hoje ~100+, crescendo\n// diariamente). busca_cabecalho_base_funil e a cadeia de lotes abaixo devem rodar UMA VEZ\n// so por execucao, nao uma vez por linha de email_status - reduz para 1 item de gatilho aqui.\nreturn [{ json: { trigger: true } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2480,
+        432
+      ],
+      "id": "reduz-email-status-1-item-000001",
+      "name": "reduz_email_status_para_1_item"
+    },
+    {
+      "id": "e3496e4f-b9ad-4397-93ca-5a1ad4989caa",
+      "name": "SYNC_BE_04_le_lead_id",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2368,
+        1676
+      ],
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo!A:A",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "b345d10c-9d13-48de-a7e7-06df614f2d21",
+      "name": "SYNC_BE_04_calcula_linha",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2588,
+        1676
+      ],
+      "parameters": {
+        "jsCode": "// Sincronizacao aditiva V/BE (22/09/2026): status_funil esta duplicado no cabecalho\n// (colunas V e BE). Todo no de escrita por nome grava em V (primeira ocorrencia);\n// todo consumidor le por BE (ultima ocorrencia, ver diagnostico da Parte B). Este bloco\n// replica o MESMO valor que '26_d30_atualiza_status_escalonado' acabou de gravar em V, tambem na coluna BE,\n// pela linha exata do lead_id (por posicao, nunca por nome, para nao colidir com a duplicidade).\nconst leadId = String($('26_d30_atualiza_status_escalonado').item.json.lead_id || '');\nconst statusFunil = $('26_d30_atualiza_status_escalonado').item.json.status_funil;\nconst values = $json.values || [];\nlet row = -1;\nfor (let i = 0; i < values.length; i++) {\n  if (String((values[i] || [])[0] || '') === leadId) { row = i + 1; break; }\n}\nif (!leadId || statusFunil === undefined || statusFunil === null || row <= 0) return [];\nreturn [{ json: { lead_id: leadId, status_funil: statusFunil, row } }];"
+      }
+    },
+    {
+      "id": "95c113bc-2a1f-47b2-9425-eacb2f98dc24",
+      "name": "SYNC_BE_04_grava_be",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2808,
+        1676
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo!BE{{ $json.row }}?valueInputOption=RAW",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: [[ $json.status_funil ]] }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "14f67e0c-f6d2-4b10-9018-03d2e280efda",
+      "name": "SYNC_BE_05_le_lead_id",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1872,
+        1948
+      ],
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo!A:A",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "436a92bd-ea7e-4e98-a1b5-3c5ec1336fc0",
+      "name": "SYNC_BE_05_calcula_linha",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2092,
+        1948
+      ],
+      "parameters": {
+        "jsCode": "// Sincronizacao aditiva V/BE (22/09/2026): status_funil esta duplicado no cabecalho\n// (colunas V e BE). Todo no de escrita por nome grava em V (primeira ocorrencia);\n// todo consumidor le por BE (ultima ocorrencia, ver diagnostico da Parte B). Este bloco\n// replica o MESMO valor que '27_d30_atualiza_status_perdido' acabou de gravar em V, tambem na coluna BE,\n// pela linha exata do lead_id (por posicao, nunca por nome, para nao colidir com a duplicidade).\nconst leadId = String($('27_d30_atualiza_status_perdido').item.json.lead_id || '');\nconst statusFunil = $('27_d30_atualiza_status_perdido').item.json.status_funil;\nconst values = $json.values || [];\nlet row = -1;\nfor (let i = 0; i < values.length; i++) {\n  if (String((values[i] || [])[0] || '') === leadId) { row = i + 1; break; }\n}\nif (!leadId || statusFunil === undefined || statusFunil === null || row <= 0) return [];\nreturn [{ json: { lead_id: leadId, status_funil: statusFunil, row } }];"
+      }
+    },
+    {
+      "id": "6d805a40-040b-43ee-aeda-91791fcc6e35",
+      "name": "SYNC_BE_05_grava_be",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2312,
+        1948
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo!BE{{ $json.row }}?valueInputOption=RAW",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: [[ $json.status_funil ]] }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
     }
   ],
   "connections": {
@@ -3496,17 +4053,6 @@
         [
           {
             "node": "02b_le_email_status",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "02_le_base_funil": {
-      "main": [
-        [
-          {
-            "node": "03_filtra_leads_ativos",
             "type": "main",
             "index": 0
           }
@@ -3620,11 +4166,6 @@
             "node": "releitura_optin_d1",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "normaliza_releitura_d1",
-            "type": "main",
-            "index": 0
           }
         ],
         [
@@ -3697,11 +4238,6 @@
             "node": "releitura_optin_d3",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "normaliza_releitura_d3",
-            "type": "main",
-            "index": 0
           }
         ],
         [
@@ -3756,11 +4292,6 @@
             "node": "releitura_optin_d5",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "normaliza_releitura_d5",
-            "type": "main",
-            "index": 0
           }
         ],
         [
@@ -3813,11 +4344,6 @@
         [
           {
             "node": "releitura_optin_d12",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "normaliza_releitura_d12",
             "type": "main",
             "index": 0
           }
@@ -3890,11 +4416,6 @@
         [
           {
             "node": "releitura_optin_d20",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "normaliza_releitura_d20",
             "type": "main",
             "index": 0
           }
@@ -3971,7 +4492,7 @@
       "main": [
         [
           {
-            "node": "02_le_base_funil",
+            "node": "reduz_email_status_para_1_item",
             "type": "main",
             "index": 0
           }
@@ -3983,6 +4504,11 @@
         [
           {
             "node": "wait_throttle_4s",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "SYNC_BE_04_le_lead_id",
             "type": "main",
             "index": 0
           }
@@ -4222,9 +4748,372 @@
           }
         ]
       ]
+    },
+    "busca_cabecalho_base_funil": {
+      "main": [
+        [
+          {
+            "node": "lote1_le_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "lote1_le_base_funil": {
+      "main": [
+        [
+          {
+            "node": "zip_lote1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "gate_lote2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gate_lote2": {
+      "main": [
+        [
+          {
+            "node": "wait_entre_lotes_1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wait_entre_lotes_1": {
+      "main": [
+        [
+          {
+            "node": "lote2_le_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "lote2_le_base_funil": {
+      "main": [
+        [
+          {
+            "node": "zip_lote2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "gate_lote3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gate_lote3": {
+      "main": [
+        [
+          {
+            "node": "wait_entre_lotes_2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wait_entre_lotes_2": {
+      "main": [
+        [
+          {
+            "node": "lote3_le_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "lote3_le_base_funil": {
+      "main": [
+        [
+          {
+            "node": "zip_lote3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "gate_lote4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gate_lote4": {
+      "main": [
+        [
+          {
+            "node": "wait_entre_lotes_3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wait_entre_lotes_3": {
+      "main": [
+        [
+          {
+            "node": "lote4_le_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "lote4_le_base_funil": {
+      "main": [
+        [
+          {
+            "node": "zip_lote4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "gate_lote5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gate_lote5": {
+      "main": [
+        [
+          {
+            "node": "wait_entre_lotes_4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wait_entre_lotes_4": {
+      "main": [
+        [
+          {
+            "node": "lote5_le_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "lote5_le_base_funil": {
+      "main": [
+        [
+          {
+            "node": "zip_lote5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "zip_lote1": {
+      "main": [
+        [
+          {
+            "node": "03_filtra_leads_ativos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "zip_lote2": {
+      "main": [
+        [
+          {
+            "node": "03_filtra_leads_ativos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "zip_lote3": {
+      "main": [
+        [
+          {
+            "node": "03_filtra_leads_ativos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "zip_lote4": {
+      "main": [
+        [
+          {
+            "node": "03_filtra_leads_ativos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "zip_lote5": {
+      "main": [
+        [
+          {
+            "node": "03_filtra_leads_ativos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "reduz_email_status_para_1_item": {
+      "main": [
+        [
+          {
+            "node": "busca_cabecalho_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "releitura_optin_d1": {
+      "main": [
+        [
+          {
+            "node": "normaliza_releitura_d1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "releitura_optin_d3": {
+      "main": [
+        [
+          {
+            "node": "normaliza_releitura_d3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "releitura_optin_d5": {
+      "main": [
+        [
+          {
+            "node": "normaliza_releitura_d5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "releitura_optin_d12": {
+      "main": [
+        [
+          {
+            "node": "normaliza_releitura_d12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "releitura_optin_d20": {
+      "main": [
+        [
+          {
+            "node": "normaliza_releitura_d20",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SYNC_BE_04_le_lead_id": {
+      "main": [
+        [
+          {
+            "node": "SYNC_BE_04_calcula_linha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SYNC_BE_04_calcula_linha": {
+      "main": [
+        [
+          {
+            "node": "SYNC_BE_04_grava_be",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SYNC_BE_04_grava_be": {
+      "main": [
+        []
+      ]
+    },
+    "27_d30_atualiza_status_perdido": {
+      "main": [
+        [
+          {
+            "node": "SYNC_BE_05_le_lead_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SYNC_BE_05_le_lead_id": {
+      "main": [
+        [
+          {
+            "node": "SYNC_BE_05_calcula_linha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SYNC_BE_05_calcula_linha": {
+      "main": [
+        [
+          {
+            "node": "SYNC_BE_05_grava_be",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SYNC_BE_05_grava_be": {
+      "main": [
+        []
+      ]
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "errorWorkflow": "MAvApEDIanoBGJPE",
+    "availableInMCP": true
   }
 }

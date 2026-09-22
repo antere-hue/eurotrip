@@ -2689,6 +2689,67 @@
       "onError": "continueRegularOutput",
       "notes": "Aditivo (21/09/2026): grava origem='Lead site institucional' em base_funil_completo apenas quando ref=site_institucional. Demais leads nao passam por aqui.",
       "id": "f0af44e6-3b21-4337-a048-70d684033da3"
+    },
+    {
+      "id": "ef8af8a5-024d-4ea5-b801-43cc745f3206",
+      "name": "SYNC_BE_03_le_lead_id",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3952,
+        -548
+      ],
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo!A:A",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "ca7cbf85-bb22-4974-a305-56b61c8da493",
+      "name": "SYNC_BE_03_calcula_linha",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4172,
+        -548
+      ],
+      "parameters": {
+        "jsCode": "// Sincronizacao aditiva V/BE (22/09/2026): status_funil esta duplicado no cabecalho\n// (colunas V e BE). Todo no de escrita por nome grava em V (primeira ocorrencia);\n// todo consumidor le por BE (ultima ocorrencia, ver diagnostico da Parte B). Este bloco\n// replica o MESMO valor que '20e_grava_base_funil_proposta' acabou de gravar em V, tambem na coluna BE,\n// pela linha exata do lead_id (por posicao, nunca por nome, para nao colidir com a duplicidade).\nconst leadId = String($('20e_grava_base_funil_proposta').item.json.lead_id || '');\nconst statusFunil = $('20e_grava_base_funil_proposta').item.json.status_funil;\nconst values = $json.values || [];\nlet row = -1;\nfor (let i = 0; i < values.length; i++) {\n  if (String((values[i] || [])[0] || '') === leadId) { row = i + 1; break; }\n}\nif (!leadId || statusFunil === undefined || statusFunil === null || row <= 0) return [];\nreturn [{ json: { lead_id: leadId, status_funil: statusFunil, row } }];"
+      }
+    },
+    {
+      "id": "6e7367ed-8b62-4a7b-80d4-b97a5cd02917",
+      "name": "SYNC_BE_03_grava_be",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4392,
+        -548
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo!BE{{ $json.row }}?valueInputOption=RAW",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: [[ $json.status_funil ]] }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
     }
   ],
   "connections": {
@@ -3226,6 +3287,11 @@
             "node": "20f2_if_ref_site_institucional",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "SYNC_BE_03_le_lead_id",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -3239,6 +3305,33 @@
             "index": 0
           }
         ],
+        []
+      ]
+    },
+    "SYNC_BE_03_le_lead_id": {
+      "main": [
+        [
+          {
+            "node": "SYNC_BE_03_calcula_linha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SYNC_BE_03_calcula_linha": {
+      "main": [
+        [
+          {
+            "node": "SYNC_BE_03_grava_be",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SYNC_BE_03_grava_be": {
+      "main": [
         []
       ]
     }

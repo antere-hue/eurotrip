@@ -89,7 +89,8 @@
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "alwaysOutputData": true
     },
     {
       "id": "aa6bee82-a398-4abc-8c1e-91d951995e14",
@@ -906,6 +907,67 @@
         }
       },
       "notes": "CORRIGIDO 11/09/2026: razao_social/cnpj agora vêm do node Gerar Token de Aceite (já resolvidos via organização), não mais de um campo inexistente."
+    },
+    {
+      "id": "110d1fe6-1a6d-4004-9cdf-74a1af3b4d72",
+      "name": "SYNC_BE_02_le_lead_id",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2464,
+        220
+      ],
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo!A:A",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "ac779462-eadb-413f-8ad2-4ee897451947",
+      "name": "SYNC_BE_02_calcula_linha",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2684,
+        220
+      ],
+      "parameters": {
+        "jsCode": "// Sincronizacao aditiva V/BE (22/09/2026): status_funil esta duplicado no cabecalho\n// (colunas V e BE). Todo no de escrita por nome grava em V (primeira ocorrencia);\n// todo consumidor le por BE (ultima ocorrencia, ver diagnostico da Parte B). Este bloco\n// replica o MESMO valor que 'Gravar Token na Base (appendOrUpdate)' acabou de gravar em V, tambem na coluna BE,\n// pela linha exata do lead_id (por posicao, nunca por nome, para nao colidir com a duplicidade).\nconst leadId = String($('Gravar Token na Base (appendOrUpdate)').item.json.lead_id || '');\nconst statusFunil = $('Gravar Token na Base (appendOrUpdate)').item.json.status_funil;\nconst values = $json.values || [];\nlet row = -1;\nfor (let i = 0; i < values.length; i++) {\n  if (String((values[i] || [])[0] || '') === leadId) { row = i + 1; break; }\n}\nif (!leadId || statusFunil === undefined || statusFunil === null || row <= 0) return [];\nreturn [{ json: { lead_id: leadId, status_funil: statusFunil, row } }];"
+      }
+    },
+    {
+      "id": "34feca18-da7e-4eb6-8521-5d60be7da69e",
+      "name": "SYNC_BE_02_grava_be",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2904,
+        220
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo!BE{{ $json.row }}?valueInputOption=RAW",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: [[ $json.status_funil ]] }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
     }
   ],
   "connections": {
@@ -1028,6 +1090,44 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "Gravar Token na Base (appendOrUpdate)": {
+      "main": [
+        [
+          {
+            "node": "SYNC_BE_02_le_lead_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SYNC_BE_02_le_lead_id": {
+      "main": [
+        [
+          {
+            "node": "SYNC_BE_02_calcula_linha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SYNC_BE_02_calcula_linha": {
+      "main": [
+        [
+          {
+            "node": "SYNC_BE_02_grava_be",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SYNC_BE_02_grava_be": {
+      "main": [
+        []
       ]
     }
   },

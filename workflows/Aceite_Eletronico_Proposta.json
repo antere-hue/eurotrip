@@ -1300,6 +1300,67 @@
       "parameters": {
         "jsCode": "const body = `<h1>Não foi possível confirmar</h1><p>Este link não é mais válido — pode já ter sido usado, ou o token não corresponde a nenhuma proposta. Entre em contato com sua consultora se precisar de ajuda.</p>`;\nconst html = `<!DOCTYPE html><html lang=\"pt-BR\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Confirmação de Proposta — Antere</title><style>body{font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;background:#F7F5F1;color:#1B1E27;margin:0;padding:40px 20px;display:flex;justify-content:center;}.card{background:#fff;max-width:480px;width:100%;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.08);padding:36px 32px;text-align:center;}.brand{color:#3A34D6;font-weight:700;font-size:20px;margin-bottom:24px;}h1{font-size:20px;margin:0 0 12px;}p{color:#5B5F6B;font-size:14px;line-height:1.6;}table{width:100%;text-align:left;font-size:14px;margin:20px 0;border-collapse:collapse;}td{padding:6px 0;border-bottom:1px solid #eee;}td:first-child{color:#5B5F6B;width:40%;}button{background:#3A34D6;color:#fff;border:none;padding:14px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;}button:hover{background:#2c27a8;}.ok{color:#12786B;font-weight:600;}</style></head><body><div class=\"card\"><div class=\"brand\">Antere</div>${body}</div></body></html>`;\nreturn [{ json: { html } }];"
       }
+    },
+    {
+      "id": "805c5f63-f66b-47b1-bec4-fc39e647de98",
+      "name": "SYNC_BE_01_le_lead_id",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        896,
+        1068
+      ],
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo!A:A",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "b7041f6d-7753-4ad6-abc0-e56ac145f034",
+      "name": "SYNC_BE_01_calcula_linha",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1116,
+        1068
+      ],
+      "parameters": {
+        "jsCode": "// Sincronizacao aditiva V/BE (22/09/2026): status_funil esta duplicado no cabecalho\n// (colunas V e BE). Todo no de escrita por nome grava em V (primeira ocorrencia);\n// todo consumidor le por BE (ultima ocorrencia, ver diagnostico da Parte B). Este bloco\n// replica o MESMO valor que 'Marcar Aceite na Base (status + data)' acabou de gravar em V, tambem na coluna BE,\n// pela linha exata do lead_id (por posicao, nunca por nome, para nao colidir com a duplicidade).\nconst leadId = String($('Marcar Aceite na Base (status + data)').item.json.lead_id || '');\nconst statusFunil = $('Marcar Aceite na Base (status + data)').item.json.status_funil;\nconst values = $json.values || [];\nlet row = -1;\nfor (let i = 0; i < values.length; i++) {\n  if (String((values[i] || [])[0] || '') === leadId) { row = i + 1; break; }\n}\nif (!leadId || statusFunil === undefined || statusFunil === null || row <= 0) return [];\nreturn [{ json: { lead_id: leadId, status_funil: statusFunil, row } }];"
+      }
+    },
+    {
+      "id": "5688c19b-67eb-4e64-a6b1-f14d51715a7f",
+      "name": "SYNC_BE_01_grava_be",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1336,
+        1068
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo!BE{{ $json.row }}?valueInputOption=RAW",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: [[ $json.status_funil ]] }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
     }
   ],
   "connections": {
@@ -1468,6 +1529,11 @@
             "node": "Buscar Token RD Station",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "SYNC_BE_01_le_lead_id",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -1562,6 +1628,33 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "SYNC_BE_01_le_lead_id": {
+      "main": [
+        [
+          {
+            "node": "SYNC_BE_01_calcula_linha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SYNC_BE_01_calcula_linha": {
+      "main": [
+        [
+          {
+            "node": "SYNC_BE_01_grava_be",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SYNC_BE_01_grava_be": {
+      "main": [
+        []
       ]
     }
   },
