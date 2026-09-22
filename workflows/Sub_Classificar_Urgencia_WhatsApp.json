@@ -1,0 +1,54 @@
+{
+  "name": "Sub_Classificar_Urgencia_WhatsApp",
+  "nodes": [
+    {
+      "name": "Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "texto"
+            }
+          ]
+        }
+      },
+      "id": "008d077c-f7bd-4a6b-a2fb-5f214253623b"
+    },
+    {
+      "name": "Classifica",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// Classificacao de urgencia para avisos de WhatsApp no Slack (decisao de negocio 21/09/2026).\n// Fonte unica da lista de palavras-chave: este sub-workflow e chamado por WhatsApp_Webhook_Status e Sub_Escalar_Atendimento_IA.\nconst PALAVRAS = ['proposta', 'formulario', 'duvida'];\nconst norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();\nconst texto = norm($input.first().json.texto);\nconst palavra = PALAVRAS.find(p => texto.includes(p)) || '';\nconst urgente = palavra !== '';\nreturn [{ json: { urgente, palavra, prefixo: urgente ? ('🔴 URGENTE (palavra: ' + palavra + ') — ') : '' } }];"
+      },
+      "id": "5e133efc-8126-4805-972f-5c2e61aaeb9e"
+    }
+  ],
+  "connections": {
+    "Trigger": {
+      "main": [
+        [
+          {
+            "node": "Classifica",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "MAvApEDIanoBGJPE"
+  }
+}

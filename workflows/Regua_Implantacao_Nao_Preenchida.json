@@ -1,0 +1,1289 @@
+{
+  "name": "Regua_Implantacao_Nao_Preenchida",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10,30,50 * * * *"
+            }
+          ]
+        }
+      },
+      "id": "e5881a36-2f71-4aae-a879-279ea2d4bf26",
+      "name": "A cada 20 minutos",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -112,
+        384
+      ],
+      "notes": "Mesmo padrão dos outros workflows Sub_Detectar_*/Regua_* do projeto (20 min).\n21/09/2026: horario escalonado para nao colidir com os demais workflows que leem a planilha no mesmo minuto (cota Sheets 'Read requests per minute'). Antes: {\"interval\": [{\"field\": \"minutes\", \"minutesInterval\": 20}]}"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1986041189"
+        },
+        "options": {}
+      },
+      "id": "e32c4a8b-898f-4ff6-bed0-69be46936d4f",
+      "name": "Buscar Log Implantacao Pendente",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 5,
+        "options": {}
+      },
+      "id": "981eb61c-5a6c-4b50-8a90-e1d0605417cf",
+      "name": "Merge Sync",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        448,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "dados_adquirentes_implantacao"
+        },
+        "options": {}
+      },
+      "id": "85c11f6e-2400-43c1-b563-8f06f4d755bf",
+      "name": "Buscar Dados Adquirentes",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        192
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "dados_pix_implantacao"
+        },
+        "options": {}
+      },
+      "id": "464474f2-ee99-4bea-a758-57590d60dce3",
+      "name": "Buscar Dados Pix",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        384
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "810524007"
+        },
+        "options": {}
+      },
+      "id": "500ceeb0-deb2-4e3f-8468-a1ac460b27c5",
+      "name": "Buscar Base Funil Completo",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        576
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "286208637"
+        },
+        "options": {}
+      },
+      "id": "a609844e-4e78-4bf4-90aa-a793795eedad",
+      "name": "Buscar Tracking Regua Implantacao",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        768
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Regua do Formulario de Implantacao nao preenchido (Parte 2.2)\nconst DIAS_LEMBRETE_1 = 2;\nconst DIAS_LEMBRETE_2 = 5;\n\nfunction normalizarCnpj(v) { return String(v || '').replace(/\\D/g, ''); }\n\nconst logs = $('Buscar Log Implantacao Pendente').all().map(i => i.json);\nconst adquirentes = $('Buscar Dados Adquirentes').all().map(i => i.json);\nconst pix = $('Buscar Dados Pix').all().map(i => i.json);\nconst baseFunil = $('Buscar Base Funil Completo').all().map(i => i.json);\nconst tracking = $('Buscar Tracking Regua Implantacao').all().map(i => i.json);\n\nconst cnpjsComDados = new Set(\n  [...adquirentes, ...pix].map(r => normalizarCnpj(r.cnpj)).filter(Boolean)\n);\nconst trackingPorDeal = new Map(tracking.map(t => [String(t.deal_id), t]));\nconst baseFunilPorLeadId = new Map(baseFunil.map(l => [String(l.lead_id), l]));\n\nconst agora = new Date();\nconst saida = [];\n\nfor (const log of logs) {\n  const concluido = log.concluido && String(log.concluido).trim() !== '';\n  if (concluido) continue;\n\n  const cnpjNorm = normalizarCnpj(log.cnpj);\n  if (cnpjNorm && cnpjsComDados.has(cnpjNorm)) continue;\n\n  const lead = baseFunilPorLeadId.get(String(log.deal_id));\n  if (!lead) continue;\n\n  const detectadoEm = new Date(log.marcado_em);\n  if (isNaN(detectadoEm)) continue;\n  const dias = (agora - detectadoEm) / (1000 * 60 * 60 * 24);\n\n  const t = trackingPorDeal.get(String(log.deal_id)) || {};\n  const d2Enviado = t.lembrete_d2_enviado_em && String(t.lembrete_d2_enviado_em).trim() !== '';\n  const d5Enviado = t.lembrete_d5_enviado_em && String(t.lembrete_d5_enviado_em).trim() !== '';\n\n  // D+5 e a escalada final: se ja foi enviado, nao ha mais lembrete a mandar,\n  // mesmo que o D+2 nunca tenha sido registrado (ex.: regua fora do ar por alguns dias\n  // e o lead pulou direto para o limiar de 5 dias).\n  let nivel = null;\n  if (dias >= DIAS_LEMBRETE_2) {\n    if (!d5Enviado) nivel = 'd5';\n  } else if (dias >= DIAS_LEMBRETE_1 && !d2Enviado) {\n    nivel = 'd2';\n  }\n  if (!nivel) continue;\n\n  saida.push({ json: {\n    acao: 'lembrete',\n    nivel,\n    deal_id: log.deal_id,\n    razao_social: lead.razao_social || '',\n    email: lead.email || '',\n  }});\n}\n\nreturn saida.length ? saida : [{ json: { acao: 'nada' } }];"
+      },
+      "id": "a7480f88-bc33-40c3-a9b6-9735859d38ef",
+      "name": "Processar Lembretes Implantacao",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        384
+      ],
+      "notes": "D+2 e D+5 sao DEFAULT assumido (mesma ressalva da Parte 2.1) — sinalizado no relatorio final. D+5 supera D+2: uma vez enviado o D+5, nenhum lembrete adicional e enviado."
+    },
+    {
+      "parameters": {
+        "mode": "expression",
+        "output": "={{ ({ lembrete: 0, nada: 1 })[$json.acao] }}"
+      },
+      "id": "1115dae2-4da9-417e-a71c-cf2dd92a9584",
+      "name": "Roteia Acao Implantacao",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        384
+      ],
+      "notes": "0=enviar lembrete (email+slack+marcar), 1=nada a fazer nesta rodada."
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1514838753",
+          "cachedResultName": "tokens"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "resend_api"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7f4dac6e-2e36-4f4b-861b-bc3d84691630",
+      "name": "Buscar Token Resend",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        288
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.signing_secret }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  from: 'Fernanda Spahn <comercial@antere.com.br>',\n  to: [$('Processar Lembretes Implantacao').item.json.email || ''],\n  subject: ($('Processar Lembretes Implantacao').item.json.nivel === 'd5' ? 'Última chamada: ' : 'Lembrete: ') + 'complete os dados de implantação da sua conta',\n  html: `\n    <div style='font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #1B1E27;'>\n      <div style='background-color: #3A34D6; padding: 32px 24px; text-align: center;'>\n        <h1 style='color: #F7F5F1; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;'>Antere</h1>\n        <p style='color: #C7C6F5; margin: 8px 0 0; font-size: 13px; letter-spacing: 0.2px;'>Automação comercial, do caixa ao pagamento</p>\n      </div>\n      <div style='padding: 32px 24px; background-color: #ffffff; text-align: center;'>\n        <p style='font-size: 15px; line-height: 1.6; color: #DC2626; font-weight: 700; margin: 0 0 12px;'>${$('Processar Lembretes Implantacao').item.json.nivel === 'd5' ? 'Ainda faltam os dados de implantação da sua conta — não deixe a ativação atrasar.' : 'Ainda não recebemos os dados de implantação da sua conta.'}</p>\n        <p style='font-size: 16px; line-height: 1.6;'>Sua proposta para <strong>${$('Processar Lembretes Implantacao').item.json.razao_social}</strong> já foi aceita — falta só preencher os dados técnicos para colocar sua conta no ar.</p>\n        <div style='margin: 28px 0;'>\n          <a href='https://tally.so/r/MeW5YY?lead_id=${encodeURIComponent($('Processar Lembretes Implantacao').item.json.deal_id || '')}' style='background-color: #3A34D6; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;'>Preencher dados de implantação</a>\n        </div>\n        <p style='font-size: 14px; line-height: 1.6; color: #5B5F6B;'>Leva poucos minutos — assim que enviar, nosso time já parte para a ativação.</p>\n      </div>\n      <div style='background-color: #F7F5F1; padding: 16px 24px; text-align: center;'>\n        <p style='font-size: 11px; color: #8B8F9C; margin: 0;'>Antere Tecnologia (F. de Carvalho Spahn Consultoria em Tecnologia da Informação LTDA)</p>\n      </div>\n    </div>\n  `,\n  tags: [\n    { name: 'deal_id', value: $('Processar Lembretes Implantacao').item.json.deal_id || 'sem_deal_id' },\n    { name: 'regua_nivel', value: $('Processar Lembretes Implantacao').item.json.nivel }\n  ]\n} }}",
+        "options": {}
+      },
+      "id": "15ea32f4-ecc0-473e-99d6-fcc43f934a05",
+      "name": "Enviar E-mail Lembrete Implantacao",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1344,
+        288
+      ],
+      "notes": "Reaproveita o template visual e de copy da Parte 1/2.1, com link real do Tally (https://tally.so/r/MeW5YY, confirmado com GET real retornando 200)."
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "vendas-negociacao"
+        },
+        "text": "=⏰ *Lembrete de Dados de Implantação Pendentes ({{ $('Processar Lembretes Implantacao').item.json.nivel.toUpperCase() }})*\n*Empresa:* {{ $('Processar Lembretes Implantacao').item.json.razao_social }}\n*Deal ID:* {{ $('Processar Lembretes Implantacao').item.json.deal_id }}\n*E-mail do lembrete:* enviado agora ao cliente\n*Ação sugerida:* considerar contato direto se não preencher em breve.",
+        "otherOptions": {}
+      },
+      "id": "75518b00-6e2d-4be0-a42c-f031607726aa",
+      "name": "Notificar Slack Implantacao Pendente",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        1568,
+        288
+      ],
+      "webhookId": "f744d155-13de-4d5a-9ebc-311be4a64aa7",
+      "credentials": {
+        "slackApi": {
+          "id": "8Qwkl6tupIvuM69K",
+          "name": "Slack - Funil Antere"
+        }
+      },
+      "notes": "Reutiliza o canal #vendas-negociacao da Parte 2.1 (não há canal dedicado a implantação identificado)."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Reformata para conter SOMENTE deal_id + o campo do nivel enviado nesta rodada, para\n// TODOS os itens que passaram pelo ramo 'lembrete' (nao so o primeiro — usa .all(), nao .item,\n// porque este e um Code node em modo \"run once for all items\" e precisa cobrir todos os leads\n// processados nesta rodada, nao apenas um).\nconst items = $('Processar Lembretes Implantacao').all();\nreturn items.map(i => {\n  const out = { deal_id: i.json.deal_id };\n  if (i.json.nivel === 'd2') out.lembrete_d2_enviado_em = new Date().toISOString();\n  if (i.json.nivel === 'd5') out.lembrete_d5_enviado_em = new Date().toISOString();\n  return { json: out };\n});"
+      },
+      "id": "c41d138d-722f-4c81-91c2-f23dff07d8da",
+      "name": "Preparar Marcacao Lembrete",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "286208637"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [
+            "deal_id"
+          ],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "77c7267f-0f6f-4428-a8cb-7a1ac74269a1",
+      "name": "Marcar Lembrete Enviado Implantacao",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2016,
+        288
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "autoMapInputData (nao defineBelow): a aba nasce sem cabecalho, e este e o primeiro write real — mesma tecnica usada em outras abas novas do projeto."
+    },
+    {
+      "parameters": {},
+      "id": "a195829a-bbdf-42cb-8417-aaf62d0536cf",
+      "name": "Fim (nada a fazer)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        480
+      ]
+    },
+    {
+      "name": "ML_01_busca_lojas_implantacao",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        900,
+        900
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "753694855"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "id": "2da59bc4-ca03-4985-9ff5-4701787329c7"
+    },
+    {
+      "name": "ML_02_processar_parciais",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        900
+      ],
+      "parameters": {
+        "jsCode": "// multi-loja 21/09/2026: lembrete de lojas faltantes (preenchimento parcial)\n// Reaproveita o mesmo intervalo do 1o lembrete da regua (2 dias) e o mesmo limite de tentativas do projeto (3) antes de escalar.\nconst DIAS_LEMBRETE = 2;\nconst MAX_TENTATIVAS = 3;\nconst dig = v => String(v || '').replace(/\\D/g, '');\nconst logs = $('Buscar Log Implantacao Pendente').all().map(i => i.json);\nconst baseFunil = $('Buscar Base Funil Completo').all().map(i => i.json);\nconst tracking = $('Buscar Tracking Regua Implantacao').all().map(i => i.json);\nconst lojas = $('ML_01_busca_lojas_implantacao').all().map(i => i.json).filter(r => r && r.lead_id);\nconst basePorLeadId = new Map(baseFunil.map(l => [String(l.lead_id), l]));\nconst trackingPorDeal = new Map(tracking.map(t => [String(t.deal_id), t]));\nconst agora = new Date();\nconst saida = [];\nfor (const log of logs) {\n  if (!log || !log.deal_id) continue;\n  if (log.concluido && String(log.concluido).trim() !== '') continue;\n  const dealId = String(log.deal_id);\n  const lead = basePorLeadId.get(dealId);\n  if (!lead) continue;\n  const esperadas = Math.max(1, Number(dig(lead.quantidade_lojas)) || 1);\n  if (esperadas <= 1) continue; // 1 loja: comportamento padrao da regua (ramo existente)\n  const linhas = lojas.filter(r => String(r.lead_id) === dealId);\n  const cnpjs = [...new Set(linhas.map(r => dig(r.cnpj_loja)).filter(Boolean))];\n  const preenchidas = cnpjs.length;\n  if (preenchidas === 0) continue;          // 0 lojas: ramo existente (lembrete padrao)\n  if (preenchidas >= esperadas) continue;   // completo: nada a lembrar\n  const t = trackingPorDeal.get(dealId) || {};\n  if (t.revisao_manual_parcial_em && String(t.revisao_manual_parcial_em).trim() !== '') continue; // ja escalado\n  const tentativas = Number(t.tentativas_parcial) || 0;\n  const datas = linhas.map(r => new Date(r.preenchido_em)).filter(d => !isNaN(d));\n  if (t.lembrete_parcial_enviado_em) { const d = new Date(t.lembrete_parcial_enviado_em); if (!isNaN(d)) datas.push(d); }\n  if (!datas.length) continue;\n  const referencia = new Date(Math.max(...datas.map(d => d.getTime())));\n  const dias = (agora - referencia) / (1000 * 60 * 60 * 24);\n  if (dias < DIAS_LEMBRETE) continue;\n  const base = {\n    deal_id: dealId, razao_social: lead.razao_social || '', email: lead.email || '',\n    lojas_esperadas: esperadas, lojas_preenchidas: preenchidas, lojas_faltantes: esperadas - preenchidas,\n    cnpjs_lista: cnpjs, cnpjs_texto: cnpjs.join(', '),\n    dias_desde_ultima_atividade: Math.floor(dias), tentativas_anteriores: tentativas,\n  };\n  if (tentativas >= MAX_TENTATIVAS) saida.push({ json: { ...base, acao: 'revisao_manual' } });\n  else saida.push({ json: { ...base, acao: 'lembrete_parcial', tentativa: tentativas + 1 } });\n}\nreturn saida.length ? saida : [{ json: { acao: 'nada' } }];\n"
+      },
+      "id": "474643bb-3c01-4e37-beae-e891fbb0b91c"
+    },
+    {
+      "name": "ML_03_roteia_parcial",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1340,
+        900
+      ],
+      "parameters": {
+        "mode": "expression",
+        "output": "={{ ({ lembrete_parcial: 0, revisao_manual: 1, nada: 2 })[$json.acao] }}",
+        "numberOutputs": 3
+      },
+      "id": "cda73d7b-7196-4528-b6a0-a65ff406d8e1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1514838753",
+          "cachedResultName": "tokens"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "resend_api"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "ML_04_token_resend",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1560,
+        800
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "id": "ebc3fd23-93eb-45cb-a5a1-1dc2bfbc686a"
+    },
+    {
+      "name": "ML_05_email_lojas_faltantes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1780,
+        800
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.signing_secret }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  from: 'Fernanda Spahn <comercial@antere.com.br>',\n  to: [$('ML_02_processar_parciais').item.json.email || ''],\n  subject: 'Faltam ' + $('ML_02_processar_parciais').item.json.lojas_faltantes + ' de ' + $('ML_02_processar_parciais').item.json.lojas_esperadas + ' lojas: complete os dados de implantação',\n  html: `\n    <div style='font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #1B1E27;'>\n      <div style='background-color: #3A34D6; padding: 32px 24px; text-align: center;'>\n        <h1 style='color: #F7F5F1; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;'>Antere</h1>\n        <p style='color: #C7C6F5; margin: 8px 0 0; font-size: 13px; letter-spacing: 0.2px;'>Automação comercial, do caixa ao pagamento</p>\n      </div>\n      <div style='padding: 32px 24px; background-color: #ffffff; text-align: center;'>\n        <p style='font-size: 16px; line-height: 1.6;'>Recebemos os dados de <strong>${$('ML_02_processar_parciais').item.json.lojas_preenchidas} das suas ${$('ML_02_processar_parciais').item.json.lojas_esperadas} lojas</strong> de <strong>${$('ML_02_processar_parciais').item.json.razao_social}</strong>. Faltam <strong>${$('ML_02_processar_parciais').item.json.lojas_faltantes}</strong>.</p>\n        <p style='font-size: 14px; line-height: 1.6; color: #5B5F6B;'>CNPJs já recebidos: ${$('ML_02_processar_parciais').item.json.cnpjs_texto}</p>\n        <p style='font-size: 15px; line-height: 1.6;'>Para ativar todas as unidades, preencha o formulário uma vez para cada loja que falta, informando o CNPJ dela no campo <strong>CNPJ desta loja</strong>.</p>\n        <div style='margin: 28px 0;'>\n          <a href='https://tally.so/r/MeW5YY?lead_id=${encodeURIComponent($('ML_02_processar_parciais').item.json.deal_id || '')}' style='background-color: #3A34D6; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;'>Preencher dados das lojas restantes</a>\n        </div>\n        <p style='font-size: 14px; line-height: 1.6; color: #5B5F6B;'>Assim que todas as lojas estiverem cadastradas, nosso time inicia a ativação.</p>\n      </div>\n      <div style='background-color: #F7F5F1; padding: 16px 24px; text-align: center;'>\n        <p style='font-size: 11px; color: #8B8F9C; margin: 0;'>Antere Tecnologia (F. de Carvalho Spahn Consultoria em Tecnologia da Informação LTDA)</p>\n      </div>\n    </div>\n  `,\n  tags: [\n    { name: 'deal_id', value: $('ML_02_processar_parciais').item.json.deal_id || 'sem_deal_id' },\n    { name: 'regua_nivel', value: 'parcial_' + $('ML_02_processar_parciais').item.json.tentativa }\n  ]\n}) }}",
+        "options": {}
+      },
+      "id": "8f1f0f42-6e37-4d5c-82cb-609e17417bdd"
+    },
+    {
+      "name": "ML_06_slack_parcial",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        2000,
+        800
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "vendas-negociacao"
+        },
+        "text": "=🏬 *Lembrete de lojas faltantes enviado ao cliente (tentativa {{ $('ML_02_processar_parciais').item.json.tentativa }} de 3)*\n*Empresa:* {{ $('ML_02_processar_parciais').item.json.razao_social }}\n*Deal ID:* {{ $('ML_02_processar_parciais').item.json.deal_id }}\n*Progresso:* {{ $('ML_02_processar_parciais').item.json.lojas_preenchidas }} de {{ $('ML_02_processar_parciais').item.json.lojas_esperadas }} lojas (faltam {{ $('ML_02_processar_parciais').item.json.lojas_faltantes }})\n*CNPJs recebidos:* {{ $('ML_02_processar_parciais').item.json.cnpjs_texto }}\n*Ação sugerida:* considerar contato direto se as lojas restantes não chegarem em breve.",
+        "otherOptions": {}
+      },
+      "credentials": {
+        "slackApi": {
+          "id": "8Qwkl6tupIvuM69K",
+          "name": "Slack - Funil Antere"
+        }
+      },
+      "id": "7fa6559b-aee4-41df-a23c-804e3d85973f",
+      "webhookId": "cf521529-9a9e-4919-87c8-02854bb2a325"
+    },
+    {
+      "name": "ML_07_prepara_marcacao_parcial",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2220,
+        800
+      ],
+      "parameters": {
+        "jsCode": "// marca somente os itens do ramo lembrete_parcial desta rodada\nconst items = $('ML_02_processar_parciais').all().filter(i => i.json.acao === 'lembrete_parcial');\nreturn items.map(i => ({ json: { deal_id: i.json.deal_id, lembrete_parcial_enviado_em: new Date().toISOString(), tentativas_parcial: i.json.tentativa } }));"
+      },
+      "id": "be63f95d-8905-42eb-8546-840392785719"
+    },
+    {
+      "name": "ML_08_marca_tracking_parcial",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2440,
+        800
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "286208637"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "deal_id": "={{ $json.deal_id }}",
+            "lembrete_parcial_enviado_em": "={{ $json.lembrete_parcial_enviado_em }}",
+            "tentativas_parcial": "={{ $json.tentativas_parcial }}"
+          },
+          "matchingColumns": [
+            "deal_id"
+          ],
+          "schema": [
+            {
+              "id": "ok",
+              "displayName": "ok",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "message_timestamp",
+              "displayName": "message_timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "deal_id",
+              "displayName": "deal_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "lembrete_d5_enviado_em",
+              "displayName": "lembrete_d5_enviado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "lembrete_d2_enviado_em",
+              "displayName": "lembrete_d2_enviado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "lembrete_parcial_enviado_em",
+              "displayName": "lembrete_parcial_enviado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tentativas_parcial",
+              "displayName": "tentativas_parcial",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "revisao_manual_parcial_em",
+              "displayName": "revisao_manual_parcial_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "id": "faf4b2fd-8a3a-414c-8680-4b01573da83b"
+    },
+    {
+      "name": "ML_09_slack_revisao_manual",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        1560,
+        1050
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "vendas-negociacao"
+        },
+        "text": "=🚨 *Revisão manual: cadastro multi-loja parado após 3 lembretes*\n*Empresa:* {{ $('ML_02_processar_parciais').item.json.razao_social }}\n*Deal ID:* {{ $('ML_02_processar_parciais').item.json.deal_id }}\n*Progresso:* {{ $('ML_02_processar_parciais').item.json.lojas_preenchidas }} de {{ $('ML_02_processar_parciais').item.json.lojas_esperadas }} lojas (faltam {{ $('ML_02_processar_parciais').item.json.lojas_faltantes }})\n*CNPJs recebidos:* {{ $('ML_02_processar_parciais').item.json.cnpjs_texto }}\n*Ação:* contato direto com o cliente; a régua automática parou para este deal.",
+        "otherOptions": {}
+      },
+      "credentials": {
+        "slackApi": {
+          "id": "8Qwkl6tupIvuM69K",
+          "name": "Slack - Funil Antere"
+        }
+      },
+      "id": "811f3c06-6027-4c32-a60f-365ca2d96ec9",
+      "webhookId": "21fd2fc1-36ce-4f05-b54d-26b6c7844a6b"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1514838753",
+          "cachedResultName": "tokens"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "resend_api"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "ML_10_token_resend_rm",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1780,
+        1050
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "id": "08becd4b-2a4d-4f04-9c58-c72a5b296005"
+    },
+    {
+      "name": "ML_11_email_revisao_manual",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2000,
+        1050
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.signing_secret }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  from: 'Funil Antere <comercial@antere.com.br>',\n  to: ['comercial@antere.com.br'],\n  subject: '🚨 Revisão manual: lojas faltantes sem resposta — ' + $('ML_02_processar_parciais').item.json.razao_social,\n  html: '<h3>Cadastro multi-loja parado após 3 lembretes automáticos</h3>' +\n        '<p><b>Razão Social:</b> ' + $('ML_02_processar_parciais').item.json.razao_social + '<br><b>Deal ID:</b> ' + $('ML_02_processar_parciais').item.json.deal_id + '<br>' +\n        '<b>Progresso:</b> ' + $('ML_02_processar_parciais').item.json.lojas_preenchidas + ' de ' + $('ML_02_processar_parciais').item.json.lojas_esperadas + ' lojas (faltam ' + $('ML_02_processar_parciais').item.json.lojas_faltantes + ')<br>' +\n        '<b>CNPJs recebidos:</b> ' + $('ML_02_processar_parciais').item.json.cnpjs_texto + '</p>' +\n        '<p>A régua automática parou para este deal. Próximo passo: contato direto com o cliente.</p>'\n}) }}",
+        "options": {}
+      },
+      "id": "6d3a5140-481a-49fb-b0b4-aacebc41ac1e"
+    },
+    {
+      "name": "ML_12_prepara_marcacao_rm",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2220,
+        1050
+      ],
+      "parameters": {
+        "jsCode": "const items = $('ML_02_processar_parciais').all().filter(i => i.json.acao === 'revisao_manual');\nreturn items.map(i => ({ json: { deal_id: i.json.deal_id, revisao_manual_parcial_em: new Date().toISOString() } }));"
+      },
+      "id": "158ac707-3f52-4f74-aeda-e9f3969adcc5"
+    },
+    {
+      "name": "ML_13_marca_tracking_rm",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2440,
+        1050
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "286208637"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "deal_id": "={{ $json.deal_id }}",
+            "revisao_manual_parcial_em": "={{ $json.revisao_manual_parcial_em }}"
+          },
+          "matchingColumns": [
+            "deal_id"
+          ],
+          "schema": [
+            {
+              "id": "ok",
+              "displayName": "ok",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "message_timestamp",
+              "displayName": "message_timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "deal_id",
+              "displayName": "deal_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "lembrete_d5_enviado_em",
+              "displayName": "lembrete_d5_enviado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "lembrete_d2_enviado_em",
+              "displayName": "lembrete_d2_enviado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "lembrete_parcial_enviado_em",
+              "displayName": "lembrete_parcial_enviado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "tentativas_parcial",
+              "displayName": "tentativas_parcial",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "revisao_manual_parcial_em",
+              "displayName": "revisao_manual_parcial_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "id": "7c3d46db-f92c-4a17-b0fa-3cddc71586a5"
+    },
+    {
+      "name": "ML_fim",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        1250
+      ],
+      "parameters": {},
+      "id": "86eb4420-60f4-44ab-9c71-9f1e259c5705"
+    }
+  ],
+  "connections": {
+    "A cada 20 minutos": {
+      "main": [
+        [
+          {
+            "node": "Buscar Log Implantacao Pendente",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Buscar Dados Adquirentes",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Buscar Dados Pix",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Buscar Base Funil Completo",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Buscar Tracking Regua Implantacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Log Implantacao Pendente": {
+      "main": [
+        [
+          {
+            "node": "Merge Sync",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Sync": {
+      "main": [
+        [
+          {
+            "node": "Processar Lembretes Implantacao",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "ML_01_busca_lojas_implantacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Dados Adquirentes": {
+      "main": [
+        [
+          {
+            "node": "Merge Sync",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Buscar Dados Pix": {
+      "main": [
+        [
+          {
+            "node": "Merge Sync",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Buscar Base Funil Completo": {
+      "main": [
+        [
+          {
+            "node": "Merge Sync",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Buscar Tracking Regua Implantacao": {
+      "main": [
+        [
+          {
+            "node": "Merge Sync",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Processar Lembretes Implantacao": {
+      "main": [
+        [
+          {
+            "node": "Roteia Acao Implantacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roteia Acao Implantacao": {
+      "main": [
+        [
+          {
+            "node": "Buscar Token Resend",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fim (nada a fazer)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Token Resend": {
+      "main": [
+        [
+          {
+            "node": "Enviar E-mail Lembrete Implantacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar E-mail Lembrete Implantacao": {
+      "main": [
+        [
+          {
+            "node": "Notificar Slack Implantacao Pendente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notificar Slack Implantacao Pendente": {
+      "main": [
+        [
+          {
+            "node": "Preparar Marcacao Lembrete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Marcacao Lembrete": {
+      "main": [
+        [
+          {
+            "node": "Marcar Lembrete Enviado Implantacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_01_busca_lojas_implantacao": {
+      "main": [
+        [
+          {
+            "node": "ML_02_processar_parciais",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_02_processar_parciais": {
+      "main": [
+        [
+          {
+            "node": "ML_03_roteia_parcial",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_03_roteia_parcial": {
+      "main": [
+        [
+          {
+            "node": "ML_04_token_resend",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ML_09_slack_revisao_manual",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ML_fim",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_04_token_resend": {
+      "main": [
+        [
+          {
+            "node": "ML_05_email_lojas_faltantes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_05_email_lojas_faltantes": {
+      "main": [
+        [
+          {
+            "node": "ML_06_slack_parcial",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_06_slack_parcial": {
+      "main": [
+        [
+          {
+            "node": "ML_07_prepara_marcacao_parcial",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_07_prepara_marcacao_parcial": {
+      "main": [
+        [
+          {
+            "node": "ML_08_marca_tracking_parcial",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_09_slack_revisao_manual": {
+      "main": [
+        [
+          {
+            "node": "ML_10_token_resend_rm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_10_token_resend_rm": {
+      "main": [
+        [
+          {
+            "node": "ML_11_email_revisao_manual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_11_email_revisao_manual": {
+      "main": [
+        [
+          {
+            "node": "ML_12_prepara_marcacao_rm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_12_prepara_marcacao_rm": {
+      "main": [
+        [
+          {
+            "node": "ML_13_marca_tracking_rm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  }
+}

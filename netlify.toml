@@ -1,0 +1,5 @@
+# Site institucional Antere (www.antere.com.br): conteudo estatico em /site
+[build]
+  base = "site"
+  publish = "."
+  command = ""

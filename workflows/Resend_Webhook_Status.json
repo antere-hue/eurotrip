@@ -1,0 +1,714 @@
+{
+  "name": "Resend_Webhook_Status",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "resend-status",
+        "options": {}
+      },
+      "id": "1d714d88-df22-4907-bc4e-68a8dfb50aed",
+      "name": "1 - Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1408,
+        224
+      ],
+      "webhookId": "resend-status-antere"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1514838753"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "resend_webhook"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1a40a9e3-33fd-47ae-88da-a1e879e9ae65",
+      "name": "2 - Buscar Secret Resend",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1168,
+        224
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "jsCode": "// Valida a assinatura HMAC enviada pela Resend (padrão Svix)\nconst crypto = require('crypto');\n\nconst webhookItem = $('1 - Webhook Trigger').item.json;\nconst headers = webhookItem.headers;\nconst svixId = headers['svix-id'];\nconst svixTimestamp = headers['svix-timestamp'];\nconst svixSignature = headers['svix-signature'];\nconst rawBody = JSON.stringify(webhookItem.body);\n\n// Segredo lido do Google Sheets (nó 2), não hardcoded aqui\nconst secret = $('2 - Buscar Secret Resend').item.json.signing_secret;\n\nlet isValid = false;\nlet isRecent = false;\n\ntry {\n  const signedContent = `${svixId}.${svixTimestamp}.${rawBody}`;\n  const secretBytes = Buffer.from(secret.split('_')[1], 'base64');\n  const expectedSig = crypto.createHmac('sha256', secretBytes)\n    .update(signedContent).digest('base64');\n\n  const validSignatures = svixSignature.split(' ').map(s => s.split(',')[1]);\n  isValid = validSignatures.includes(expectedSig);\n\n  const timestampAge = Math.abs(Date.now() / 1000 - parseInt(svixTimestamp));\n  isRecent = timestampAge < 300; // 5 minutos\n} catch (e) {\n  isValid = false;\n}\n\nreturn {\n  json: {\n    ...webhookItem,\n    assinatura_valida: isValid && isRecent\n  }\n};"
+      },
+      "id": "e785d8c5-41f7-47e4-ab66-451e84f3a67b",
+      "name": "3 - Validar Assinatura",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -928,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-assinatura",
+              "leftValue": "={{ $json.assinatura_valida }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "374df451-8957-4803-a7b9-3824882fee42",
+      "name": "4 - IF Assinatura Valida",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -688,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "cond-delivered",
+                    "leftValue": "={{ $json.body.type }}",
+                    "rightValue": "email.delivered",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "cond-opened",
+                    "leftValue": "={{ $json.body.type }}",
+                    "rightValue": "email.opened",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "bd6f4d5c-4164-4eba-883e-a384780b83a4",
+      "name": "5 - Switch Tipo Evento",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -432,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1",
+              "name": "lead_id",
+              "type": "string",
+              "value": "={{ $json.body.data.tags?.lead_id || '' }}"
+            },
+            {
+              "id": "f2",
+              "name": "email",
+              "type": "string",
+              "value": "={{ $json.body.data.to[0] }}"
+            },
+            {
+              "id": "f3",
+              "name": "evento",
+              "type": "string",
+              "value": "={{ $json.body.type }}"
+            },
+            {
+              "id": "f4",
+              "name": "timestamp",
+              "type": "string",
+              "value": "={{ $json.body.created_at }}"
+            },
+            {
+              "id": "a7564000-35d4-4cf7-af09-024753853eda",
+              "name": "proposta_enviada_em",
+              "value": "={{ $json.body.data.created_at }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0d76555f-71d1-4bab-9ebb-977abd60e5b3",
+      "name": "6 - Extrair Dados",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -176,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 775929465,
+          "mode": "list",
+          "cachedResultName": "email_status",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=775929465"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_id": "={{ $json.lead_id }}",
+            "email": "={{ $json.email }}",
+            "evento": "={{ $json.evento }}",
+            "timestamp": "={{ $json.timestamp }}",
+            "proposta_enviada_em": "={{ $json.proposta_enviada_em }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "evento",
+              "displayName": "evento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "proposta_enviada_em",
+              "displayName": "proposta_enviada_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "073e2cfd-a757-4692-8fb6-af5cc221a643",
+      "name": "7 - Google Sheets Append",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        96,
+        144
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1",
+              "name": "lead_id",
+              "type": "string",
+              "value": "={{ $json.body.data.tags?.lead_id || '' }}"
+            },
+            {
+              "id": "b2",
+              "name": "email",
+              "type": "string",
+              "value": "={{ $json.body.data.to[0] }}"
+            },
+            {
+              "id": "b3",
+              "name": "evento",
+              "type": "string",
+              "value": "={{ $json.body.type }}"
+            },
+            {
+              "id": "b4",
+              "name": "timestamp",
+              "type": "string",
+              "value": "={{ $json.body.created_at }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "288d698d-e76f-4513-a78e-977b134d038d",
+      "name": "8 - Extrair Dados (Bounce Etc)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -176,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 290963209,
+          "mode": "list",
+          "cachedResultName": "email_status_outros",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=290963209"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_id": "={{ $json.lead_id }}",
+            "email": "={{ $json.email }}",
+            "evento": "={{ $json.evento }}",
+            "timestamp": "={{ $json.timestamp }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "evento",
+              "displayName": "evento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "proposta_enviada_em",
+              "displayName": "proposta_enviada_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "82ccd9ba-52a5-4d01-9f62-c2b1f2eb3b96",
+      "name": "9 - Google Sheets Append (Bounce Etc)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        96,
+        352
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {},
+      "id": "347ba556-2fe2-46ca-a4dc-382c7c18a20b",
+      "name": "10 - NoOp Assinatura Invalida",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-email-aberto",
+              "leftValue": "={{ $('6 - Extrair Dados').item.json.evento }}",
+              "rightValue": "email.opened",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        900,
+        300
+      ],
+      "id": "rd000000-0000-0000-0000-000000000001",
+      "name": "11 - Checa Email Aberto",
+      "notes": "Sincronizacao com RD Station (Anexo J.0c) -- fan-out em paralelo com '7 - Google Sheets Append', nao altera a logica existente. So dispara para email.opened."
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1514838753"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "rdstation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1120,
+        240
+      ],
+      "id": "rd000000-0000-0000-0000-000000000002",
+      "name": "12 - Busca Token RD Station",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ `https://api.rd.services/crm/v2/deals/${$('6 - Extrair Dados').item.json.lead_id}` }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('12 - Busca Token RD Station').item.json.access_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { data: { custom_fields: { \"email-aberto\": \"Sim\" } } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        240
+      ],
+      "id": "rd000000-0000-0000-0000-000000000003",
+      "name": "13 - Atualiza Campo Email Aberto RD Station",
+      "notes": "Custom field 'Email Aberto' (slug email-aberto, id 6a97a37540a345002a388616) na negociacao, criado em 02/09/2026. lead_id = id da negociacao no RD Station (mesmo padrao ja usado em todo o projeto)."
+    }
+  ],
+  "connections": {
+    "1 - Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "2 - Buscar Secret Resend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 - Buscar Secret Resend": {
+      "main": [
+        [
+          {
+            "node": "3 - Validar Assinatura",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 - Validar Assinatura": {
+      "main": [
+        [
+          {
+            "node": "4 - IF Assinatura Valida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 - IF Assinatura Valida": {
+      "main": [
+        [
+          {
+            "node": "5 - Switch Tipo Evento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "10 - NoOp Assinatura Invalida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 - Switch Tipo Evento": {
+      "main": [
+        [
+          {
+            "node": "6 - Extrair Dados",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "6 - Extrair Dados",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "8 - Extrair Dados (Bounce Etc)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 - Extrair Dados": {
+      "main": [
+        [
+          {
+            "node": "7 - Google Sheets Append",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "11 - Checa Email Aberto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 - Extrair Dados (Bounce Etc)": {
+      "main": [
+        [
+          {
+            "node": "9 - Google Sheets Append (Bounce Etc)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 - Checa Email Aberto": {
+      "main": [
+        [
+          {
+            "node": "12 - Busca Token RD Station",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "12 - Busca Token RD Station": {
+      "main": [
+        [
+          {
+            "node": "13 - Atualiza Campo Email Aberto RD Station",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

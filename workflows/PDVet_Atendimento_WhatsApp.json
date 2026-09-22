@@ -1,0 +1,798 @@
+{
+  "name": "PDVet_Atendimento_WhatsApp",
+  "nodes": [
+    {
+      "id": "51159c12-52d4-42b5-b535-7bed5b398763",
+      "name": "WhatsApp Inbound - Verificação (GET)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "path": "pdvet-whatsapp-inbound",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "pdvet-whatsapp-inbound-get",
+      "notes": "Nó separado só para o handshake de verificação da Meta (GET com hub.challenge). Mesmo path do nó POST abaixo — o n8n trata os dois como pontos de entrada do mesmo endpoint externo, roteando por método HTTP."
+    },
+    {
+      "id": "dc55c96d-8cbe-42ee-b539-08a5672bf320",
+      "name": "Validar Token e Preparar Challenge",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const EXPECTED_VERIFY_TOKEN = 'hyfo9876';\nconst q = $input.first().json.query || {};\nconst tokenOk = q['hub.verify_token'] === EXPECTED_VERIFY_TOKEN;\nreturn [{ json: { challenge: q['hub.challenge'], tokenOk } }];"
+      }
+    },
+    {
+      "id": "fc500c1f-6dea-4b6a-bcf4-380d4decb014",
+      "name": "Responder Challenge (Meta)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.tokenOk ? $json.challenge : '' }}",
+        "options": {
+          "responseCode": "={{ $json.tokenOk ? 200 : 403 }}"
+        }
+      }
+    },
+    {
+      "id": "35ffc527-00ab-4291-acd1-e71b77e02a71",
+      "name": "WhatsApp Inbound - Mensagens (POST)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        448
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pdvet-whatsapp-inbound",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "pdvet-whatsapp-inbound-post",
+      "notes": "Recebe as mensagens reais da Meta Cloud API. Mesmo path do nó GET acima, método diferente."
+    },
+    {
+      "id": "87f471a4-5ed3-4ba0-bcdc-cf110d984ca7",
+      "name": "Normalizar Mensagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        448
+      ],
+      "parameters": {
+        "jsCode": "// Formato real do webhook da Meta Cloud API (nao Evolution API)\nconst body = $input.first().json.body || $input.first().json;\nconst value = body?.entry?.[0]?.changes?.[0]?.value;\nconst msg = value?.messages?.[0];\nconst phone = msg?.from || '';\nconst text = msg?.text?.body || '';\nconst pushName = value?.contacts?.[0]?.profile?.name || '';\n// eventos de status (sent/delivered/read) chegam no mesmo webhook e nao tem 'messages' -\n// sem essa checagem, phone/text vazios derrubavam o Postgres Chat Memory (Key vazia)\nreturn [{ json: { phone, text, pushName, isMessage: Boolean(msg) } }];"
+      },
+      "notes": "Formato real de webhook da Meta Cloud API — confirmado contra payloads reais de producao (ex.: execucao 5983 e 7640)."
+    },
+    {
+      "id": "0ac8ad99-51bc-456e-ba82-50c56697dbeb",
+      "name": "IF é mensagem real (não status)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        448
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "pdvet-if-eh-mensagem-001",
+              "leftValue": "={{ $json.isMessage }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "078901b3-559c-4831-a29e-181743e6aba3",
+      "name": "AI Agent - Comercial PDVet",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        864,
+        336
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "Você é o assistente comercial do PDVet, sistema de gestão e venda para pet shops (100% navegador, sem instalação). Atenda pelo WhatsApp, em português, com tom cordial e descontraído.\n\nCONTEXTO — Planos:\n- Free: R$0 para sempre. 50 vendas e 10 agendamentos/mês. 1 loja, terminais ilimitados, caixa com fechamento cego.\n- Básico: R$20/mês. 200 vendas e 30 agendamentos/mês. + Relatórios/dashboard, lembretes automáticos.\n- Intermediário (mais escolhido): R$75/mês. Vendas/agendamentos ilimitados. + Pix, cartão, boleto, cobrança recorrente.\n- Avançado: R$150/mês. Tudo do Intermediário + NFC-e, integração TEF, múltiplas unidades.\nAnual: 15% de desconto. Sem fidelidade, self-service.\n\nRecursos: venda offline com sync automático, caixa com fechamento cego, controle de estoque por movimento, venda por peso/unidade, agenda de banho e tosa por profissional com histórico do pet, cobrança recorrente, lembretes automáticos, white-label parcial, relatórios/dashboard, auditoria com autor/data, multiusuário, múltiplas unidades (Avançado), terminais ilimitados em qualquer plano, isolamento de dados por loja.\n\nFluxo de criação de conta (~4 min): 1) criar conta (loja, e-mail, senha, sem cartão) 2) parear tablet com código 3) montar catálogo 4) abrir caixa.\n\nINSTRUÇÕES:\n1. Use a ferramenta 'Consultar_Base_PDVet' para checar recursos/planos/FAQ antes de responder algo que não tenha certeza. Nunca invente preço ou recurso.\n2. Se perguntarem de TEF específico (Stone, Cielo etc.), diga que não tem essa info agora e chame a ferramenta 'Escalar_Atendimento' com motivo 'pergunta_fora_escopo'.\n3. Se for lojista já cadastrado com dúvida técnica pós-venda, NÃO diga apenas 'fale com o suporte' — esse canal não existe hoje no PDVet. Chame 'Escalar_Atendimento' com motivo 'suporte_sem_canal'.\n4. Quando a pessoa demonstrar interesse real (quer assinar, criar conta, fechar, pedir proposta/contrato), colete de forma conversada, um ou dois de cada vez, sem parecer formulário: nome do responsável, telefone celular (DDD), e-mail, Razão Social, CNPJ.\n5. Assim que tiver os 5 dados, chame a ferramenta 'Criar_Lead_PDVet_RDStation' passando nome_responsavel, telefone, email, razao_social, cnpj. Só depois disso siga com o passo a passo de criação de conta.\n6. Se a pessoa não quiser dar algum dado, não insista — continue ajudando e sugira que finalize direto pelo site.\n7. Se pedir atendimento humano, tente resolver primeiro; se não conseguir, chame 'Escalar_Atendimento' com motivo 'pedido_humano'.\n8b. Motivos válidos de escalonamento: interesse_confirmado, pergunta_fora_escopo, pedido_humano, falha_entendimento, suporte_sem_canal.\n8. Se você mesmo não conseguir entender o pedido depois de 2 tentativas, chame 'Escalar_Atendimento' com motivo 'falha_entendimento'.\n9. Tom cordial e descontraído, emojis com moderação, sempre em português."
+        }
+      }
+    },
+    {
+      "id": "d4a7f6ba-2b95-436d-9f54-9814fbb02cca",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        672,
+        560
+      ],
+      "parameters": {
+        "options": {}
+      },
+      "credentials": {
+        "googlePalmApi": {
+          "id": "OEknq8PxQlCzAYw1",
+          "name": "Gemini"
+        }
+      }
+    },
+    {
+      "id": "35ebc958-ec0a-4de6-b7f3-b337c40453eb",
+      "name": "Postgres Chat Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.2,
+      "position": [
+        800,
+        560
+      ],
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Normalizar Mensagem').item.json.phone }}",
+        "tableName": "pdvet_chat_memory"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "ESsOJiJVbTZ5O5Ux",
+          "name": "postgres_cloudfy"
+        }
+      }
+    },
+    {
+      "id": "22713a55-5050-4ea8-b332-bfceac5721bb",
+      "name": "Consultar_Base_PDVet",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        928,
+        560
+      ],
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Consulta a planilha de base de conhecimento do PDVet (planos, recursos, FAQ) antes de responder dúvidas do lead.",
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 835417881,
+          "mode": "list",
+          "cachedResultName": "base_pdvet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=835417881"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Confirmado em 08/09/2026: documento Leads Site e aba base_pdvet já configurados no n8n, credencial Google Sheets account já selecionada."
+    },
+    {
+      "id": "21c62bdd-62ee-4f3e-b387-385996a4d555",
+      "name": "Criar_Lead_PDVet_RDStation",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.1,
+      "position": [
+        1056,
+        560
+      ],
+      "parameters": {
+        "name": "Criar_lead_PDVet",
+        "description": "Cria (ou atualiza) o lead do PDVet no RD Station CRM. Chame SOMENTE depois de ter coletado com o cliente os 5 dados: nome_responsavel, telefone, email, razao_social e cnpj. Todos os 5 parâmetros são obrigatórios — passe cada um exatamente como o cliente informou, nunca vazio ou null.",
+        "workflowId": {
+          "__rl": true,
+          "value": "ecqILE3fOtqdg1EY",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/ecqILE3fOtqdg1EY",
+          "cachedResultName": "Sub_Criar_Lead_PDVet_RDStation"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "nome_responsavel": "={{ $fromAI('nome_responsavel', 'Nome completo do responsável pela loja, exatamente como o cliente informou', 'string') }}",
+            "telefone": "={{ $fromAI('telefone', 'Telefone celular com DDD informado pelo cliente, apenas dígitos', 'string') }}",
+            "email": "={{ $fromAI('email', 'E-mail do responsável, exatamente como o cliente informou', 'string') }}",
+            "razao_social": "={{ $fromAI('razao_social', 'Razão Social da empresa, exatamente como o cliente informou', 'string') }}",
+            "cnpj": "={{ $fromAI('cnpj', 'CNPJ da empresa, exatamente como o cliente informou', 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "nome_responsavel",
+              "displayName": "nome_responsavel",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "telefone",
+              "displayName": "telefone",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "razao_social",
+              "displayName": "razao_social",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "cnpj",
+              "displayName": "cnpj",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        }
+      },
+      "notes": "CORRIGIDO 20/09/2026 (2ª rodada): workflowInputs estava SEM o array schema — sem ele o toolWorkflow v2 expõe ao LLM só um campo \"query\" (visto no inputOverride das execuções 7695/7700) e todos os $fromAI resolvem para null. Schema com os 5 campos adicionado, $fromAI com descrição/tipo mantidos."
+    },
+    {
+      "id": "eac7cc0b-754c-4aab-bf09-b22dfe2f9396",
+      "name": "Escalar_Atendimento",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.1,
+      "position": [
+        1184,
+        560
+      ],
+      "parameters": {
+        "name": "Sub_Escalar_Atendimento",
+        "description": "Escala o atendimento para um humano da equipe comercial (notificação no Slack). Use nos casos previstos nas instruções. Ambos os parâmetros são obrigatórios.",
+        "workflowId": {
+          "__rl": true,
+          "value": "oKSyJOi70bEdutXr",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/oKSyJOi70bEdutXr",
+          "cachedResultName": "Sub_Escalar_Atendimento_PDVet"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "telefone": "={{ $fromAI('telefone', 'Número de WhatsApp do cliente desta conversa, apenas dígitos com DDI e DDD', 'string') }}",
+            "motivo": "={{ $fromAI('motivo', 'Motivo do escalonamento, exatamente um destes valores: interesse_confirmado, pergunta_fora_escopo, pedido_humano, falha_entendimento, suporte_sem_canal', 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "telefone",
+              "displayName": "telefone",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "motivo",
+              "displayName": "motivo",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        }
+      },
+      "notes": "CORRIGIDO 20/09/2026 (2ª rodada): schema dos 2 campos adicionado ao workflowInputs (mesma causa-raiz da tool Criar_Lead_PDVet_RDStation)."
+    },
+    {
+      "id": "ccc41a41-d275-4234-b635-8d042e32c51e",
+      "name": "Enviar Resposta WhatsApp (Meta Cloud API)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1392,
+        336
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v21.0/1298182450044736/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $credentials.metaCloudApiPdvet }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $('Normalizar Mensagem').item.json.phone, type: 'text', text: { body: $json.output } }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "NiP693Xn0WiMNm84",
+          "name": "Meta_PDVet_Token"
+        }
+      },
+      "notes": "CONFIRMADO FUNCIONANDO em 09/09/2026 e novamente em 20/09/2026 (execução real 7640, número desconhecido). Credencial httpHeaderAuth Meta_PDVet_Token (id NiP693Xn0WiMNm84). POST direto na Graph API da Meta."
+    },
+    {
+      "id": "fefb17db-372a-448d-bf4f-33312f95ef52",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1616,
+        448
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "35fd5961-f5c9-4c75-b83a-ecabfa534fb7",
+      "name": "Encaminhar Status p/ WhatsApp_Webhook_Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1392,
+        576
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://raregoat-n8n.cloudfy.live/webhook/whatsapp-status",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Hub-Signature-256",
+              "value": "={{ $('WhatsApp Inbound - Mensagens (POST)').item.json.headers['x-hub-signature-256'] || '' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('WhatsApp Inbound - Mensagens (POST)').item.json.body) }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "notes": "ADITIVO 20/09/2026 (Item 2): o app Meta so aceita UMA callback URL, apontada para pdvet-whatsapp-inbound. Este no reencaminha os eventos de status (statuses[], ramo false do IF) para o webhook whatsapp-status, repassando o corpo original e o header X-Hub-Signature-256 da Meta para a validacao HMAC do WhatsApp_Webhook_Status continuar valida. onError=continue: falha aqui nunca bloqueia a resposta 200 para a Meta.",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "name": "Roteia: é o número do Atendimento IA?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        -150
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "pdvet-roteia-ia",
+              "leftValue": "={{ String($('WhatsApp Inbound - Mensagens (POST)').item.json.body.entry[0].changes[0].value.metadata.phone_number_id || '') }}",
+              "rightValue": "1271767229359186",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "ef57a1da-df0c-4f9b-9f52-124600ebf1b7"
+    },
+    {
+      "name": "Encaminhar p/ Atendimento_IA_WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        950,
+        -300
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "parameters": {
+        "method": "POST",
+        "url": "https://raregoat-n8n.cloudfy.live/webhook/atendimento-ia-inbound",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Hub-Signature-256",
+              "value": "={{ $('WhatsApp Inbound - Mensagens (POST)').item.json.headers['x-hub-signature-256'] || '' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('WhatsApp Inbound - Mensagens (POST)').item.json.body) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "94de90e0-c030-4aca-8a3a-de0ae4bac713"
+    },
+    {
+      "name": "Roteia: é o número de Notificações (WhatsApp_Webhook_Status)?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        950,
+        -30
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "pdvet-roteia-notif",
+              "leftValue": "={{ String($('WhatsApp Inbound - Mensagens (POST)').item.json.body.entry[0].changes[0].value.metadata.phone_number_id || '') }}",
+              "rightValue": "1335430412979767",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "f63d80dc-8306-4ad2-90cc-84ec9164b69b"
+    },
+    {
+      "name": "Encaminhar Mensagem p/ WhatsApp_Webhook_Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        -180
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "parameters": {
+        "method": "POST",
+        "url": "https://raregoat-n8n.cloudfy.live/webhook/whatsapp-status",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Hub-Signature-256",
+              "value": "={{ $('WhatsApp Inbound - Mensagens (POST)').item.json.headers['x-hub-signature-256'] || '' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('WhatsApp Inbound - Mensagens (POST)').item.json.body) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "c0d9982a-4ad9-4e1f-9d70-e7fcb9938369"
+    }
+  ],
+  "connections": {
+    "WhatsApp Inbound - Verificação (GET)": {
+      "main": [
+        [
+          {
+            "node": "Validar Token e Preparar Challenge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Token e Preparar Challenge": {
+      "main": [
+        [
+          {
+            "node": "Responder Challenge (Meta)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Inbound - Mensagens (POST)": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Mensagem": {
+      "main": [
+        [
+          {
+            "node": "IF é mensagem real (não status)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF é mensagem real (não status)": {
+      "main": [
+        [
+          {
+            "node": "Roteia: é o número do Atendimento IA?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Encaminhar Status p/ WhatsApp_Webhook_Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Comercial PDVet": {
+      "main": [
+        [
+          {
+            "node": "Enviar Resposta WhatsApp (Meta Cloud API)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - Comercial PDVet",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent - Comercial PDVet",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar_Base_PDVet": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Comercial PDVet",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar_Lead_PDVet_RDStation": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Comercial PDVet",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escalar_Atendimento": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Comercial PDVet",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar Resposta WhatsApp (Meta Cloud API)": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Encaminhar Status p/ WhatsApp_Webhook_Status": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roteia: é o número do Atendimento IA?": {
+      "main": [
+        [
+          {
+            "node": "Encaminhar p/ Atendimento_IA_WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Roteia: é o número de Notificações (WhatsApp_Webhook_Status)?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Encaminhar p/ Atendimento_IA_WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roteia: é o número de Notificações (WhatsApp_Webhook_Status)?": {
+      "main": [
+        [
+          {
+            "node": "Encaminhar Mensagem p/ WhatsApp_Webhook_Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent - Comercial PDVet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Encaminhar Mensagem p/ WhatsApp_Webhook_Status": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "errorWorkflow": "MAvApEDIanoBGJPE",
+    "availableInMCP": true
+  }
+}

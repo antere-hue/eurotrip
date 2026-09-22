@@ -1,0 +1,1883 @@
+{
+  "name": "Sub_Detectar_Preenchimento_Implantacao",
+  "nodes": [
+    {
+      "id": "a53f2dc7-8362-4527-949f-65452fd8f29f",
+      "name": "A cada 20 minutos",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        192
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 20
+            }
+          ]
+        }
+      },
+      "notes": "Sem webhook nativo do Tally disponível — checagem periódica é o caminho confiável."
+    },
+    {
+      "id": "109ff37d-246f-4857-bd2f-62c3faac7eff",
+      "name": "Buscar Token Tally",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        192
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "Tally"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "8cba71f7-82b6-45ef-b59c-3f536cada6f5",
+      "name": "Buscar Submissões do Tally",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        448,
+        192
+      ],
+      "parameters": {
+        "url": "https://api.tally.so/forms/MeW5YY/submissions",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "50"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "notes": "PENDENTE VALIDAR: formato exato de auth/paginação da API do Tally — testar isolado antes de confiar."
+    },
+    {
+      "id": "e1b42b40-bfcb-4924-ad9b-a6d1def75e71",
+      "name": "Buscar Log de Submissões Já Processadas",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        672,
+        192
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1654186873,
+          "mode": "list",
+          "cachedResultName": "log_implantacao_processadas"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Aba já existe e está vazia (0 linhas, sem header). A primeira escrita real vai bater no bug de append em planilha vazia do Google Sheets node — tratar manualmente naquele momento (mesma técnica usada em log_implantacao_pendente), não em lote com as outras abas.",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "794c5304-5bec-47ae-8b24-55c263a8f052",
+      "name": "Normalizar e Filtrar Novas Submissões (multi-select)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        192
+      ],
+      "parameters": {
+        "jsCode": "\n// Reescrito para suportar múltiplos adquirentes e múltiplos bancos PIX por submissão.\n// Rótulos e estrutura de campos confirmados por inspeção direta do formulário Tally ao vivo (form MeW5YY).\n// CORRIGIDO: rótulos reais divergiam do que este código assumia (ver notas abaixo em cada ponto).\n\nconst submissions = $('Buscar Submissões do Tally').first().json.submissions || [];\nconst processadas = new Set(\n  $('Buscar Log de Submissões Já Processadas').all().map(item => item.json.submission_id)\n);\n// COMPAT 21/09/2026 (aditivo): a API do Tally devolve responses[] como { questionId, answer } e a lista questions[] com { id, title }.\n// O restante deste codigo le r.value / r.field.title / r.label; o shim abaixo preenche esses campos sem alterar a logica existente.\nconst questoesTally = $('Buscar Submissões do Tally').first().json.questions || [];\nconst tituloPorQuestao = Object.fromEntries(questoesTally.map(q => [q.id, q.title]));\nconst novas = submissions.filter(s => !processadas.has(s.id)).map(s => ({\n  ...s,\n  responses: (s.responses || s.answers || []).map(r => ({\n    ...r,\n    value: r.value !== undefined ? r.value : r.answer,\n    field: r.field || { id: r.questionId, title: tituloPorQuestao[r.questionId] },\n    label: r.label || tituloPorQuestao[r.questionId],\n  })),\n}));\n\nfunction campo(resp, label) {\n  const candidatos = resp.filter(r => (r.field?.title || r.label) === label);\n  const comValor = candidatos.find(r => r.value !== undefined && r.value !== null && r.value !== '');\n  if (comValor) return comValor.value;\n  return candidatos.length ? (candidatos[0].value ?? '') : '';\n}\nfunction campoArray(resp, label) {\n  const f = resp.find(r => (r.field?.title || r.label) === label);\n  const v = f ? f.value : [];\n  return Array.isArray(v) ? v : (v ? [v] : []);\n}\n// Client ID/Client Secret/Chave EVP existem como 3 blocos SEPARADOS no formulário real\n// (Sicredi, Sicoob, Cielo), todos com o MESMO título literal \"Client ID\" etc — não dá para\n// distinguir por rótulo quando mais de um banco é selecionado na mesma submissão.\n// Usa o id único da pergunta (confirmado via API real do Tally) e cai para o rótulo se o id não bater.\nfunction campoPorId(resp, id, labelFallback) {\n  const f = resp.find(r => r.questionId === id || r.field?.id === id);\n  if (f) return f.value ?? '';\n  return campo(resp, labelFallback);\n}\n\n// Tabela de referência: quais campos existem por adquirente (true = tem o campo)\n// Rótulo do campo de afiliação é \"Número de Afiliação (X)\" para todos, EXCETO Sipag,\n// que usa \"Número do Comércio (Sipag)\", e EXCETO Cielo, cujo campo vem sem sufixo\n// (primeira ocorrência do bloco no formulário, sem \"(Cielo)\" no título real).\nconst TABELA_ADQUIRENTE = {\n  'Cielo':                      { afiliacao: true,  logico: true  },\n  'Getnet':                     { afiliacao: true,  logico: true  },\n  'Safra':                      { afiliacao: true,  logico: true  },\n  'Vero':                       { afiliacao: false, logico: true  },\n  'Banrisul':                   { afiliacao: false, logico: true  },\n  'Pagseguro':                  { afiliacao: true,  logico: false },\n  'Rede':                       { afiliacao: false, logico: true  },\n  'Stone':                      { afiliacao: true,  logico: true  },\n  'Bin (Sicredi e Azulzinha)':  { afiliacao: true,  logico: true  },\n  'Global Payments':            { afiliacao: true,  logico: false },\n  'Ticket Log':                 { afiliacao: true,  logico: false },\n  'CTF':                        { afiliacao: true,  logico: false },\n  'Credishop':                  { afiliacao: true,  logico: false },\n  'Banesecard':                 { afiliacao: true,  logico: true  },\n  'Sipag':                      { afiliacao: true,  logico: true, rotuloAfiliacao: 'Número do Comércio' },\n  'Mercado Pago':               { afiliacao: false, logico: false, confirmacaoPortal: true },\n  'DMCard':                     { afiliacao: true,  logico: false },\n  'Conductor / Dock':           { afiliacao: true,  logico: false },\n};\n\n// Estrutura de campos por banco PIX. Client ID/Secret/EVP identificados por id (ver campoPorId).\nconst ESTRUTURA_PIX = {\n  'C6 Bank':  { campos: [] }, // fast path, sem dado técnico\n  'Sicredi':  { campos: ['client_id', 'client_secret', 'tipo_chave', 'chave_pix'], ids: { client_id: 'PXad55', client_secret: 'Yz4BR5' } },\n  'Sicoob':   { campos: ['client_id', 'tipo_chave', 'chave_pix'], ids: { client_id: 'NJedjj' } },\n  'Cielo':    { campos: ['client_id', 'client_secret', 'chave_evp'], ids: { client_id: 'DJl9GZ', client_secret: 'l7PXEv', chave_evp: 'RJ719j' } },\n  'Bradesco': { campos: [] }, // cartilha linkada no texto do formulário\n  'Itaú':     { campos: [] }, // cartilha linkada no texto do formulário\n};\n\nconst resultado = [];\n\nfor (const s of novas) {\n  const r = s.responses || s.answers || [];\n  const cnpj = (campo(r, 'CNPJ do estabelecimento') || '').replace(/\\D/g, '');\n  const dadosBase = {\n    submission_id: s.id,\n    submitted_at: s.submittedAt || s.createdAt,\n    razao_social: campo(r, 'Razão Social'),\n    cnpj,\n    // multi-loja 21/09/2026: CNPJ da unidade (campo novo 'CNPJ desta loja'); submissoes antigas caem no CNPJ do estabelecimento\n    cnpj_loja: (campo(r, 'CNPJ desta loja') || '').replace(/\\D/g, '') || cnpj,\n    nome_responsavel: campo(r, 'Nome do responsável'),\n    email: campo(r, 'E-mail'),\n    telefone: campo(r, 'Telefone'),\n  };\n\n  const adquirentes = campoArray(r, 'Qual adquirente você vai usar no TEF?');\n  const bancosPix = campoArray(r, 'Qual banco você vai usar para receber via PIX?');\n\n  // Item resumo — usado para atualizar base_funil_completo e disparar a notificação\n  resultado.push({ json: {\n    ...dadosBase,\n    tipo: 'resumo',\n    adquirentes_selecionados: adquirentes.join(', '),\n    bancos_pix_selecionados: bancosPix.join(', '),\n    nome_software_pdv: campo(r, 'Nome do Software PDV / Automação Comercial'),\n  }});\n\n  // Um item por adquirente marcado\n  for (const adq of adquirentes) {\n    if (adq === 'C6 Pay (mais simples — sem dados necessários)' || adq === 'C6 Pay') continue; // fast path, sem campo\n    const spec = TABELA_ADQUIRENTE[adq];\n    if (!spec) {\n      resultado.push({ json: { ...dadosBase, tipo: 'adquirente_erro', adquirente: adq,\n        erro: 'Adquirente não mapeado na tabela de referência — campo pode não ter sido lido corretamente.' }});\n      continue;\n    }\n    const labelAfiliacao = spec.rotuloAfiliacao || 'Número de Afiliação';\n    const sufixo = adq === 'Cielo' ? '' : ` (${adq})`;\n    resultado.push({ json: {\n      ...dadosBase,\n      tipo: 'adquirente',\n      adquirente: adq,\n      pinpad: campo(r, 'Você já tem o equipamento (PinPad)?'),\n      numero_afiliacao: spec.afiliacao ? campo(r, `${labelAfiliacao}${sufixo}`) : '',\n      numero_logico: spec.logico ? campo(r, `Número Lógico${sufixo}`) : '',\n      confirmacao_portal: spec.confirmacaoPortal ? (campoArray(r, 'Confirme quando tiver habilitado a integração').length > 0 ? 'Sim' : 'Não') : '',\n      nome_software_pdv: campo(r, 'Nome do Software PDV / Automação Comercial'),\n    }});\n  }\n\n  // Um item por banco PIX marcado\n  for (const banco of bancosPix) {\n    const bancoBase = banco.split(' (')[0]; // remove sufixo tipo \"(já incluído se...\"\n    const spec = ESTRUTURA_PIX[bancoBase] || ESTRUTURA_PIX[banco];\n    if (!spec) {\n      resultado.push({ json: { ...dadosBase, tipo: 'pix_erro', banco,\n        erro: 'Banco não mapeado na estrutura de referência.' }});\n      continue;\n    }\n    const item = { ...dadosBase, tipo: 'pix', banco: bancoBase };\n    if (spec.campos.includes('client_id')) item.client_id = campoPorId(r, spec.ids?.client_id, 'Client ID');\n    if (spec.campos.includes('client_secret')) item.client_secret = campoPorId(r, spec.ids?.client_secret, 'Client Secret');\n    if (spec.campos.includes('chave_evp')) item.chave_evp = campoPorId(r, spec.ids?.chave_evp, 'Chave EVP');\n    if (spec.campos.includes('tipo_chave')) item.tipo_chave = campo(r, `Tipo de chave Pix (${bancoBase})`);\n    if (spec.campos.includes('chave_pix')) item.chave_pix = campo(r, `Qual é a chave Pix (${bancoBase})`);\n    resultado.push({ json: item });\n  }\n}\n\nreturn resultado;\n"
+      },
+      "notes": "CORRIGIDO (via inspeção direta da API real do Tally, form MeW5YY): (1) rótulo do CNPJ é \"CNPJ do estabelecimento\", não \"CNPJ\" — antes vinha sempre vazio; (2) campos de Cielo (Número de Afiliação/Lógico) não têm sufixo \"(Cielo)\" no formulário real; (3) adquirente 'Vero' foi substituído por 'Banrisul' no formulário ao vivo, agora mapeado; (4) Client ID/Client Secret/Chave EVP existem como 3 blocos com título idêntico (Sicredi/Sicoob/Cielo) — agora identificados por id único da pergunta, não mais por rótulo ambíguo; (5) confirmação do Mercado Pago usava o texto do checkbox como se fosse o título da pergunta — corrigido para o título real 'Confirme quando tiver habilitado a integração'. Itens com tipo 'adquirente_erro'/'pix_erro' sinalizam entrada não mapeada — checar esses casos manualmente antes de assumir que a tabela de referência está 100%."
+    },
+    {
+      "id": "2b30ffe8-4db2-4a90-b749-84d07ad49b13",
+      "name": "Rotear por Tipo",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        176
+      ],
+      "parameters": {
+        "mode": "expression",
+        "output": "={{ ({ adquirente: 0, pix: 1, resumo: 2 })[$json.tipo] }}"
+      },
+      "notes": "CORRIGIDO: 'output' em modo expression exige um NÚMERO nesta versão do n8n — a expressão antiga (={{ $json.tipo }}) retornava a string diretamente e falhava em toda execução real (nunca detectado porque o formulário nunca teve uma submissão real até agora). Agora mapeia a string para o índice numérico da saída correspondente. Itens 'adquirente_erro'/'pix_erro' continuam sem saída mapeada de propósito — ficam visíveis como falha na execução em vez de serem gravados silenciosamente como dado válido."
+    },
+    {
+      "id": "763dfcc7-2bbc-4665-9fdd-5bd9bc6a1a1f",
+      "name": "Gravar em dados_adquirentes_implantacao",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1344,
+        0
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "dados_adquirentes_implantacao",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "cnpj": "={{ $json.cnpj }}",
+            "adquirente": "={{ $json.adquirente }}",
+            "numero_afiliacao": "={{ $json.numero_afiliacao }}",
+            "numero_logico": "={{ $json.numero_logico }}",
+            "confirmacao_portal": "={{ $json.confirmacao_portal }}",
+            "nome_software_pdv": "={{ $json.nome_software_pdv }}",
+            "preenchido_em": "={{ $json.submitted_at }}",
+            "cnpj_loja": "={{ $json.cnpj_loja }}"
+          },
+          "schema": [
+            {
+              "id": "cnpj",
+              "displayName": "cnpj",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "adquirente",
+              "displayName": "adquirente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "numero_afiliacao",
+              "displayName": "numero_afiliacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "numero_logico",
+              "displayName": "numero_logico",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "confirmacao_portal",
+              "displayName": "confirmacao_portal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nome_software_pdv",
+              "displayName": "nome_software_pdv",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "preenchido_em",
+              "displayName": "preenchido_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cnpj_loja",
+              "displayName": "cnpj_loja",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "CORRIGIDO: sheetName apontava para GID 0, que não existe nesta planilha (aba original com esse GID foi apagada em algum momento) — agora referencia a aba pelo nome, que é mais robusto a mudanças de GID. Sempre append (nunca update) — 1 linha por adquirente por submissão, histórico completo. Inclui confirmacao_portal, preenchido apenas para Mercado Pago (checkbox de confirmação no formulário em vez de números de afiliação/lógico). Aba está vazia (0 linhas) — a primeira escrita real pode bater no bug de append em planilha vazia do Google Sheets node; tratar manualmente naquele momento (mesma técnica usada em log_implantacao_pendente)."
+    },
+    {
+      "id": "3c105653-dfbd-4ed9-b67c-def3db494672",
+      "name": "Gravar em dados_pix_implantacao",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1344,
+        192
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "dados_pix_implantacao",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "cnpj": "={{ $json.cnpj }}",
+            "banco": "={{ $json.banco }}",
+            "client_id": "={{ $json.client_id }}",
+            "client_secret": "={{ $json.client_secret }}",
+            "chave_evp": "={{ $json.chave_evp }}",
+            "tipo_chave": "={{ $json.tipo_chave }}",
+            "chave_pix": "={{ $json.chave_pix }}",
+            "preenchido_em": "={{ $json.submitted_at }}",
+            "cnpj_loja": "={{ $json.cnpj_loja }}"
+          },
+          "schema": [
+            {
+              "id": "cnpj",
+              "displayName": "cnpj",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "banco",
+              "displayName": "banco",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "client_id",
+              "displayName": "client_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "client_secret",
+              "displayName": "client_secret",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "chave_evp",
+              "displayName": "chave_evp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tipo_chave",
+              "displayName": "tipo_chave",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "chave_pix",
+              "displayName": "chave_pix",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "preenchido_em",
+              "displayName": "preenchido_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cnpj_loja",
+              "displayName": "cnpj_loja",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "CORRIGIDO: sheetName apontava para GID 0, que não existe nesta planilha — agora referencia a aba pelo nome. Aba está vazia (0 linhas) — a primeira escrita real pode bater no bug de append em planilha vazia do Google Sheets node; tratar manualmente naquele momento (mesma técnica usada em log_implantacao_pendente)."
+    },
+    {
+      "id": "e51a0ed2-61c4-4b0d-b3d7-58989e484f7f",
+      "name": "Atualizar Resumo em base_funil_completo",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1344,
+        384
+      ],
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 810524007,
+          "mode": "list",
+          "cachedResultName": "base_funil_completo"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "cnpj": "={{ $json.cnpj }}",
+            "dados_implantacao_preenchido_em": "={{ $json.submitted_at }}",
+            "adquirentes_selecionados": "={{ $json.adquirentes_selecionados }}",
+            "bancos_pix_selecionados": "={{ $json.bancos_pix_selecionados }}",
+            "status_funil": "Dados de Implantação Recebidos"
+          },
+          "matchingColumns": [
+            "cnpj"
+          ],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nome_contato",
+              "displayName": "nome_contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "primeiro_nome",
+              "displayName": "primeiro_nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "telefone",
+              "displayName": "telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "origem",
+              "displayName": "origem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_primeiro_contato",
+              "displayName": "data_primeiro_contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp",
+              "displayName": "optin_whatsapp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp_data",
+              "displayName": "optin_whatsapp_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp_texto",
+              "displayName": "optin_whatsapp_texto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "razao_social",
+              "displayName": "razao_social",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "cnpj",
+              "displayName": "cnpj",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cidade",
+              "displayName": "cidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "uf",
+              "displayName": "uf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "qtd_caixas",
+              "displayName": "qtd_caixas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "produtos_interesse",
+              "displayName": "produtos_interesse",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "isencao",
+              "displayName": "isencao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_envio_proposta",
+              "displayName": "data_envio_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_proposta",
+              "displayName": "valor_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "link_pdf",
+              "displayName": "link_pdf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "score_qualificacao",
+              "displayName": "score_qualificacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status_funil",
+              "displayName": "status_funil",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_resposta_proposta",
+              "displayName": "data_resposta_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_data",
+              "displayName": "ultimo_toque_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_canal",
+              "displayName": "ultimo_toque_canal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_dia_regua",
+              "displayName": "ultimo_toque_dia_regua",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_perda",
+              "displayName": "motivo_perda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nutricao_mensal",
+              "displayName": "nutricao_mensal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "consultor_responsavel",
+              "displayName": "consultor_responsavel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_fechamento_comercial",
+              "displayName": "data_fechamento_comercial",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_fechado",
+              "displayName": "valor_fechado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "produtos_contratados",
+              "displayName": "produtos_contratados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_cadastro_sistema_gestao",
+              "displayName": "data_cadastro_sistema_gestao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sistema_gestao_usado",
+              "displayName": "sistema_gestao_usado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_instalacao_ativacao",
+              "displayName": "data_instalacao_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "mrr_mensal",
+              "displayName": "mrr_mensal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_cancelamento",
+              "displayName": "data_cancelamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_cancelamento",
+              "displayName": "motivo_cancelamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "homologado_paygo",
+              "displayName": "homologado_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_solicitacao_integracao",
+              "displayName": "data_solicitacao_integracao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status_integracao_paygo",
+              "displayName": "status_integracao_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_abertura_conta_c6",
+              "displayName": "data_abertura_conta_c6",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sla_ativacao_dias",
+              "displayName": "sla_ativacao_dias",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_ativacao_real",
+              "displayName": "data_ativacao_real",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_atraso_ativacao",
+              "displayName": "motivo_atraso_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_validacao_pos_ativacao",
+              "displayName": "data_validacao_pos_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nf_paygo_recebida_em",
+              "displayName": "nf_paygo_recebida_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_comissao_esperado",
+              "displayName": "valor_comissao_esperado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_comissao_informado_paygo",
+              "displayName": "valor_comissao_informado_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "divergencia_comissao",
+              "displayName": "divergencia_comissao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nf_faturamento_emitida_em",
+              "displayName": "nf_faturamento_emitida_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "token_aceite",
+              "displayName": "token_aceite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "aceite_confirmado_em",
+              "displayName": "aceite_confirmado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "dados_implantacao_preenchido_em",
+              "displayName": "dados_implantacao_preenchido_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "adquirentes_selecionados",
+              "displayName": "adquirentes_selecionados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "bancos_pix_selecionados",
+              "displayName": "bancos_pix_selecionados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status_funil",
+              "displayName": "status_funil",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "quantidade_lojas",
+              "displayName": "quantidade_lojas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "quantidade_pdvs",
+              "displayName": "quantidade_pdvs",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ]
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Casamento por CNPJ — normalizar (só dígitos) dos dois lados antes do match, para não criar linha duplicada por formatação divergente."
+    },
+    {
+      "id": "340a7f3f-4a29-494b-99c0-b750f2b0735c",
+      "name": "Buscar Token Resend",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1568,
+        384
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "resend_api"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "7c7388a4-24df-48d6-8316-924f066d76dd",
+      "name": "Notificar Fernanda (dados prontos para PayGo)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1792,
+        384
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.signing_secret }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  from: 'Funil Antere <comercial@antere.com.br>',\n  to: ['comercial@antere.com.br'],\n  subject: '📋 Dados de implantação recebidos — ' + $('Rotear por Tipo').item.json.razao_social,\n  html: '<h3>Dados prontos para cadastro no CRM da PayGo</h3>' +\n        '<p><b>Razão Social:</b> ' + $('Rotear por Tipo').item.json.razao_social + '<br>' +\n        '<b>CNPJ:</b> ' + $('Rotear por Tipo').item.json.cnpj + '<br>' +\n        '<b>Adquirentes selecionados:</b> ' + $('Rotear por Tipo').item.json.adquirentes_selecionados + '<br>' +\n        '<b>Bancos PIX selecionados:</b> ' + $('Rotear por Tipo').item.json.bancos_pix_selecionados + '</p>' +\n        '<p>Consulte as abas <code>dados_adquirentes_implantacao</code> e <code>dados_pix_implantacao</code> ' +\n        'na planilha para os números/credenciais completos de cada adquirente e banco selecionado ' +\n        '(inclusive Client Secret, que não vai por e-mail por segurança).</p>' +\n        '<p style=\"background:#FEF3C7; border-left:4px solid #D9822B; padding:10px 14px; border-radius:6px;\">' +\n        'Antes de cadastrar: confirme se o software informado (<b>' + $('Rotear por Tipo').item.json.nome_software_pdv + '</b>) já é homologado nas plataformas da PayGo. ' +\n        'Se não for, aplique o campo <b>Não Homologado</b> = Sim neste deal no RD Station e abra o chamado de integração junto à PayGo. ' +\n        'Quando a homologação for concluída, remova/limpe esse campo e mova o card para \"Aguardando Confirmação de Ativação\" manualmente.' +\n        '</p>' +\n        '<p>Próximo passo: cadastrar manualmente no CRM da PayGo.</p>'\n}) }}",
+        "options": {}
+      },
+      "notes": "REESCRITO: agora lista TODOS os adquirentes/bancos marcados (não mais um só). Aponta pra dentro da planilha em vez de listar cada credencial individualmente — reduz e-mail longo e mantém a decisão de segurança já tomada (Client Secret nunca no corpo do e-mail). ATUALIZADO: adicionado lembrete de homologação antes do \"Próximo passo\", usando nome_software_pdv real do item resumo (propagado no node de normalização) e referenciando o campo real \"Não Homologado\" (não é uma tag nativa nesta conta — é custom field na Empresa).",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "50d83770-bd75-4746-b566-3bf7a84ea525",
+      "name": "Marcar Submissão como Processada",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2016,
+        384
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1654186873,
+          "mode": "list",
+          "cachedResultName": "log_implantacao_processadas"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "submission_id": "={{ $('Rotear por Tipo').item.json.submission_id }}",
+            "processado_em": "={{ $now.toISO() }}"
+          },
+          "schema": [
+            {
+              "id": "submission_id",
+              "displayName": "submission_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "processado_em",
+              "displayName": "processado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "CORRIGIDO: sheetName apontava para GID 0, que não existe nesta planilha (a leitura já usava o GID correto 1654186873 — só a escrita estava errada, causando reprocessamento indefinido da mesma submissão). Dispara só a partir do ramo 'resumo' — 1 vez por submissão, independente de quantos adquirentes/bancos ela tinha. Aba está vazia (0 linhas) — a primeira escrita real pode bater no bug de append em planilha vazia do Google Sheets node; tratar manualmente naquele momento (mesma técnica usada em log_implantacao_pendente)."
+    },
+    {
+      "name": "ML_01_busca_base_funil",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1400,
+        700
+      ],
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo!A1:BZ3000",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "id": "bdce0906-16b2-4c13-8210-cfa77983ea6e"
+    },
+    {
+      "name": "ML_02_resolve_lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1620,
+        700
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// multi-loja 21/09/2026: resolve o lead da proposta (lead_id + quantidade_lojas) a partir de base_funil_completo\n// item 'resumo' completo vem do Switch (o node Atualizar Resumo devolve so as colunas gravadas)\nconst resumo = $('Rotear por Tipo').item.json;\nconst dig = v => String(v || '').replace(/\\D/g, '');\nconst values = ($json.values || []);\nconst header = values[0] || [];\nconst rows = values.slice(1).map(r => Object.fromEntries(header.map((h, i) => [h, r[i] !== undefined ? r[i] : ''])));\nconst cnpjEst = dig(resumo.cnpj);\nconst email = String(resumo.email || '').trim().toLowerCase();\n// Parte 2 (22/09/2026): prioriza o lead_id vindo do campo oculto do Tally (P2_02), depois cnpj, depois e-mail\nconst leadIdOculto = String(resumo.lead_id_oculto || '').trim();\nlet lead = leadIdOculto ? (rows.find(r => String(r.lead_id || '').trim() === leadIdOculto) || null) : null;\nlet resolvidoPor = lead ? 'lead_id' : '';\nif (!lead) { lead = rows.find(r => cnpjEst && dig(r.cnpj) === cnpjEst) || null; resolvidoPor = lead ? 'cnpj' : ''; }\nif (!lead && email) { lead = rows.find(r => String(r.email || '').trim().toLowerCase() === email) || null; resolvidoPor = lead ? 'email' : ''; }\nfunction cnpjValido(c) {\n  c = dig(c); if (c.length !== 14 || /^(\\d)\\1+$/.test(c)) return false;\n  const calc = (base, pesos) => { const s = base.split('').reduce((a, d, i) => a + Number(d) * pesos[i], 0); const r = s % 11; return r < 2 ? 0 : 11 - r; };\n  const d1 = calc(c.slice(0, 12), [5,4,3,2,9,8,7,6,5,4,3,2]);\n  const d2 = calc(c.slice(0, 12) + d1, [6,5,4,3,2,9,8,7,6,5,4,3,2]);\n  return c.slice(12) === `${d1}${d2}`;\n}\nconst cnpjLoja = dig(resumo.cnpj_loja) || cnpjEst;\nreturn { json: {\n  ...resumo,\n  cnpj_loja: cnpjLoja,\n  cnpj_loja_valido: cnpjValido(cnpjLoja),\n  lead_encontrado: !!lead,\n  lead_resolvido_por: resolvidoPor,\n  lead_id: lead ? String(lead.lead_id || '') : '',\n  quantidade_lojas: lead ? (Math.max(1, Number(dig(lead.quantidade_lojas)) || 1)) : 1,\n  lead_razao_social: lead ? (lead.razao_social || '') : '',\n  lead_email: lead ? (lead.email || '') : '',\n}};\n"
+      },
+      "id": "d3ed12b2-a2fb-48bc-a9e3-0386d23277ac"
+    },
+    {
+      "name": "ML_03_le_lojas_implantacao",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1840,
+        700
+      ],
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/lojas_implantacao!A1:G5000",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "id": "e170456a-38d7-4a51-8365-70b55400face"
+    },
+    {
+      "name": "ML_04_calcula_progresso",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2060,
+        700
+      ],
+      "parameters": {
+        "jsCode": "// multi-loja 21/09/2026: conta lojas distintas ja cadastradas por lead (inclui as submissoes desta rodada, em ordem)\nconst dig = v => String(v || '').replace(/\\D/g, '');\nconst resolvidos = $('ML_02_resolve_lead').all().map(i => i.json);\nconst leituras = $input.all();\nconst porLead = new Map();\nconst idsJaGravados = new Set();\nconst out = [];\nfor (let i = 0; i < leituras.length; i++) {\n  const r = resolvidos[i] || {};\n  if (i === 0) {\n    const values = leituras[0].json.values || [];\n    const header = values[0] || [];\n    for (const row of values.slice(1)) {\n      const o = Object.fromEntries(header.map((h, k) => [h, row[k] !== undefined ? row[k] : '']));\n      if (!o.lead_id) continue;\n      if (!porLead.has(String(o.lead_id))) porLead.set(String(o.lead_id), new Set());\n      if (dig(o.cnpj_loja)) porLead.get(String(o.lead_id)).add(dig(o.cnpj_loja));\n      if (o.submission_id) idsJaGravados.add(String(o.submission_id));\n    }\n  }\n  const chave = r.lead_id || ('sem_lead:' + dig(r.cnpj));\n  if (!porLead.has(chave)) porLead.set(chave, new Set());\n  const jaRegistrada = idsJaGravados.has(String(r.submission_id));\n  if (dig(r.cnpj_loja)) porLead.get(chave).add(dig(r.cnpj_loja));\n  const cnpjs = [...porLead.get(chave)];\n  const esperadas = Math.max(1, Number(r.quantidade_lojas) || 1);\n  const preenchidas = cnpjs.length;\n  out.push({ json: {\n    ...r,\n    ja_registrada: jaRegistrada,\n    multi_loja: esperadas > 1,\n    lojas_esperadas: esperadas,\n    lojas_preenchidas: preenchidas,\n    lojas_faltantes: Math.max(0, esperadas - preenchidas),\n    lojas_completo: preenchidas >= esperadas,\n    cnpjs_lista: cnpjs,\n    cnpjs_texto: cnpjs.join(', '),\n  }, pairedItem: { item: i } });\n}\nreturn out;\n"
+      },
+      "id": "7ec81bd6-a863-4254-8519-5d6b6ce3f089"
+    },
+    {
+      "name": "ML_05_grava_lojas_implantacao",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2280,
+        700
+      ],
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/lojas_implantacao!A1:G1:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {},
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: [[ $json.lead_id || '', $json.cnpj_loja || '', $json.submitted_at || $now.toISO(), $json.submission_id || '', $json.cnpj || '', $json.razao_social || '', $json.cnpj_software_house || '' ]] }) }}"
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput",
+      "id": "df9c8fd0-85e7-44fe-822c-aea4db95e071"
+    },
+    {
+      "name": "ML_06_if_multi_loja",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2500,
+        700
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ml06",
+              "leftValue": "={{ $('ML_04_calcula_progresso').item.json.multi_loja }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "1830cd92-9f88-4fe8-b8ff-9f10a9a94569"
+    },
+    {
+      "name": "ML_07_busca_token_resend",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2720,
+        900
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "resend_api"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true,
+      "id": "89f81dd4-50ee-4bdd-9011-fe8275653c92"
+    },
+    {
+      "name": "ML_08_if_completo",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2940,
+        900
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ml08",
+              "leftValue": "={{ $('ML_04_calcula_progresso').item.json.lojas_completo }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "f8139f60-fb2b-4061-8b24-e30355d2e7ec"
+    },
+    {
+      "name": "ML_09_email_lojas_completas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3160,
+        800
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.signing_secret }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  from: 'Funil Antere <comercial@antere.com.br>',\n  to: ['comercial@antere.com.br'],\n  subject: '✅ Todas as lojas cadastradas (' + $('ML_04_calcula_progresso').item.json.lojas_preenchidas + ' de ' + $('ML_04_calcula_progresso').item.json.lojas_esperadas + ') — ' + ($('ML_04_calcula_progresso').item.json.lead_razao_social || $('ML_04_calcula_progresso').item.json.razao_social),\n  html: '<h3>Cadastro multi-loja completo: pode iniciar o cadastro na PayGo</h3>' +\n        '<p><b>Razão Social:</b> ' + ($('ML_04_calcula_progresso').item.json.lead_razao_social || $('ML_04_calcula_progresso').item.json.razao_social) + '<br>' +\n        '<b>CNPJ da proposta (matriz):</b> ' + $('ML_04_calcula_progresso').item.json.cnpj + '<br>' +\n        '<b>Lead ID:</b> ' + $('ML_04_calcula_progresso').item.json.lead_id + '<br>' +\n        '<b>Lojas cadastradas:</b> ' + $('ML_04_calcula_progresso').item.json.lojas_preenchidas + ' de ' + $('ML_04_calcula_progresso').item.json.lojas_esperadas + '</p>' +\n        '<p><b>CNPJs recebidos:</b></p><ul>' + $('ML_04_calcula_progresso').item.json.cnpjs_lista.map(c => '<li>' + c + '</li>').join('') + '</ul>' +\n        '<p>Os dados de adquirente e PIX de cada loja estão nas abas <code>dados_adquirentes_implantacao</code> e <code>dados_pix_implantacao</code> (coluna <code>cnpj_loja</code>) e a lista de lojas na aba <code>lojas_implantacao</code>.</p>' +\n        '<p style=\"background:#DCFCE7; border-left:4px solid #16A34A; padding:10px 14px; border-radius:6px;\">Este é o sinal de que o cadastro na PayGo pode começar de fato para todas as unidades. Só depois de cadastrar todas, limpe o campo <b>Status Implantação</b> do deal no RD Station.</p>'\n}) }}",
+        "options": {}
+      },
+      "id": "8585044b-4115-43cb-a611-b25d15b04cae"
+    },
+    {
+      "name": "ML_10_email_lojas_parcial",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3160,
+        1000
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.signing_secret }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  from: 'Funil Antere <comercial@antere.com.br>',\n  to: ['comercial@antere.com.br'],\n  subject: '🏬 Lojas cadastradas: ' + $('ML_04_calcula_progresso').item.json.lojas_preenchidas + ' de ' + $('ML_04_calcula_progresso').item.json.lojas_esperadas + ' — ' + ($('ML_04_calcula_progresso').item.json.lead_razao_social || $('ML_04_calcula_progresso').item.json.razao_social) + ' (INCOMPLETO)',\n  html: '<h3>Cadastro multi-loja em andamento — ainda NÃO iniciar cadastro na PayGo</h3>' +\n        '<p><b>Razão Social:</b> ' + ($('ML_04_calcula_progresso').item.json.lead_razao_social || $('ML_04_calcula_progresso').item.json.razao_social) + '<br>' +\n        '<b>CNPJ da proposta (matriz):</b> ' + $('ML_04_calcula_progresso').item.json.cnpj + '<br>' +\n        '<b>Lead ID:</b> ' + $('ML_04_calcula_progresso').item.json.lead_id + '<br>' +\n        '<b>Progresso:</b> ' + $('ML_04_calcula_progresso').item.json.lojas_preenchidas + ' de ' + $('ML_04_calcula_progresso').item.json.lojas_esperadas + ' lojas cadastradas (faltam ' + $('ML_04_calcula_progresso').item.json.lojas_faltantes + ')</p>' +\n        '<p><b>CNPJs recebidos até agora:</b></p><ul>' + $('ML_04_calcula_progresso').item.json.cnpjs_lista.map(c => '<li>' + c + '</li>').join('') + '</ul>' +\n        '<p><b>Loja desta submissão:</b> ' + $('ML_04_calcula_progresso').item.json.cnpj_loja + ($('ML_04_calcula_progresso').item.json.cnpj_loja_valido ? '' : ' <span style=\"color:#DC2626\">(CNPJ com dígito verificador inválido — confirmar com o cliente)</span>') + '</p>' +\n        '<p style=\"background:#FEF3C7; border-left:4px solid #D9822B; padding:10px 14px; border-radius:6px;\">Cadastro incompleto: mantenha o campo <b>Status Implantação</b> do deal como está. A régua lembrará o cliente das lojas faltantes automaticamente.</p>'\n}) }}",
+        "options": {}
+      },
+      "id": "891b20a9-62ea-4270-abf7-c8000fbd6d74"
+    },
+    {
+      "name": "ML_11_slack_lojas",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        3400,
+        900
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "vendas-negociacao"
+        },
+        "text": "={{ ($('ML_04_calcula_progresso').item.json.lojas_completo ? '✅ *Multi-loja: todas as lojas cadastradas* (' : '🏬 *Multi-loja: cadastro parcial* (') + $('ML_04_calcula_progresso').item.json.lojas_preenchidas + ' de ' + $('ML_04_calcula_progresso').item.json.lojas_esperadas + ')' }}\n*Empresa:* {{ $('ML_04_calcula_progresso').item.json.lead_razao_social || $('ML_04_calcula_progresso').item.json.razao_social }}\n*Lead ID:* {{ $('ML_04_calcula_progresso').item.json.lead_id }}\n*CNPJs recebidos:* {{ $('ML_04_calcula_progresso').item.json.cnpjs_texto }}\n*Ação:* {{ $('ML_04_calcula_progresso').item.json.lojas_completo ? 'pode iniciar o cadastro na PayGo de todas as unidades' : 'aguardar as ' + $('ML_04_calcula_progresso').item.json.lojas_faltantes + ' loja(s) restante(s) — não concluir Status Implantação ainda' }}",
+        "otherOptions": {}
+      },
+      "credentials": {
+        "slackApi": {
+          "id": "8Qwkl6tupIvuM69K",
+          "name": "Slack - Funil Antere"
+        }
+      },
+      "id": "785f216e-0319-4be4-a913-3511d3d185cb",
+      "webhookId": "c47b2bae-f65b-477a-9fff-9fef26f46062"
+    },
+    {
+      "name": "ML_04b_if_nao_registrada",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2170,
+        560
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ml04b",
+              "leftValue": "={{ $json.ja_registrada }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "8fcf17ce-f547-4438-9d0d-d69ff45123d3"
+    },
+    {
+      "name": "P2_01_busca_base_funil",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1000,
+        1000
+      ],
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo!A1:BZ3000",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "id": "p2-01-busca-base-funil",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parte 2 (22/09/2026) - resolucao do lead pelo campo oculto lead_id do Tally, com fallback por e-mail.\n// Aditivo: recebe os itens do Normalizar e devolve os mesmos itens com cnpj (matriz), lead_id e cnpj_software_house preenchidos.\n// O campo \"CNPJ do estabelecimento\" deixou de existir no formulario; o cnpj (matriz) passa a vir de base_funil_completo.\nconst dig = v => String(v || '').replace(/\\D/g, '');\nconst itens = $('Normalizar e Filtrar Novas Submissões (multi-select)').all().map(i => i.json);\nconst values = ($input.first().json.values || []);\nconst header = values[0] || [];\nconst rows = values.slice(1).map(r => Object.fromEntries(header.map((h, i) => [h, r[i] !== undefined ? r[i] : ''])));\n// campos ocultos / novos lidos direto da resposta bruta do Tally (sem alterar o Normalizar)\nconst raw = $('Buscar Submissões do Tally').first().json || {};\nconst questoes = raw.questions || [];\n// campo oculto: no API do Tally a pergunta vem com type 'HIDDEN_FIELDS', title null e fields[].title = 'lead_id';\n// a resposta vem como objeto { lead_id: '<valor>' } (validado com submissao real em 22/09/2026)\nconst idsLeadId = new Set(questoes.filter(q => q.type === 'HIDDEN_FIELDS' || (q.fields || []).some(f => String(f.title || '').trim().toLowerCase() === 'lead_id') || String(q.title || '').trim().toLowerCase() === 'lead_id').map(q => q.id));\nconst idsSwHouse = new Set(questoes.filter(q => String(q.title || '').trim().toLowerCase() === 'cnpj da software house').map(q => q.id));\nconst extras = {};\nfor (const s of (raw.submissions || [])) {\n  const resp = s.responses || s.answers || [];\n  const pick = ids => {\n    const r = resp.find(x => ids.has(x.questionId || (x.field && x.field.id)));\n    let v = r ? (r.answer !== undefined ? r.answer : r.value) : '';\n    if (v && typeof v === 'object' && !Array.isArray(v)) { v = v.lead_id !== undefined ? v.lead_id : (Object.values(v)[0] ?? ''); }\n    return v === null || v === undefined ? '' : String(v);\n  };\n  extras[s.id] = { lead_id_oculto: pick(idsLeadId).trim(), cnpj_software_house: dig(pick(idsSwHouse)) };\n}\nreturn itens.map((it, i) => {\n  const ex = extras[it.submission_id] || { lead_id_oculto: '', cnpj_software_house: '' };\n  const email = String(it.email || '').trim().toLowerCase();\n  let lead = null, por = '';\n  if (ex.lead_id_oculto) { lead = rows.find(r => String(r.lead_id || '').trim() === ex.lead_id_oculto) || null; por = lead ? 'lead_id' : ''; }\n  if (!lead && dig(it.cnpj)) { lead = rows.find(r => dig(r.cnpj) === dig(it.cnpj)) || null; por = lead ? 'cnpj' : ''; }\n  if (!lead && email) { lead = rows.find(r => String(r.email || '').trim().toLowerCase() === email) || null; por = lead ? 'email' : ''; }\n  const cnpjMatriz = dig(it.cnpj) || (lead ? dig(lead.cnpj) : '') || dig(it.cnpj_loja);\n  return { json: {\n    ...it,\n    cnpj: cnpjMatriz,\n    cnpj_loja: dig(it.cnpj_loja) || cnpjMatriz,\n    lead_id: lead ? String(lead.lead_id || '') : ex.lead_id_oculto,\n    lead_id_oculto: ex.lead_id_oculto,\n    lead_resolvido_por_p2: por,\n    cnpj_software_house: ex.cnpj_software_house,\n  }, pairedItem: { item: i } };\n});\n"
+      },
+      "id": "p2-02-resolve-lead-oculto",
+      "name": "P2_02_resolve_lead_oculto",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1220,
+        1000
+      ]
+    }
+  ],
+  "connections": {
+    "A cada 20 minutos": {
+      "main": [
+        [
+          {
+            "node": "Buscar Token Tally",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Token Tally": {
+      "main": [
+        [
+          {
+            "node": "Buscar Submissões do Tally",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Submissões do Tally": {
+      "main": [
+        [
+          {
+            "node": "Buscar Log de Submissões Já Processadas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Log de Submissões Já Processadas": {
+      "main": [
+        [
+          {
+            "node": "Normalizar e Filtrar Novas Submissões (multi-select)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar e Filtrar Novas Submissões (multi-select)": {
+      "main": [
+        [
+          {
+            "node": "P2_01_busca_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rotear por Tipo": {
+      "main": [
+        [
+          {
+            "node": "Gravar em dados_adquirentes_implantacao",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gravar em dados_pix_implantacao",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Atualizar Resumo em base_funil_completo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Resumo em base_funil_completo": {
+      "main": [
+        [
+          {
+            "node": "ML_01_busca_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Token Resend": {
+      "main": [
+        [
+          {
+            "node": "Notificar Fernanda (dados prontos para PayGo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notificar Fernanda (dados prontos para PayGo)": {
+      "main": [
+        [
+          {
+            "node": "Marcar Submissão como Processada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_01_busca_base_funil": {
+      "main": [
+        [
+          {
+            "node": "ML_02_resolve_lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_02_resolve_lead": {
+      "main": [
+        [
+          {
+            "node": "ML_03_le_lojas_implantacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_03_le_lojas_implantacao": {
+      "main": [
+        [
+          {
+            "node": "ML_04_calcula_progresso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_04_calcula_progresso": {
+      "main": [
+        [
+          {
+            "node": "ML_04b_if_nao_registrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_05_grava_lojas_implantacao": {
+      "main": [
+        [
+          {
+            "node": "ML_06_if_multi_loja",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_06_if_multi_loja": {
+      "main": [
+        [
+          {
+            "node": "ML_07_busca_token_resend",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Buscar Token Resend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_07_busca_token_resend": {
+      "main": [
+        [
+          {
+            "node": "ML_08_if_completo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_08_if_completo": {
+      "main": [
+        [
+          {
+            "node": "ML_09_email_lojas_completas",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ML_10_email_lojas_parcial",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_09_email_lojas_completas": {
+      "main": [
+        [
+          {
+            "node": "ML_11_slack_lojas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_10_email_lojas_parcial": {
+      "main": [
+        [
+          {
+            "node": "ML_11_slack_lojas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_11_slack_lojas": {
+      "main": [
+        [
+          {
+            "node": "Marcar Submissão como Processada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML_04b_if_nao_registrada": {
+      "main": [
+        [
+          {
+            "node": "ML_05_grava_lojas_implantacao",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ML_06_if_multi_loja",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "P2_01_busca_base_funil": {
+      "main": [
+        [
+          {
+            "node": "P2_02_resolve_lead_oculto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "P2_02_resolve_lead_oculto": {
+      "main": [
+        [
+          {
+            "node": "Rotear por Tipo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  }
+}

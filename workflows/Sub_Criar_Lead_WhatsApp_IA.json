@@ -1,0 +1,672 @@
+{
+  "name": "Sub_Criar_Lead_WhatsApp_IA",
+  "nodes": [
+    {
+      "name": "Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "nome"
+            },
+            {
+              "name": "email"
+            },
+            {
+              "name": "telefone"
+            },
+            {
+              "name": "telefone_conversa"
+            },
+            {
+              "name": "interesse"
+            }
+          ]
+        }
+      },
+      "id": "ff5d9828-0d19-4505-b2e6-aae59462a121"
+    },
+    {
+      "name": "01_valida_normaliza",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// Lead do atendimento IA: nome obrigatorio + pelo menos um contato (e-mail ou telefone)\nconst inp = $input.first().json || {};\nconst clean = v => (v === undefined || v === null || String(v).toLowerCase() === 'null' || String(v).toLowerCase() === 'undefined') ? '' : String(v).trim();\nconst nome = clean(inp.nome);\nlet email = clean(inp.email).toLowerCase();\nif (email && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) email = '';\nlet telefone = clean(inp.telefone).replace(/\\D/g, '');\nconst telConversa = clean(inp.telefone_conversa).replace(/\\D/g, '');\nif (!telefone) telefone = telConversa;\nif (telefone && telefone.length <= 11) telefone = '55' + telefone;\nconst faltas = [];\nif (!nome) faltas.push('nome');\nif (!email && !telefone) faltas.push('e-mail ou telefone');\nreturn [{ json: { ok: faltas.length === 0, faltas, nome, email, telefone, telefone_conversa: telConversa, tem_email: !!email, interesse: clean(inp.interesse), origem: 'Lead WhatsApp IA' } }];"
+      },
+      "id": "1c26ca24-638b-4981-9934-3503010daa39"
+    },
+    {
+      "name": "02_if_ok",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "02_if_ok",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "eef89d1f-0496-4bd2-8b6b-1b104a49f351"
+    },
+    {
+      "name": "02b_retorna_erro",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        200
+      ],
+      "parameters": {
+        "jsCode": "const j=$input.first().json; return [{ json: { ok: false, erro: 'Faltou: ' + j.faltas.join(', ') + '. Peça ao cliente e chame a ferramenta de novo.' } }];"
+      },
+      "id": "2b687523-cabd-463d-9e4d-e7f41cbfcbee"
+    },
+    {
+      "name": "03_if_tem_email",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        -100
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "03_if_tem_email",
+              "leftValue": "={{ $json.tem_email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "610763b1-2e41-4bf5-b424-69c2eae8a8de"
+    },
+    {
+      "name": "04a_sub_criar_lead_rdstation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        900,
+        -250
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "ElNf9FGBFxrFWO2u",
+          "cachedResultName": "Sub_Criar_Lead_RDStation"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "nome": "={{ $json.nome }}",
+            "email": "={{ $json.email }}",
+            "telefone": "={{ $json.telefone }}",
+            "origem": "={{ $json.origem }}",
+            "ref": "whatsapp_ia"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "nome",
+              "displayName": "nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "telefone",
+              "displayName": "telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "origem",
+              "displayName": "origem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ref",
+              "displayName": "ref",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a7898d8a-2eca-4e43-b069-8c4a39ccabcb"
+    },
+    {
+      "name": "04a2_normaliza_retorno",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1140,
+        -250
+      ],
+      "parameters": {
+        "jsCode": "const r = $input.first().json || {}; const v = $('01_valida_normaliza').first().json;\nif (!r.lead_id) return [{ json: { ok: false, erro: 'Falha ao criar lead no RD Station: ' + (r.message || r.error || JSON.stringify(r)).slice(0, 200) } }];\nreturn [{ json: { ok: true, lead_id: String(r.lead_id), contato_existia: !!r.contato_existia, nome: v.nome, email: v.email, telefone: v.telefone, origem: v.origem, caminho: 'sub_criar_lead' } }];"
+      },
+      "id": "717de864-9d6d-447b-a620-4cea125badda"
+    },
+    {
+      "name": "04b_token_rd",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        900,
+        50
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1514838753"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "rdstation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "id": "d4c746d6-8a1a-4597-ad28-bb6175c45a4a"
+    },
+    {
+      "name": "04b2_criar_contato_telefone",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1140,
+        50
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.rd.services/crm/v2/contacts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ data: { name: $('01_valida_normaliza').first().json.nome, phones: [{ phone: $('01_valida_normaliza').first().json.telefone }] } }) }}",
+        "options": {}
+      },
+      "id": "cc420c00-1174-4722-be40-89f757ee4159"
+    },
+    {
+      "name": "04b3_criar_deal_telefone",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1380,
+        50
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.rd.services/crm/v2/deals",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('04b_token_rd').first().json.access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ data: { name: $('01_valida_normaliza').first().json.nome + ' - Identificação de Interesse', stage_id: '63a0f06e85f086001ce207d0', contact_ids: [ Array.isArray($json.data) ? $json.data[0].id : $json.data.id ], status: 'ongoing', owner_id: '63a0f04366d0e60019e9c9d6' } }) }}",
+        "options": {}
+      },
+      "id": "e1adb75d-8057-44e2-9480-967e14ae45c7"
+    },
+    {
+      "name": "04b4_extrai_lead_id",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1620,
+        50
+      ],
+      "parameters": {
+        "jsCode": "const r = $input.first().json || {}; const v = $('01_valida_normaliza').first().json; const id = r.data && r.data.id;\nif (!id) return [{ json: { ok: false, erro: 'Falha ao criar negociação no RD Station (sem e-mail): ' + JSON.stringify(r).slice(0, 200) } }];\nreturn [{ json: { ok: true, lead_id: String(id), contato_existia: false, nome: v.nome, email: '', telefone: v.telefone, origem: v.origem, caminho: 'direto_telefone' } }];"
+      },
+      "id": "5f13d955-a4bf-4020-922a-273facf72d6a"
+    },
+    {
+      "name": "05_if_lead_ok",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1860,
+        -100
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "05_if_lead_ok",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "d53f02f7-96e6-4b86-af28-ccc3f38fbef4"
+    },
+    {
+      "name": "06_vincula_fonte_rd",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        -100
+      ],
+      "parameters": {
+        "jsCode": "// Vincula a fonte \"Lead WhatsApp IA\" ao deal (deals ignoram 'source' string; precisa de source_id). Erros aqui nao interrompem.\n// dados do lead vem do IF (a entrada deste node e a linha de token)\nconst j = $('05_if_lead_ok').first().json; const token = $input.first().json.access_token;\nconst base = 'https://api.rd.services/crm/v2'; const H = { Authorization: 'Bearer ' + token, Accept: 'application/json', 'Content-Type': 'application/json' };\nconst norm = x => String(x || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();\nlet sourceId = ''; let fonte = 'nao_vinculada';\ntry {\n  const r = await this.helpers.httpRequest({ method: 'GET', url: base + '/sources?limit=100', headers: H, json: true });\n  const hit = ((r && r.data) || []).find(f => norm(f.name) === norm('Lead WhatsApp IA'));\n  if (hit && hit.id) sourceId = hit.id;\n  if (!sourceId) { const cr = await this.helpers.httpRequest({ method: 'POST', url: base + '/sources', headers: H, body: { data: { name: 'Lead WhatsApp IA' } }, json: true }); sourceId = (cr && cr.data && cr.data.id) || ''; }\n  if (sourceId) { await this.helpers.httpRequest({ method: 'PUT', url: base + '/deals/' + j.lead_id, headers: H, body: { data: { source_id: sourceId } }, json: true }); fonte = 'vinculada'; }\n} catch (e) { fonte = 'erro: ' + String(e.message || e).slice(0, 120); }\nreturn [{ json: { ...j, source_id: sourceId, fonte_rd: fonte } }];"
+      },
+      "id": "613cefca-32cf-49da-8655-f446b13f12c1"
+    },
+    {
+      "name": "05b_token_rd",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2000,
+        -100
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1514838753"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "rdstation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "id": "e5614381-943f-42c0-98ff-a1da14573828"
+    },
+    {
+      "name": "07_grava_base_funil",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2480,
+        -100
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "parameters": {
+        "method": "POST",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo!A1:H1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: [[ $('06_vincula_fonte_rd').first().json.lead_id, $('06_vincula_fonte_rd').first().json.nome, String($('06_vincula_fonte_rd').first().json.nome).split(' ')[0], $('06_vincula_fonte_rd').first().json.email, $('06_vincula_fonte_rd').first().json.telefone, 'Lead WhatsApp IA', $now.toISO(), '' ]] }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "id": "cc05974d-a8bd-415c-8eb0-0f23282ab2ae"
+    },
+    {
+      "name": "08_retorna",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2720,
+        -100
+      ],
+      "parameters": {
+        "jsCode": "const j = $('06_vincula_fonte_rd').first().json;\nconst link = 'https://raregoat-n8n.cloudfy.live/form/proposta?lead_id=' + j.lead_id + '&ref=whatsapp_ia';\nreturn [{ json: { ok: true, lead_id: j.lead_id, contato_existia: j.contato_existia, link_proposta: link, mensagem: 'Lead registrado no RD Station' + (j.contato_existia ? ' (contato já existia)' : '') + '. Envie ao cliente o link do formulário de proposta: ' + link } }];"
+      },
+      "id": "18c2767b-2e5d-4876-9f80-04e8642d82c2"
+    },
+    {
+      "name": "05c_retorna_erro_lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2100,
+        150
+      ],
+      "parameters": {
+        "jsCode": "return [{ json: $input.first().json }];"
+      },
+      "id": "3a6be39d-bb6e-4d42-8ae2-52b947ac5d6a"
+    }
+  ],
+  "connections": {
+    "Trigger": {
+      "main": [
+        [
+          {
+            "node": "01_valida_normaliza",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "01_valida_normaliza": {
+      "main": [
+        [
+          {
+            "node": "02_if_ok",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02_if_ok": {
+      "main": [
+        [
+          {
+            "node": "03_if_tem_email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "02b_retorna_erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03_if_tem_email": {
+      "main": [
+        [
+          {
+            "node": "04a_sub_criar_lead_rdstation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "04b_token_rd",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04a_sub_criar_lead_rdstation": {
+      "main": [
+        [
+          {
+            "node": "04a2_normaliza_retorno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04b_token_rd": {
+      "main": [
+        [
+          {
+            "node": "04b2_criar_contato_telefone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04b2_criar_contato_telefone": {
+      "main": [
+        [
+          {
+            "node": "04b3_criar_deal_telefone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04b3_criar_deal_telefone": {
+      "main": [
+        [
+          {
+            "node": "04b4_extrai_lead_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04a2_normaliza_retorno": {
+      "main": [
+        [
+          {
+            "node": "05_if_lead_ok",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04b4_extrai_lead_id": {
+      "main": [
+        [
+          {
+            "node": "05_if_lead_ok",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05_if_lead_ok": {
+      "main": [
+        [
+          {
+            "node": "05b_token_rd",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "05c_retorna_erro_lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05b_token_rd": {
+      "main": [
+        [
+          {
+            "node": "06_vincula_fonte_rd",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06_vincula_fonte_rd": {
+      "main": [
+        [
+          {
+            "node": "07_grava_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07_grava_base_funil": {
+      "main": [
+        [
+          {
+            "node": "08_retorna",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "MAvApEDIanoBGJPE"
+  }
+}

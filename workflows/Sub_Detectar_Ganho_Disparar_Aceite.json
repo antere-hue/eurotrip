@@ -1,0 +1,1040 @@
+{
+  "name": "Sub_Detectar_Ganho_Disparar_Aceite",
+  "nodes": [
+    {
+      "id": "26dd09d7-044a-4890-8f8a-5a6008aac299",
+      "name": "A cada 20 minutos",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 20
+            }
+          ]
+        }
+      },
+      "notes": "Intervalo sugerido (20 min) — ajustar conforme volume real de negociações. Mais assertivo que webhook em tempo real, ao custo de um atraso pequeno e previsível."
+    },
+    {
+      "id": "c2dd9716-fc56-47dd-9366-8663a688983f",
+      "name": "Buscar Token RD Station",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": 1514838753,
+          "cachedResultName": "tokens"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "rdstation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "6541cf99-bf7e-4288-8ecd-23c66d04698f",
+      "name": "Buscar Base Funil Completo",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": 810524007
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "aa6bee82-a398-4abc-8c1e-91d951995e14",
+      "name": "Empacota Base Funil (1 item)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// Empacota todas as linhas da planilha em UM unico item,\n// para que o node seguinte (Listar Deals Ganhos) rode uma unica vez\n// independente de quantas linhas existam em base_funil_completo.\nreturn [{ json: { rows: $input.all().map(i => i.json) } }];"
+      }
+    },
+    {
+      "id": "7e18c459-a96c-42ae-a7e2-55c690868880",
+      "name": "Listar Deals Ganhos (Em Negociação — Humano)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        896,
+        0
+      ],
+      "parameters": {
+        "url": "=https://api.rd.services/crm/v2/deals",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filter",
+              "value": "stage_id:63a0f06e85f086001ce207d1"
+            },
+            {
+              "name": "page[size]",
+              "value": "100"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Buscar Token RD Station').first().json.access_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "pagination": {
+            "pagination": {
+              "parameters": {
+                "parameters": [
+                  {
+                    "name": "page[number]",
+                    "value": "={{ $pageCount + 1 }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ $response.body.data.length === 0 }}",
+              "limitPagesFetched": true,
+              "maxRequests": 20
+            }
+          }
+        }
+      },
+      "notes": "CORRIGIDO 11/09/2026: a API v2 do RD Station ignora silenciosamente parâmetros soltos (deal_stage_id, win) — o formato correto é filter=<campo>:<valor> (confirmado contra a doc oficial e testado na API real: retornou exatamente o deal esperado, status=won). Paginação nativa do n8n adicionada (page[number]/page[size], confirmados na doc) para não perder deals se o estágio crescer além de 100.",
+      "retryOnFail": true
+    },
+    {
+      "id": "0b4db1de-e4fd-4859-8346-8681507f297c",
+      "name": "Filtrar: ainda sem Aceite Enviado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// Mantém apenas deals ganhos que AINDA NAO tem token_aceite gravado em base_funil_completo.\n// (RD Station nao aceita tags/custom_fields arbitrarios via API nesta conta - confirmado empiricamente:\n// PUT com {data:{tags:[...]}} e {data:{custom_fields:{...}}} sao ignorados silenciosamente, sem erro e\n// sem mudar updated_at. Por isso o controle de \"ja enviado\" usa a propria planilha como fonte da verdade.)\nconst paginas = $input.all().map(i => i.json);\nconst deals = paginas.flatMap(p => p.data || p.deals || []);\n\nconst funilRows = $('Empacota Base Funil (1 item)').item.json.rows;\nconst jaProcessados = new Set(\n  funilRows\n    .filter(r => r.token_aceite && String(r.token_aceite).trim() !== '')\n    .map(r => String(r.lead_id))\n);\n\nreturn deals\n  .filter(d => d.status === 'won')\n  .filter(d => !jaProcessados.has(String(d.id)))\n  .map(d => ({ json: d, pairedItem: { item: 0 } }));"
+      },
+      "notes": "CORRIGIDO 11/09/2026: adicionado achatamento de múltiplas páginas (a paginação nativa do n8n emite 1 item por página) + checagem explícita de status==='won' como segurança extra, já que o filtro da API só usa stage_id. pairedItem fixado em item 0 — só há uma linha de token RD Station buscada upstream, então a referência é sempre a mesma independente de qual página o deal veio."
+    },
+    {
+      "id": "050c947d-4191-488b-ae95-bfb5f12c27ae",
+      "name": "Buscar Organização",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1344,
+        0
+      ],
+      "parameters": {
+        "url": "=https://api.rd.services/crm/v2/organizations/{{ $json.organization_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Buscar Token RD Station').first().json.access_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "notes": "NOVO 11/09/2026: descoberto por teste real contra a API que razao_social e cnpj NÃO vêm aninhados no deal (não existe deal.organization) — é preciso buscar a organização separada por organization_id. cnpj confirmado dentro de organization.custom_fields.cnpj.",
+      "retryOnFail": true
+    },
+    {
+      "id": "8f9400b0-096a-481a-97ce-c602166a5055",
+      "name": "Buscar Contato",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1568,
+        0
+      ],
+      "parameters": {
+        "url": "=https://api.rd.services/crm/v2/contacts/{{ $('Filtrar: ainda sem Aceite Enviado').item.json.contact_ids[0] }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Buscar Token RD Station').first().json.access_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "notes": "NOVO 11/09/2026: contact_email não vem na resposta do deal nem da organização — só existe via GET /contacts/{id}, usando contact_ids[0] do deal original. Confirmado contra a API real: campo é contact.emails[0].email (array de objetos, não string direta).",
+      "retryOnFail": true
+    },
+    {
+      "id": "881626da-2d5e-40d5-ac98-21e38b52b1ea",
+      "name": "Gerar Token de Aceite",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// Gera token único por deal, combinando dados do deal + organização + contato\n// (buscados em nós separados - a API do RD Station não traz esses dados aninhados no deal)\n// Processa TODOS os deals que casaram no filtro (não só o primeiro).\nfunction uuid() {\n  return Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);\n}\nconst deals = $('Filtrar: ainda sem Aceite Enviado').all();\nconst orgs = $('Buscar Organização').all();\nconst contacts = $('Buscar Contato').all();\n\nreturn deals.map((item, i) => {\n  const deal = item.json;\n  const org = (orgs[i] && orgs[i].json.data) || {};\n  const contact = (contacts[i] && contacts[i].json.data) || {};\n  return {\n    json: {\n      id: deal.id,\n      razao_social: org.name || '',\n      cnpj: (org.custom_fields && org.custom_fields.cnpj) || '',\n      contact_email: (contact.emails && contact.emails[0] && contact.emails[0].email) || '',\n      // 22/09/2026: nome e telefone do contato tambem vao para o stub em base_funil (antes o stub ficava sem e-mail/nome/telefone\n      // e os e-mails pos-aceite falhavam com 'Invalid to field')\n      contact_name: contact.name || '',\n      contact_phone: (contact.phones && contact.phones[0] && contact.phones[0].phone) || '',\n      token_aceite: uuid()\n    },\n    pairedItem: { item: i }\n  };\n});"
+      },
+      "notes": "CORRIGIDO 11/09/2026: antes assumia razao_social/cnpj dentro de deal.organization (não existe) e contact_email sem fonte alguma. Agora combina dados reais de 3 chamadas confirmadas contra a API (deal, organização, contato)."
+    },
+    {
+      "id": "9af57ef5-9d3d-45d1-bb1c-ceb6b32ee8e9",
+      "name": "Buscar Token Resend",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2016,
+        0
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": 1514838753,
+          "cachedResultName": "tokens"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "resend_api"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Mesmo padrão dos outros workflows (aba tokens, service=resend_api, campo signing_secret é o usado para envio — confirmado no PDVet).",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "be4360a8-6d80-443f-aa77-36982f73fd6c",
+      "name": "Enviar E-mail de Aceite",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2240,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.signing_secret }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  from: 'Fernanda Spahn <comercial@antere.com.br>',\n  to: [$('Gerar Token de Aceite').item.json.contact_email || ''],\n  subject: 'Confirme aceite eletrônico da sua proposta comercial',\n  html: `\n    <div style='font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #1B1E27;'>\n      <div style='background-color: #3A34D6; padding: 32px 24px; text-align: center;'>\n        <h1 style='color: #F7F5F1; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;'>Antere</h1>\n        <p style='color: #C7C6F5; margin: 8px 0 0; font-size: 13px; letter-spacing: 0.2px;'>Automação comercial, do caixa ao pagamento</p>\n      </div>\n      <div style='padding: 32px 24px; background-color: #ffffff; text-align: center;'>\n        <p style='font-size: 16px; line-height: 1.6;'>Sua proposta para <strong>${$('Gerar Token de Aceite').item.json.razao_social}</strong> está pronta para ser formalizada.</p>\n        <div style='margin: 28px 0;'>\n          <a href='https://raregoat-n8n.cloudfy.live/webhook/aceite-proposta?token=${$('Gerar Token de Aceite').item.json.token_aceite}' style='background-color: #3A34D6; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;'>Confirmar aceite</a>\n        </div>\n        <p style='font-size: 14px; line-height: 1.6; color: #5B5F6B;'>Depois de confirmar, você recebe os próximos passos por e-mail.</p>\n      </div>\n      <div style='background-color: #F7F5F1; padding: 16px 24px; text-align: center;'>\n        <p style='font-size: 11px; color: #8B8F9C; margin: 0;'>Antere Tecnologia (F. de Carvalho Spahn Consultoria em Tecnologia da Informação LTDA)</p>\n      </div>\n    </div>\n  `,\n  tags: [\n    { name: 'lead_id', value: $('Gerar Token de Aceite').item.json.id || 'sem_lead_id' }\n  ]\n} }}",
+        "options": {}
+      },
+      "notes": "ATUALIZADO: identidade visual e assunto alinhados ao padrão do projeto (header indigo #3A34D6, rodapé claro #F7F5F1, mesma estrutura de 18_email_proposta e dos e-mails de Aceite_Eletronico_Proposta). Assunto fixo 'Confirme aceite eletrônico da sua proposta comercial'. Corpo resumido: abertura + botão único + linha final sobre próximos passos."
+    },
+    {
+      "id": "2143a682-5802-4743-964a-d4c6e2812ae1",
+      "name": "Gravar Token na Base (appendOrUpdate)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2464,
+        0
+      ],
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": 810524007,
+          "cachedResultName": "base_funil_completo"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_id": "={{ $('Gerar Token de Aceite').item.json.id }}",
+            "token_aceite": "={{ $('Gerar Token de Aceite').item.json.token_aceite }}",
+            "razao_social": "={{ $('Gerar Token de Aceite').item.json.razao_social }}",
+            "cnpj": "={{ $('Gerar Token de Aceite').item.json.cnpj }}",
+            "status_funil": "Aguardando Aceite Digital",
+            "nome_contato": "={{ $('Gerar Token de Aceite').item.json.contact_name }}",
+            "email": "={{ $('Gerar Token de Aceite').item.json.contact_email }}",
+            "telefone": "={{ $('Gerar Token de Aceite').item.json.contact_phone }}"
+          },
+          "matchingColumns": [
+            "lead_id"
+          ],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nome_contato",
+              "displayName": "nome_contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "primeiro_nome",
+              "displayName": "primeiro_nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "telefone",
+              "displayName": "telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "origem",
+              "displayName": "origem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_primeiro_contato",
+              "displayName": "data_primeiro_contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp",
+              "displayName": "optin_whatsapp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp_data",
+              "displayName": "optin_whatsapp_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp_texto",
+              "displayName": "optin_whatsapp_texto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "razao_social",
+              "displayName": "razao_social",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cnpj",
+              "displayName": "cnpj",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cidade",
+              "displayName": "cidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "uf",
+              "displayName": "uf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "qtd_caixas",
+              "displayName": "qtd_caixas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "produtos_interesse",
+              "displayName": "produtos_interesse",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "isencao",
+              "displayName": "isencao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_envio_proposta",
+              "displayName": "data_envio_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_proposta",
+              "displayName": "valor_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "link_pdf",
+              "displayName": "link_pdf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "score_qualificacao",
+              "displayName": "score_qualificacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status_funil",
+              "displayName": "status_funil",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_resposta_proposta",
+              "displayName": "data_resposta_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_data",
+              "displayName": "ultimo_toque_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_canal",
+              "displayName": "ultimo_toque_canal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_dia_regua",
+              "displayName": "ultimo_toque_dia_regua",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_perda",
+              "displayName": "motivo_perda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nutricao_mensal",
+              "displayName": "nutricao_mensal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "consultor_responsavel",
+              "displayName": "consultor_responsavel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_fechamento_comercial",
+              "displayName": "data_fechamento_comercial",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_fechado",
+              "displayName": "valor_fechado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "produtos_contratados",
+              "displayName": "produtos_contratados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_cadastro_sistema_gestao",
+              "displayName": "data_cadastro_sistema_gestao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sistema_gestao_usado",
+              "displayName": "sistema_gestao_usado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_instalacao_ativacao",
+              "displayName": "data_instalacao_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "mrr_mensal",
+              "displayName": "mrr_mensal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_cancelamento",
+              "displayName": "data_cancelamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_cancelamento",
+              "displayName": "motivo_cancelamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "homologado_paygo",
+              "displayName": "homologado_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_solicitacao_integracao",
+              "displayName": "data_solicitacao_integracao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status_integracao_paygo",
+              "displayName": "status_integracao_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_abertura_conta_c6",
+              "displayName": "data_abertura_conta_c6",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sla_ativacao_dias",
+              "displayName": "sla_ativacao_dias",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_ativacao_real",
+              "displayName": "data_ativacao_real",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_atraso_ativacao",
+              "displayName": "motivo_atraso_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_validacao_pos_ativacao",
+              "displayName": "data_validacao_pos_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nf_paygo_recebida_em",
+              "displayName": "nf_paygo_recebida_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_comissao_esperado",
+              "displayName": "valor_comissao_esperado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_comissao_informado_paygo",
+              "displayName": "valor_comissao_informado_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "divergencia_comissao",
+              "displayName": "divergencia_comissao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nf_faturamento_emitida_em",
+              "displayName": "nf_faturamento_emitida_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "token_aceite",
+              "displayName": "token_aceite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "aceite_confirmado_em",
+              "displayName": "aceite_confirmado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "CORRIGIDO 11/09/2026: razao_social/cnpj agora vêm do node Gerar Token de Aceite (já resolvidos via organização), não mais de um campo inexistente."
+    }
+  ],
+  "connections": {
+    "A cada 20 minutos": {
+      "main": [
+        [
+          {
+            "node": "Buscar Token RD Station",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Token RD Station": {
+      "main": [
+        [
+          {
+            "node": "Buscar Base Funil Completo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Base Funil Completo": {
+      "main": [
+        [
+          {
+            "node": "Empacota Base Funil (1 item)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Empacota Base Funil (1 item)": {
+      "main": [
+        [
+          {
+            "node": "Listar Deals Ganhos (Em Negociação — Humano)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Listar Deals Ganhos (Em Negociação — Humano)": {
+      "main": [
+        [
+          {
+            "node": "Filtrar: ainda sem Aceite Enviado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar: ainda sem Aceite Enviado": {
+      "main": [
+        [
+          {
+            "node": "Buscar Organização",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Organização": {
+      "main": [
+        [
+          {
+            "node": "Buscar Contato",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Contato": {
+      "main": [
+        [
+          {
+            "node": "Gerar Token de Aceite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar Token de Aceite": {
+      "main": [
+        [
+          {
+            "node": "Buscar Token Resend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Token Resend": {
+      "main": [
+        [
+          {
+            "node": "Enviar E-mail de Aceite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar E-mail de Aceite": {
+      "main": [
+        [
+          {
+            "node": "Gravar Token na Base (appendOrUpdate)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "MAvApEDIanoBGJPE",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  }
+}

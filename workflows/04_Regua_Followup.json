@@ -1,0 +1,4230 @@
+{
+  "name": "04_Regua_Followup",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "id": "a3997ad9-9405-4da9-a45d-d63652e098b7",
+      "name": "01_schedule_trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2416,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 810524007,
+          "mode": "list",
+          "cachedResultName": "base_funil_completo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007"
+        },
+        "options": {}
+      },
+      "id": "f24f6710-0940-433f-9a9d-c0ef9d7f7015",
+      "name": "02_le_base_funil",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -2000,
+        656
+      ],
+      "notesInFlow": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "TODO: preencher documentId e credencial do Google Sheets",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 775929465,
+          "mode": "list",
+          "cachedResultName": "email_status",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=775929465"
+        },
+        "options": {}
+      },
+      "id": "13b7c25b-9d67-4148-932f-75062a9b790b",
+      "name": "02b_le_email_status",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -2208,
+        656
+      ],
+      "notesInFlow": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Lido em paralelo; referenciado dentro do Code node 04 via $('02b_le_email_status').all() -- NAO conectar diretamente ao 04",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "8c9c5a5d-a42c-4ec3-97e6-3dcddf139c68",
+              "leftValue": "={{$json.status_funil}}",
+              "rightValue": "Proposta Enviada",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e7106057-d58a-4344-bd12-a271021ed6e7",
+      "name": "03_filtra_leads_ativos",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -1776,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Le status de abertura do e-mail (D0), gravado pelo Resend_Webhook_Status\nconst emailStatus = $('02b_le_email_status').all().map(i => i.json);\n\nconst hoje = new Date();\nhoje.setHours(0,0,0,0);\n\nconst out = [];\n\nfor (const item of $input.all()) {\n  const lead = item.json;\n\n  if (!lead.data_envio_proposta) continue;\n\n  const dataProposta = new Date(lead.data_envio_proposta);\n  dataProposta.setHours(0,0,0,0);\n\n  const diffMs = hoje - dataProposta;\n  const dias_corridos = Math.round(diffMs / (1000 * 60 * 60 * 24));\n\n  const dataValidade = new Date(dataProposta);\n  dataValidade.setDate(dataValidade.getDate() + 30);\n\n  const statusDoLead = emailStatus.filter(e => e.lead_id === lead.lead_id);\n  const d0_aberto = statusDoLead.some(e => e.evento === 'opened');\n\n  out.push({\n    json: {\n      ...lead,\n      dias_corridos,\n      d0_aberto,\n      data_validade: dataValidade.toISOString().split('T')[0]\n    }\n  });\n}\n\nreturn out;"
+      },
+      "id": "d0bf6e34-a2f6-4383-b41b-98ca34852659",
+      "name": "04_calcula_dias_corridos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1536,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "45a692a5-02dc-4e1d-8ef8-b01b67bc6efc",
+              "leftValue": "={{$json.dias_corridos}}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "6fb5fa5d-8be6-48a9-8552-af630fda573b",
+              "leftValue": "={{$json.dias_corridos}}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "b7687ff3-6728-47d0-aa26-52bdb6a8600e",
+              "leftValue": "={{$json.dias_corridos}}",
+              "rightValue": 5,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "7ca57c7a-d2d1-403d-b75b-10b8af1d24b2",
+              "leftValue": "={{$json.dias_corridos}}",
+              "rightValue": 8,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "d8b4effa-b4e7-44ea-949f-ba340c6ccabc",
+              "leftValue": "={{$json.dias_corridos}}",
+              "rightValue": 12,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "19e0eedf-0d7d-4c85-8563-2c79768598de",
+              "leftValue": "={{$json.dias_corridos}}",
+              "rightValue": 16,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "3b82d9df-eaa6-4295-a212-6eec6d56dfeb",
+              "leftValue": "={{$json.dias_corridos}}",
+              "rightValue": 20,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "43950ff1-8000-4fec-9d60-62eff2434083",
+              "leftValue": "={{$json.dias_corridos}}",
+              "rightValue": 25,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "1a8098e7-991c-4904-99ec-fffb64f4b527",
+              "leftValue": "={{$json.dias_corridos}}",
+              "rightValue": 30,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          }
+        },
+        "options": {}
+      },
+      "id": "826971be-b32c-44d0-870b-5170bb4c9244",
+      "name": "05_filtra_dia_gatilho",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -1296,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5ae52f6e-e68b-487b-9ab2-870d5d6414b9",
+                    "leftValue": "={{ $('04_calcula_dias_corridos').item.json.dias_corridos }}",
+                    "rightValue": 1,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "D1"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "636f0b57-892a-48c4-8485-bfd48cb367b2",
+                    "leftValue": "={{ $('04_calcula_dias_corridos').item.json.dias_corridos }}",
+                    "rightValue": 3,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "D3"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "9301019d-53b9-4228-b1d3-e3427a6af5f6",
+                    "leftValue": "={{ $('04_calcula_dias_corridos').item.json.dias_corridos }}",
+                    "rightValue": 5,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "D5"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "47e576ed-3bb2-4cd5-be8b-6d5ea85bc360",
+                    "leftValue": "={{ $('04_calcula_dias_corridos').item.json.dias_corridos }}",
+                    "rightValue": 8,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "D8"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2b6c764e-b67a-4ff6-baf3-39d44cbe9064",
+                    "leftValue": "={{ $('04_calcula_dias_corridos').item.json.dias_corridos }}",
+                    "rightValue": 12,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "D12"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "08d31056-c2c7-41d1-a31e-8a3eb3b1746e",
+                    "leftValue": "={{ $('04_calcula_dias_corridos').item.json.dias_corridos }}",
+                    "rightValue": 16,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "D16"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ee537e4b-dbdc-461d-9006-9c5da0be3dbb",
+                    "leftValue": "={{ $('04_calcula_dias_corridos').item.json.dias_corridos }}",
+                    "rightValue": 20,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "D20"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2dab5e5d-9cb1-4b52-80e9-bf54d7cb0495",
+                    "leftValue": "={{ $('04_calcula_dias_corridos').item.json.dias_corridos }}",
+                    "rightValue": 25,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "D25"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d0da32d5-ed08-45bc-bfd0-1d02e5f7a262",
+                    "leftValue": "={{ $('04_calcula_dias_corridos').item.json.dias_corridos }}",
+                    "rightValue": 30,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "D30"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "none"
+        }
+      },
+      "id": "89e6d27e-39ed-42df-adfa-a02c6358180c",
+      "name": "06_switch_dia",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -704,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 810524007,
+          "mode": "list",
+          "cachedResultName": "base_funil_completo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_id": "={{ $('04_calcula_dias_corridos').item.json.lead_id }}",
+            "ultimo_toque_data": "={{ $now.toISO() }}",
+            "ultimo_toque_canal": "={{ $prevNode.name.includes('whatsapp') ? 'whatsapp' : ($prevNode.name.includes('email') ? 'email' : 'nenhum') }}",
+            "ultimo_toque_dia_regua": "={{ $('04_calcula_dias_corridos').item.json.dias_corridos }}"
+          },
+          "matchingColumns": [
+            "lead_id"
+          ],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nome_contato",
+              "displayName": "nome_contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "primeiro_nome",
+              "displayName": "primeiro_nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "telefone",
+              "displayName": "telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "origem",
+              "displayName": "origem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_primeiro_contato",
+              "displayName": "data_primeiro_contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp",
+              "displayName": "optin_whatsapp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp_data",
+              "displayName": "optin_whatsapp_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp_texto",
+              "displayName": "optin_whatsapp_texto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "razao_social",
+              "displayName": "razao_social",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "cnpj",
+              "displayName": "cnpj",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "cidade",
+              "displayName": "cidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "uf",
+              "displayName": "uf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "qtd_caixas",
+              "displayName": "qtd_caixas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "produtos_interesse",
+              "displayName": "produtos_interesse",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "isencao",
+              "displayName": "isencao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_envio_proposta",
+              "displayName": "data_envio_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_proposta",
+              "displayName": "valor_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "link_pdf",
+              "displayName": "link_pdf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "score_qualificacao",
+              "displayName": "score_qualificacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status_funil",
+              "displayName": "status_funil",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_resposta_proposta",
+              "displayName": "data_resposta_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_data",
+              "displayName": "ultimo_toque_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ultimo_toque_canal",
+              "displayName": "ultimo_toque_canal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ultimo_toque_dia_regua",
+              "displayName": "ultimo_toque_dia_regua",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "motivo_perda",
+              "displayName": "motivo_perda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nutricao_mensal",
+              "displayName": "nutricao_mensal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "consultor_responsavel",
+              "displayName": "consultor_responsavel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_fechamento_comercial",
+              "displayName": "data_fechamento_comercial",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_fechado",
+              "displayName": "valor_fechado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "produtos_contratados",
+              "displayName": "produtos_contratados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_cadastro_sistema_gestao",
+              "displayName": "data_cadastro_sistema_gestao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sistema_gestao_usado",
+              "displayName": "sistema_gestao_usado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_instalacao_ativacao",
+              "displayName": "data_instalacao_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "mrr_mensal",
+              "displayName": "mrr_mensal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_cancelamento",
+              "displayName": "data_cancelamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_cancelamento",
+              "displayName": "motivo_cancelamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "homologado_paygo",
+              "displayName": "homologado_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_solicitacao_integracao",
+              "displayName": "data_solicitacao_integracao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status_integracao_paygo",
+              "displayName": "status_integracao_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_abertura_conta_c6",
+              "displayName": "data_abertura_conta_c6",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sla_ativacao_dias",
+              "displayName": "sla_ativacao_dias",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_ativacao_real",
+              "displayName": "data_ativacao_real",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_atraso_ativacao",
+              "displayName": "motivo_atraso_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_validacao_pos_ativacao",
+              "displayName": "data_validacao_pos_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nf_paygo_recebida_em",
+              "displayName": "nf_paygo_recebida_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_comissao_esperado",
+              "displayName": "valor_comissao_esperado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_comissao_informado_paygo",
+              "displayName": "valor_comissao_informado_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "divergencia_comissao",
+              "displayName": "divergencia_comissao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nf_faturamento_emitida_em",
+              "displayName": "nf_faturamento_emitida_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "1aaf1f27-9b2b-470d-9e06-8aea86b7bb4c",
+      "name": "99_atualiza_base_funil",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        896,
+        560
+      ],
+      "notesInFlow": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Todos os ramos convergem aqui. Usa referencia explicita: $('04_calcula_dias_corridos').item.json.lead_id -- NUNCA $json cru, pois quase todo ramo passou por um HTTP Request antes.",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "4ce8f94d-770a-46ed-9795-145e6b270163",
+              "leftValue": "={{ $('04_calcula_dias_corridos').item.json.optin_whatsapp }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          }
+        },
+        "options": {}
+      },
+      "id": "62f0f313-115a-4704-8671-57e70436fb11",
+      "name": "07_d1_if_optin",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -464,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v20.0/1335430412979767/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"messaging_product\": \"whatsapp\",\n  \"to\": $('04_calcula_dias_corridos').item.json.telefone,\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"confirmacao_envio_proposta\",\n    \"language\": { \"code\": \"pt_BR\" },\n    \"components\": [\n      { \"type\": \"body\", \"parameters\": [\n        { \"type\": \"text\", \"text\": $('04_calcula_dias_corridos').item.json.primeiro_nome }\n      ]},\n      { \"type\": \"button\", \"sub_type\": \"url\", \"index\": \"0\", \"parameters\": [\n        { \"type\": \"text\", \"text\": $('04_calcula_dias_corridos').item.json.link_pdf.replace('https://drive.google.com/file/d/', '') }\n      ]}\n    ]\n  }\n} }}",
+        "options": {}
+      },
+      "id": "d87236db-8759-4959-9838-65d4983b2ef3",
+      "name": "08_d1_whatsapp_confirmacao",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -224,
+        -288
+      ],
+      "notesInFlow": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "r0RzQWiWxhzmaeWd",
+          "name": "Header Auth account"
+        }
+      },
+      "notes": "Template: confirmacao_envio_proposta (Utility, Anexo I.6). D+1, sempre disparada se optin=true.",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "23ca73ab-221d-4843-9b03-eabf36818bed",
+              "leftValue": "={{ $('04_calcula_dias_corridos').item.json.d0_aberto }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "cb5bb9f6-569e-478a-b7f0-c409ce775b7b",
+      "name": "09_d3_if_d0_aberto",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -464,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('busca_token_resend').item.json.signing_secret }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  from: \"Fernanda Spahn <comercial@antere.com.br>\",\n  to: [$('04_calcula_dias_corridos').item.json.email],\n  subject: $('04_calcula_dias_corridos').item.json.primeiro_nome + \", o PIX grátis da proposta\",\n  html: `\n    <div style=\"font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #1B1E27;\">\n      <div style=\"background-color: #3A34D6; padding: 32px 24px; text-align: center;\">\n        <h1 style=\"color: #F7F5F1; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;\">Antere</h1>\n        <p style=\"color: #C7C6F5; margin: 8px 0 0; font-size: 13px; letter-spacing: 0.2px;\">Automação comercial, do caixa ao pagamento</p>\n      </div>\n      <div style=\"padding: 32px 24px; background-color: #ffffff;\">\n        <p style=\"font-size: 16px; line-height: 1.6;\">Oi, <strong>${$('04_calcula_dias_corridos').item.json.primeiro_nome}</strong>!</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Rapidinho: um ponto da proposta que vale destacar é o <strong>PIX 100% gratuito</strong> e a <strong>conciliação de caixa automática</strong> — sem precisar fechar o caixa manualmente no fim do dia.</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Costuma ser o que mais economiza tempo do time logo no primeiro mês.</p>\n        <div style=\"text-align: center; margin: 32px 0;\">\n          <a href=\"${$('04_calcula_dias_corridos').item.json.link_pdf}\" style=\"background-color: #3A34D6; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;\">Rever minha proposta</a>\n        </div>\n        <p style=\"font-size: 14px; line-height: 1.6; color: #5B5F6B;\">Faz sentido pro fluxo de vocês? Se sim, é só responder este e-mail que já sigo com os próximos passos.</p>\n        <hr style=\"border: none; border-top: 1px solid #E5E1D8; margin: 24px 0;\">\n        <p style=\"font-size: 14px; line-height: 1.6;\">📱 WhatsApp: <a href=\"https://wa.me/5511993979324\" style=\"color: #12786B;\">(11) 99397-9324</a></p>\n        <p style=\"font-size: 14px; line-height: 1.6; margin-top: 24px;\">Abraço,<br><strong>Fernanda Spahn</strong><br>Consultoria Comercial — Antere</p>\n      </div>\n      <div style=\"background-color: #F7F5F1; padding: 16px 24px; text-align: center;\">\n        <p style=\"font-size: 11px; color: #8B8F9C; margin: 0;\">Antere Tecnologia (F. de Carvalho Spahn Consultoria em Tecnologia da Informação LTDA)</p>\n      </div>\n    </div>\n  `,\n  tags: [\n    { name: \"lead_id\", value: $('04_calcula_dias_corridos').item.json.lead_id || \"sem_lead_id\" }\n  ]\n} }}",
+        "options": {}
+      },
+      "id": "c5c9a097-9b5b-4162-9375-2ec1498f6492",
+      "name": "10_d3_email_reforco",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -224,
+        -96
+      ],
+      "notesInFlow": true,
+      "notes": "E-mail D+3: reforco de beneficio nao destacado antes. Disparado quando D0 FOI aberto.",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d3bf1f3c-520c-4830-ae72-7127d052801b",
+              "leftValue": "={{ $('04_calcula_dias_corridos').item.json.optin_whatsapp }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "599d1244-e623-4497-865a-0d72da45d7c8",
+      "name": "11_d3_if_optin",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -224,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v20.0/1335430412979767/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"messaging_product\": \"whatsapp\",\n  \"to\": $('04_calcula_dias_corridos').item.json.telefone,\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"regua_d3_lembrete_pdf\",\n    \"language\": { \"code\": \"pt_BR\" },\n    \"components\": [\n      {\n        \"type\": \"body\",\n        \"parameters\": [\n          { \"type\": \"text\", \"parameter_name\": \"primeiro_nome\", \"text\": $('04_calcula_dias_corridos').item.json.primeiro_nome }\n        ]\n      },\n      {\n        \"type\": \"button\",\n        \"sub_type\": \"url\",\n        \"index\": \"0\",\n        \"parameters\": [\n          { \"type\": \"text\", \"text\": $('04_calcula_dias_corridos').item.json.link_pdf.replace('https://drive.google.com/file/",
+        "options": {}
+      },
+      "id": "e9af94aa-4b0d-403a-85f7-a62e431da85a",
+      "name": "12_d3_whatsapp_prioritario",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        16,
+        32
+      ],
+      "notesInFlow": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "r0RzQWiWxhzmaeWd",
+          "name": "Header Auth account"
+        }
+      },
+      "notes": "WhatsApp priorizado: D0 nao aberto + optin=true.",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('busca_token_resend').item.json.signing_secret }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  from: \"Fernanda Spahn <comercial@antere.com.br>\",\n  to: [$('04_calcula_dias_corridos').item.json.email],\n  subject: \"Ainda vale a conversa, \" + $('04_calcula_dias_corridos').item.json.primeiro_nome + \"?\",\n  html: `\n    <div style=\"font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #1B1E27;\">\n      <div style=\"background-color: #3A34D6; padding: 32px 24px; text-align: center;\">\n        <h1 style=\"color: #F7F5F1; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;\">Antere</h1>\n        <p style=\"color: #C7C6F5; margin: 8px 0 0; font-size: 13px; letter-spacing: 0.2px;\">Automação comercial, do caixa ao pagamento</p>\n      </div>\n      <div style=\"padding: 32px 24px; background-color: #ffffff;\">\n        <p style=\"font-size: 16px; line-height: 1.6;\">Oi, <strong>${$('04_calcula_dias_corridos').item.json.primeiro_nome}</strong>!</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Não sei se chegou a ver o e-mail com a proposta da Antere — às vezes cai no spam ou passa batido na correria.</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Deixo o link direto aqui, pra garantir:</p>\n        <div style=\"text-align: center; margin: 32px 0;\">\n          <a href=\"${$('04_calcula_dias_corridos').item.json.link_pdf}\" style=\"background-color: #3A34D6; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;\">Ver minha proposta</a>\n        </div>\n        <p style=\"font-size: 14px; line-height: 1.6; color: #5B5F6B;\">Se ainda fizer sentido pro seu negócio, é só responder este e-mail que sigo com você.</p>\n        <hr style=\"border: none; border-top: 1px solid #E5E1D8; margin: 24px 0;\">\n        <p style=\"font-size: 14px; line-height: 1.6;\">📱 WhatsApp: <a href=\"https://wa.me/5511993979324\" style=\"color: #12786B;\">(11) 99397-9324</a></p>\n        <p style=\"font-size: 14px; line-height: 1.6; margin-top: 24px;\">Abraço,<br><strong>Fernanda Spahn</strong><br>Consultoria Comercial — Antere</p>\n      </div>\n      <div style=\"background-color: #F7F5F1; padding: 16px 24px; text-align: center;\">\n        <p style=\"font-size: 11px; color: #8B8F9C; margin: 0;\">Antere Tecnologia (F. de Carvalho Spahn Consultoria em Tecnologia da Informação LTDA)</p>\n      </div>\n    </div>\n  `,\n  tags: [\n    { name: \"lead_id\", value: $('04_calcula_dias_corridos').item.json.lead_id || \"sem_lead_id\" }\n  ]\n} }}",
+        "options": {}
+      },
+      "id": "9e19133d-5473-463a-a180-c23793aba702",
+      "name": "13_d3_email_fallback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        16,
+        192
+      ],
+      "notesInFlow": true,
+      "notes": "Fallback: D0 nao aberto mas sem optin de WhatsApp -> mantem e-mail mesmo assim.",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f447a338-a8a2-4fb2-a292-d8b1102660d8",
+              "leftValue": "={{ $('04_calcula_dias_corridos').item.json.optin_whatsapp }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "645cbad0-3184-4a1b-9420-88b74daa632c",
+      "name": "14_d5_if_optin",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -464,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v20.0/1335430412979767/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"messaging_product\": \"whatsapp\",\n  \"to\": $('04_calcula_dias_corridos').item.json.telefone,\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"regua_d5_duvida_produto\",\n    \"language\": { \"code\": \"pt_BR\" },\n    \"components\": [\n      {\n        \"type\": \"body\",\n        \"parameters\": [\n          { \"type\": \"text\", \"parameter_name\": \"primeiro_nome\", \"text\": $('04_calcula_dias_corridos').item.json.primeiro_nome },\n          { \"type\": \"text\", \"parameter_name\": \"produtos_interesse\", \"text\": $('04_calcula_dias_corridos').item.json.produtos_interesse }\n        ]\n      }\n    ]\n  }\n} }}",
+        "options": {}
+      },
+      "id": "1428f4fd-5bfd-42e5-845a-8b138a4b76f8",
+      "name": "15_d5_whatsapp_pergunta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -224,
+        240
+      ],
+      "notesInFlow": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "r0RzQWiWxhzmaeWd",
+          "name": "Header Auth account"
+        }
+      },
+      "notes": "D+5: pergunta objetiva sobre produto de interesse (produtos_contratados).",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('busca_token_resend').item.json.signing_secret }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  from: \"Fernanda Spahn <comercial@antere.com.br>\",\n  to: [$('04_calcula_dias_corridos').item.json.email],\n  subject: \"Proposta válida até \" + $('04_calcula_dias_corridos').item.json.data_validade,\n  html: `\n    <div style=\"font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #1B1E27;\">\n      <div style=\"background-color: #3A34D6; padding: 32px 24px; text-align: center;\">\n        <h1 style=\"color: #F7F5F1; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;\">Antere</h1>\n        <p style=\"color: #C7C6F5; margin: 8px 0 0; font-size: 13px; letter-spacing: 0.2px;\">Automação comercial, do caixa ao pagamento</p>\n      </div>\n      <div style=\"padding: 32px 24px; background-color: #ffffff;\">\n        <p style=\"font-size: 16px; line-height: 1.6;\">Oi, <strong>${$('04_calcula_dias_corridos').item.json.primeiro_nome}</strong>!</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Lembrete rápido: as condições da proposta — taxas e mensalidade fixadas hoje — valem até <strong style=\"color: #D9822B;\">${$('04_calcula_dias_corridos').item.json.data_validade}</strong>.</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Depois disso, preciso recalcular com base na tabela vigente na época.</p>\n        <div style=\"text-align: center; margin: 32px 0;\">\n          <a href=\"${$('04_calcula_dias_corridos').item.json.link_pdf}\" style=\"background-color: #3A34D6; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;\">Rever minha proposta</a>\n        </div>\n        <p style=\"font-size: 14px; line-height: 1.6; color: #5B5F6B;\">Pra garantir as condições atuais, é só responder este e-mail que já sigo com os próximos passos.</p>\n        <hr style=\"border: none; border-top: 1px solid #E5E1D8; margin: 24px 0;\">\n        <p style=\"font-size: 14px; line-height: 1.6;\">📱 WhatsApp: <a href=\"https://wa.me/5511993979324\" style=\"color: #12786B;\">(11) 99397-9324</a></p>\n        <p style=\"font-size: 14px; line-height: 1.6; margin-top: 24px;\">Abraço,<br><strong>Fernanda Spahn</strong><br>Consultoria Comercial — Antere</p>\n      </div>\n      <div style=\"background-color: #F7F5F1; padding: 16px 24px; text-align: center;\">\n        <p style=\"font-size: 11px; color: #8B8F9C; margin: 0;\">Antere Tecnologia (F. de Carvalho Spahn Consultoria em Tecnologia da Informação LTDA)</p>\n      </div>\n    </div>\n  `,\n  tags: [\n    { name: \"lead_id\", value: $('04_calcula_dias_corridos').item.json.lead_id || \"sem_lead_id\" }\n  ]\n} }}",
+        "options": {}
+      },
+      "id": "a2ccd7dd-e944-4855-bdce-c6b909bddf95",
+      "name": "16_d8_email_urgencia",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -464,
+        512
+      ],
+      "notesInFlow": true,
+      "notes": "D+8: urgencia real -- validade da proposta (data_proposta + 30 dias). Sempre disparado.",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "1bb450e2-b741-4fbe-b442-2b3ed9c406ba",
+              "leftValue": "={{ $('04_calcula_dias_corridos').item.json.optin_whatsapp }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          }
+        },
+        "options": {}
+      },
+      "id": "5798a275-aeaf-4088-b534-e26ccfbae12a",
+      "name": "17_d12_if_optin",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -464,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v20.0/1335430412979767/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"messaging_product\": \"whatsapp\",\n  \"to\": $('04_calcula_dias_corridos').item.json.telefone,\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"regua_d12_prova_social\",\n    \"language\": { \"code\": \"pt_BR\" },\n    \"components\": [\n      {\n        \"type\": \"body\",\n        \"parameters\": [\n          { \"type\": \"text\", \"parameter_name\": \"primeiro_nome\", \"text\": $('04_calcula_dias_corridos').item.json.primeiro_nome },\n          { \"type\": \"text\", \"parameter_name\": \"data_validade\", \"text\": $('04_calcula_dias_corridos').item.json.data_validade }\n        ]\n      }\n    ]\n  }\n} }}",
+        "options": {}
+      },
+      "id": "8bee28a4-38eb-40c0-93ce-05c6a7a37051",
+      "name": "18_d12_whatsapp_prova_social",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -224,
+        720
+      ],
+      "notesInFlow": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "r0RzQWiWxhzmaeWd",
+          "name": "Header Auth account"
+        }
+      },
+      "notes": "D+12: prova social leve (caso de uso do setor do lead).",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5034005a-af9e-4661-a5e5-bcb62f9a881a",
+              "leftValue": "={{ $('04_calcula_dias_corridos').item.json.isencao }}",
+              "rightValue": "Sim",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "053e3ec3-d131-4f86-9cbf-295f5924d584",
+      "name": "19_d16_if_isencao",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -464,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('busca_token_resend').item.json.signing_secret }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  from: \"Fernanda Spahn <comercial@antere.com.br>\",\n  to: [$('04_calcula_dias_corridos').item.json.email],\n  subject: \"Isenção da taxa de implantação, \" + $('04_calcula_dias_corridos').item.json.primeiro_nome,\n  html: `\n    <div style=\"font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #1B1E27;\">\n      <div style=\"background-color: #3A34D6; padding: 32px 24px; text-align: center;\">\n        <h1 style=\"color: #F7F5F1; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;\">Antere</h1>\n        <p style=\"color: #C7C6F5; margin: 8px 0 0; font-size: 13px; letter-spacing: 0.2px;\">Automação comercial, do caixa ao pagamento</p>\n      </div>\n      <div style=\"padding: 32px 24px; background-color: #ffffff;\">\n        <p style=\"font-size: 16px; line-height: 1.6;\">Oi, <strong>${$('04_calcula_dias_corridos').item.json.primeiro_nome}</strong>!</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Um detalhe que pode ajudar a fechar a conta: abrindo uma <strong>conta digital C6 Bank</strong> e direcionando os recebíveis pra lá, a <strong style=\"color: #D9822B;\">taxa de implantação (R$ 200) sai isenta</strong>.</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">É simples de configurar e reduz o investimento inicial.</p>\n        <div style=\"text-align: center; margin: 32px 0;\">\n          <a href=\"${$('04_calcula_dias_corridos').item.json.link_pdf}\" style=\"background-color: #3A34D6; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;\">Rever minha proposta</a>\n        </div>\n        <p style=\"font-size: 14px; line-height: 1.6; color: #5B5F6B;\">Quer que eu te explique como funciona esse passo? É só responder este e-mail.</p>\n        <hr style=\"border: none; border-top: 1px solid #E5E1D8; margin: 24px 0;\">\n        <p style=\"font-size: 14px; line-height: 1.6;\">📱 WhatsApp: <a href=\"https://wa.me/5511993979324\" style=\"color: #12786B;\">(11) 99397-9324</a></p>\n        <p style=\"font-size: 14px; line-height: 1.6; margin-top: 24px;\">Abraço,<br><strong>Fernanda Spahn</strong><br>Consultoria Comercial — Antere</p>\n      </div>\n      <div style=\"background-color: #F7F5F1; padding: 16px 24px; text-align: center;\">\n        <p style=\"font-size: 11px; color: #8B8F9C; margin: 0;\">Antere Tecnologia (F. de Carvalho Spahn Consultoria em Tecnologia da Informação LTDA)</p>\n      </div>\n    </div>\n  `,\n  tags: [\n    { name: \"lead_id\", value: $('04_calcula_dias_corridos').item.json.lead_id || \"sem_lead_id\" }\n  ]\n} }}",
+        "options": {}
+      },
+      "id": "639d05c1-81c0-4d59-be62-03462e0bf14c",
+      "name": "20_d16_email_isencao",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -224,
+        912
+      ],
+      "notesInFlow": true,
+      "notes": "D+16: reforco da isencao da taxa de implantacao. So dispara se isencao != Sim.",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "52b337be-84a4-454c-8ee8-653868aff275",
+              "leftValue": "={{ $('04_calcula_dias_corridos').item.json.optin_whatsapp }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          }
+        },
+        "options": {}
+      },
+      "id": "7c1b5bef-ae4d-4edb-a9b8-d52db3fce602",
+      "name": "21_d20_if_optin",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -464,
+        1264
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v20.0/1335430412979767/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"messaging_product\": \"whatsapp\",\n  \"to\": $('04_calcula_dias_corridos').item.json.telefone,\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"regua_d20_ultima_tentativa\",\n    \"language\": { \"code\": \"pt_BR\" },\n    \"components\": [\n      {\n        \"type\": \"body\",\n        \"parameters\": [\n          { \"type\": \"text\", \"parameter_name\": \"primeiro_nome\", \"text\": $('04_calcula_dias_corridos').item.json.primeiro_nome }\n        ]\n      }\n    ]\n  }\n} }}",
+        "options": {}
+      },
+      "id": "d6fbde1b-a49d-4fda-9832-2ad96a552dd7",
+      "name": "22_d20_whatsapp_ultima_tentativa",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -224,
+        1216
+      ],
+      "notesInFlow": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "r0RzQWiWxhzmaeWd",
+          "name": "Header Auth account"
+        }
+      },
+      "notes": "D+20: ultima tentativa automatizada + CTA de agendamento.",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('busca_token_resend').item.json.signing_secret }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  from: \"Fernanda Spahn <comercial@antere.com.br>\",\n  to: [$('04_calcula_dias_corridos').item.json.email],\n  subject: \"Faltam 5 dias, \" + $('04_calcula_dias_corridos').item.json.primeiro_nome,\n  html: `\n    <div style=\"font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #1B1E27;\">\n      <div style=\"background-color: #3A34D6; padding: 32px 24px; text-align: center;\">\n        <h1 style=\"color: #F7F5F1; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;\">Antere</h1>\n        <p style=\"color: #C7C6F5; margin: 8px 0 0; font-size: 13px; letter-spacing: 0.2px;\">Automação comercial, do caixa ao pagamento</p>\n      </div>\n      <div style=\"padding: 32px 24px; background-color: #ffffff;\">\n        <p style=\"font-size: 16px; line-height: 1.6;\">Oi, <strong>${$('04_calcula_dias_corridos').item.json.primeiro_nome}</strong>!</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Sua proposta da Antere expira em <strong style=\"color: #D9822B;\">5 dias</strong> (${$('04_calcula_dias_corridos').item.json.data_validade}).</p>\n        <div style=\"text-align: center; margin: 32px 0;\">\n          <a href=\"${$('04_calcula_dias_corridos').item.json.link_pdf}\" style=\"background-color: #3A34D6; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;\">Rever minha proposta</a>\n        </div>\n        <p style=\"font-size: 14px; line-height: 1.6; color: #5B5F6B;\">Se quiser seguir com as condições atuais ou tiver qualquer dúvida de última hora, me chama por aqui que resolvemos rápido.</p>\n        <hr style=\"border: none; border-top: 1px solid #E5E1D8; margin: 24px 0;\">\n        <p style=\"font-size: 14px; line-height: 1.6;\">📱 WhatsApp: <a href=\"https://wa.me/5511993979324\" style=\"color: #12786B;\">(11) 99397-9324</a></p>\n        <p style=\"font-size: 14px; line-height: 1.6; margin-top: 24px;\">Abraço,<br><strong>Fernanda Spahn</strong><br>Consultoria Comercial — Antere</p>\n      </div>\n      <div style=\"background-color: #F7F5F1; padding: 16px 24px; text-align: center;\">\n        <p style=\"font-size: 11px; color: #8B8F9C; margin: 0;\">Antere Tecnologia (F. de Carvalho Spahn Consultoria em Tecnologia da Informação LTDA)</p>\n      </div>\n    </div>\n  `,\n  tags: [\n    { name: \"lead_id\", value: $('04_calcula_dias_corridos').item.json.lead_id || \"sem_lead_id\" }\n  ]\n} }}",
+        "options": {}
+      },
+      "id": "28787b37-0499-4c11-b848-be9c71007063",
+      "name": "23_d25_email_expiracao",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -464,
+        1504
+      ],
+      "notesInFlow": true,
+      "notes": "D+25: aviso de expiracao proxima (faltam 5 dias).",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "4095f01e-bfd5-4409-b800-dfb09d847cc1",
+              "leftValue": "={{ $('04_calcula_dias_corridos').item.json.score_qualificacao }}",
+              "rightValue": 50,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "or",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          }
+        },
+        "options": {}
+      },
+      "id": "2da7b375-2ba6-43a0-a44d-c1d40d8d044b",
+      "name": "24_d30_if_escalona",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -464,
+        1760
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 810524007,
+          "mode": "list",
+          "cachedResultName": "base_funil_completo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_id": "={{ $('04_calcula_dias_corridos').item.json.lead_id }}",
+            "status_funil": "Em Negociação - Atendimento Humano"
+          },
+          "matchingColumns": [
+            "lead_id"
+          ],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nome_contato",
+              "displayName": "nome_contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "primeiro_nome",
+              "displayName": "primeiro_nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "telefone",
+              "displayName": "telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "origem",
+              "displayName": "origem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_primeiro_contato",
+              "displayName": "data_primeiro_contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp",
+              "displayName": "optin_whatsapp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp_data",
+              "displayName": "optin_whatsapp_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp_texto",
+              "displayName": "optin_whatsapp_texto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "razao_social",
+              "displayName": "razao_social",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "cnpj",
+              "displayName": "cnpj",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "cidade",
+              "displayName": "cidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "uf",
+              "displayName": "uf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "qtd_caixas",
+              "displayName": "qtd_caixas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "produtos_interesse",
+              "displayName": "produtos_interesse",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "isencao",
+              "displayName": "isencao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_envio_proposta",
+              "displayName": "data_envio_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_proposta",
+              "displayName": "valor_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "link_pdf",
+              "displayName": "link_pdf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "score_qualificacao",
+              "displayName": "score_qualificacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status_funil",
+              "displayName": "status_funil",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_resposta_proposta",
+              "displayName": "data_resposta_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_data",
+              "displayName": "ultimo_toque_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_canal",
+              "displayName": "ultimo_toque_canal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_dia_regua",
+              "displayName": "ultimo_toque_dia_regua",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_perda",
+              "displayName": "motivo_perda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nutricao_mensal",
+              "displayName": "nutricao_mensal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "consultor_responsavel",
+              "displayName": "consultor_responsavel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_fechamento_comercial",
+              "displayName": "data_fechamento_comercial",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_fechado",
+              "displayName": "valor_fechado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "produtos_contratados",
+              "displayName": "produtos_contratados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_cadastro_sistema_gestao",
+              "displayName": "data_cadastro_sistema_gestao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sistema_gestao_usado",
+              "displayName": "sistema_gestao_usado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_instalacao_ativacao",
+              "displayName": "data_instalacao_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "mrr_mensal",
+              "displayName": "mrr_mensal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_cancelamento",
+              "displayName": "data_cancelamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_cancelamento",
+              "displayName": "motivo_cancelamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "homologado_paygo",
+              "displayName": "homologado_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_solicitacao_integracao",
+              "displayName": "data_solicitacao_integracao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status_integracao_paygo",
+              "displayName": "status_integracao_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_abertura_conta_c6",
+              "displayName": "data_abertura_conta_c6",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sla_ativacao_dias",
+              "displayName": "sla_ativacao_dias",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_ativacao_real",
+              "displayName": "data_ativacao_real",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_atraso_ativacao",
+              "displayName": "motivo_atraso_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_validacao_pos_ativacao",
+              "displayName": "data_validacao_pos_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nf_paygo_recebida_em",
+              "displayName": "nf_paygo_recebida_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_comissao_esperado",
+              "displayName": "valor_comissao_esperado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_comissao_informado_paygo",
+              "displayName": "valor_comissao_informado_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "divergencia_comissao",
+              "displayName": "divergencia_comissao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nf_faturamento_emitida_em",
+              "displayName": "nf_faturamento_emitida_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        240,
+        1584
+      ],
+      "id": "ea700610-b923-4c5a-bf47-51be9b504223",
+      "name": "26_d30_atualiza_status_escalonado",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 810524007,
+          "mode": "list",
+          "cachedResultName": "base_funil_completo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_id": "={{ $('04_calcula_dias_corridos').item.json.lead_id }}",
+            "status_funil": "Perdido",
+            "motivo_perda": "Sem resposta",
+            "nutricao_mensal": "true"
+          },
+          "matchingColumns": [
+            "lead_id"
+          ],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nome_contato",
+              "displayName": "nome_contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "primeiro_nome",
+              "displayName": "primeiro_nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "telefone",
+              "displayName": "telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "origem",
+              "displayName": "origem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_primeiro_contato",
+              "displayName": "data_primeiro_contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp",
+              "displayName": "optin_whatsapp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp_data",
+              "displayName": "optin_whatsapp_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp_texto",
+              "displayName": "optin_whatsapp_texto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "razao_social",
+              "displayName": "razao_social",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "cnpj",
+              "displayName": "cnpj",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "cidade",
+              "displayName": "cidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "uf",
+              "displayName": "uf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "qtd_caixas",
+              "displayName": "qtd_caixas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "produtos_interesse",
+              "displayName": "produtos_interesse",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "isencao",
+              "displayName": "isencao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_envio_proposta",
+              "displayName": "data_envio_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_proposta",
+              "displayName": "valor_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "link_pdf",
+              "displayName": "link_pdf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "score_qualificacao",
+              "displayName": "score_qualificacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status_funil",
+              "displayName": "status_funil",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_resposta_proposta",
+              "displayName": "data_resposta_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_data",
+              "displayName": "ultimo_toque_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_canal",
+              "displayName": "ultimo_toque_canal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_dia_regua",
+              "displayName": "ultimo_toque_dia_regua",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_perda",
+              "displayName": "motivo_perda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "nutricao_mensal",
+              "displayName": "nutricao_mensal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "consultor_responsavel",
+              "displayName": "consultor_responsavel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_fechamento_comercial",
+              "displayName": "data_fechamento_comercial",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_fechado",
+              "displayName": "valor_fechado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "produtos_contratados",
+              "displayName": "produtos_contratados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_cadastro_sistema_gestao",
+              "displayName": "data_cadastro_sistema_gestao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sistema_gestao_usado",
+              "displayName": "sistema_gestao_usado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_instalacao_ativacao",
+              "displayName": "data_instalacao_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "mrr_mensal",
+              "displayName": "mrr_mensal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_cancelamento",
+              "displayName": "data_cancelamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_cancelamento",
+              "displayName": "motivo_cancelamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "homologado_paygo",
+              "displayName": "homologado_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_solicitacao_integracao",
+              "displayName": "data_solicitacao_integracao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status_integracao_paygo",
+              "displayName": "status_integracao_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_abertura_conta_c6",
+              "displayName": "data_abertura_conta_c6",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sla_ativacao_dias",
+              "displayName": "sla_ativacao_dias",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_ativacao_real",
+              "displayName": "data_ativacao_real",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_atraso_ativacao",
+              "displayName": "motivo_atraso_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_validacao_pos_ativacao",
+              "displayName": "data_validacao_pos_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nf_paygo_recebida_em",
+              "displayName": "nf_paygo_recebida_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_comissao_esperado",
+              "displayName": "valor_comissao_esperado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_comissao_informado_paygo",
+              "displayName": "valor_comissao_informado_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "divergencia_comissao",
+              "displayName": "divergencia_comissao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nf_faturamento_emitida_em",
+              "displayName": "nf_faturamento_emitida_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -256,
+        1856
+      ],
+      "id": "e871e572-e145-4e30-b18d-b5231d12f940",
+      "name": "27_d30_atualiza_status_perdido",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1514838753"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "rdstation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -240,
+        1584
+      ],
+      "id": "684093e8-c0f7-48ae-966c-39090ab56a84",
+      "name": "25a_token_rdstation",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.rd.services/crm/v2/tasks",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('25a_token_rdstation').item.json.access_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"deal_id\": $('04_calcula_dias_corridos').item.json.lead_id,\n  \"text\": \"Escalonamento automático: lead sem resposta após 30 dias de régua (score >= 50). Contatar em até 4h úteis.\",\n  \"type\": \"call\",\n  \"date\": $now.plus({ hours: 4 }).toISO()\n} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        1584
+      ],
+      "id": "0ee37978-1404-4383-9a30-c409a36980e8",
+      "name": "25b_cria_tarefa_rdstation"
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -992,
+        656
+      ],
+      "id": "21ef6ff8-cf57-4d9f-8b41-2a4be11d5ea9",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 4,
+        "unit": "seconds"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        1584
+      ],
+      "id": "wt-throttle-0000-0000-000000000001",
+      "name": "wait_throttle_4s",
+      "webhookId": "46c7bb9d-ad67-463f-8a14-95e3a43fe960"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1514838753"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "resend_api"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -848,
+        656
+      ],
+      "id": "rk000000-0000-0000-0000-000000000004",
+      "name": "busca_token_resend",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 810524007,
+          "mode": "list",
+          "cachedResultName": "base_funil_completo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "lead_id",
+              "lookupValue": "={{ $('04_calcula_dias_corridos').item.json.lead_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1856,
+        -424
+      ],
+      "id": "rc-d1-0000-0000-000000000001",
+      "name": "releitura_optin_d1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $('releitura_optin_d1').all();\nreturn [{ json: { optin_whatsapp_atual: rows.length > 0 ? (rows[0].json.optin_whatsapp === true || rows[0].json.optin_whatsapp === 'true') : false } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1676,
+        -364
+      ],
+      "id": "rc-d1-0000-0000-000000000002",
+      "name": "normaliza_releitura_d1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-d1-optin-atual",
+              "leftValue": "={{ $json.optin_whatsapp_atual }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1496,
+        -364
+      ],
+      "id": "rc-d1-0000-0000-000000000003",
+      "name": "if_optin_ainda_valido_d1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 810524007,
+          "mode": "list",
+          "cachedResultName": "base_funil_completo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "lead_id",
+              "lookupValue": "={{ $('04_calcula_dias_corridos').item.json.lead_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1216,
+        -520
+      ],
+      "id": "rc-d3-0000-0000-000000000001",
+      "name": "releitura_optin_d3",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $('releitura_optin_d3').all();\nreturn [{ json: { optin_whatsapp_atual: rows.length > 0 ? (rows[0].json.optin_whatsapp === true || rows[0].json.optin_whatsapp === 'true') : false } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1036,
+        -460
+      ],
+      "id": "rc-d3-0000-0000-000000000002",
+      "name": "normaliza_releitura_d3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-d3-optin-atual",
+              "leftValue": "={{ $json.optin_whatsapp_atual }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -856,
+        -460
+      ],
+      "id": "rc-d3-0000-0000-000000000003",
+      "name": "if_optin_ainda_valido_d3"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 810524007,
+          "mode": "list",
+          "cachedResultName": "base_funil_completo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "lead_id",
+              "lookupValue": "={{ $('04_calcula_dias_corridos').item.json.lead_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -576,
+        -296
+      ],
+      "id": "rc-d5-0000-0000-000000000001",
+      "name": "releitura_optin_d5",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $('releitura_optin_d5').all();\nreturn [{ json: { optin_whatsapp_atual: rows.length > 0 ? (rows[0].json.optin_whatsapp === true || rows[0].json.optin_whatsapp === 'true') : false } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -396,
+        -236
+      ],
+      "id": "rc-d5-0000-0000-000000000002",
+      "name": "normaliza_releitura_d5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-d5-optin-atual",
+              "leftValue": "={{ $json.optin_whatsapp_atual }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -216,
+        -236
+      ],
+      "id": "rc-d5-0000-0000-000000000003",
+      "name": "if_optin_ainda_valido_d5"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 810524007,
+          "mode": "list",
+          "cachedResultName": "base_funil_completo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "lead_id",
+              "lookupValue": "={{ $('04_calcula_dias_corridos').item.json.lead_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        64,
+        -40
+      ],
+      "id": "rc-d12-0000-0000-000000000001",
+      "name": "releitura_optin_d12",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $('releitura_optin_d12').all();\nreturn [{ json: { optin_whatsapp_atual: rows.length > 0 ? (rows[0].json.optin_whatsapp === true || rows[0].json.optin_whatsapp === 'true') : false } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        244,
+        20
+      ],
+      "id": "rc-d12-0000-0000-000000000002",
+      "name": "normaliza_releitura_d12"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-d12-optin-atual",
+              "leftValue": "={{ $json.optin_whatsapp_atual }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        424,
+        20
+      ],
+      "id": "rc-d12-0000-0000-000000000003",
+      "name": "if_optin_ainda_valido_d12"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 810524007,
+          "mode": "list",
+          "cachedResultName": "base_funil_completo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "lead_id",
+              "lookupValue": "={{ $('04_calcula_dias_corridos').item.json.lead_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        704,
+        280
+      ],
+      "id": "rc-d20-0000-0000-000000000001",
+      "name": "releitura_optin_d20",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $('releitura_optin_d20').all();\nreturn [{ json: { optin_whatsapp_atual: rows.length > 0 ? (rows[0].json.optin_whatsapp === true || rows[0].json.optin_whatsapp === 'true') : false } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        884,
+        340
+      ],
+      "id": "rc-d20-0000-0000-000000000002",
+      "name": "normaliza_releitura_d20"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-d20-optin-atual",
+              "leftValue": "={{ $json.optin_whatsapp_atual }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1064,
+        340
+      ],
+      "id": "rc-d20-0000-0000-000000000003",
+      "name": "if_optin_ainda_valido_d20"
+    },
+    {
+      "parameters": {
+        "jsCode": "let errMsg = 'Erro sem mensagem';\nif ($json.error) {\n  errMsg = (typeof $json.error === 'string') ? $json.error : ($json.error.message || errMsg);\n}\nreturn [{ json: {\n  workflow_origem: '04_Regua_Followup',\n  no_origem: $prevNode.name,\n  mensagem_erro: errMsg,\n  timestamp: $now.toISO(),\n  link_execucao: `https://raregoat-n8n.cloudfy.live/workflow/a8P2SlOqAoGIgrYB/executions/${$execution.id}`\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1000,
+        1856
+      ],
+      "id": "e2000000-0000-0000-0000-000000000001",
+      "name": "prepara_erro_envio_regua",
+      "notes": "Fan-in dos outputs de erro dos 10 nos de envio (onError=continueErrorOutput). $prevNode.name identifica dinamicamente qual no falhou."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "MAvApEDIanoBGJPE",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/MAvApEDIanoBGJPE",
+          "cachedResultName": "Mission_Control_Error_Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workflow_origem": "={{ $('prepara_erro_envio_regua').item.json.workflow_origem }}",
+            "no_origem": "={{ $('prepara_erro_envio_regua').item.json.no_origem }}",
+            "mensagem_erro": "={{ $('prepara_erro_envio_regua').item.json.mensagem_erro }}",
+            "timestamp": "={{ $('prepara_erro_envio_regua').item.json.timestamp }}",
+            "link_execucao": "={{ $('prepara_erro_envio_regua').item.json.link_execucao }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "workflow_origem",
+              "displayName": "workflow_origem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "no_origem",
+              "displayName": "no_origem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "mensagem_erro",
+              "displayName": "mensagem_erro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "link_execucao",
+              "displayName": "link_execucao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "e2000000-0000-0000-0000-000000000002",
+      "name": "notifica_mission_control_regua",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -780,
+        1856
+      ],
+      "notes": "Chama Mission_Control_Error_Handler para registrar o erro (log_erros_producao + notificacao) e depois segue para 99_atualiza_base_funil para o loop continuar no proximo item."
+    }
+  ],
+  "connections": {
+    "01_schedule_trigger": {
+      "main": [
+        [
+          {
+            "node": "02b_le_email_status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02_le_base_funil": {
+      "main": [
+        [
+          {
+            "node": "03_filtra_leads_ativos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03_filtra_leads_ativos": {
+      "main": [
+        [
+          {
+            "node": "04_calcula_dias_corridos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04_calcula_dias_corridos": {
+      "main": [
+        [
+          {
+            "node": "05_filtra_dia_gatilho",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05_filtra_dia_gatilho": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06_switch_dia": {
+      "main": [
+        [
+          {
+            "node": "07_d1_if_optin",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "09_d3_if_d0_aberto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "14_d5_if_optin",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "16_d8_email_urgencia",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "17_d12_if_optin",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "19_d16_if_isencao",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "21_d20_if_optin",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "23_d25_email_expiracao",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "24_d30_if_escalona",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07_d1_if_optin": {
+      "main": [
+        [
+          {
+            "node": "releitura_optin_d1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "normaliza_releitura_d1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08_d1_whatsapp_confirmacao": {
+      "main": [
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "prepara_erro_envio_regua",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "09_d3_if_d0_aberto": {
+      "main": [
+        [
+          {
+            "node": "10_d3_email_reforco",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "11_d3_if_optin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10_d3_email_reforco": {
+      "main": [
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "prepara_erro_envio_regua",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11_d3_if_optin": {
+      "main": [
+        [
+          {
+            "node": "releitura_optin_d3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "normaliza_releitura_d3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "13_d3_email_fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12_d3_whatsapp_prioritario": {
+      "main": [
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "prepara_erro_envio_regua",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13_d3_email_fallback": {
+      "main": [
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "prepara_erro_envio_regua",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14_d5_if_optin": {
+      "main": [
+        [
+          {
+            "node": "releitura_optin_d5",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "normaliza_releitura_d5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15_d5_whatsapp_pergunta": {
+      "main": [
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "prepara_erro_envio_regua",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "16_d8_email_urgencia": {
+      "main": [
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "prepara_erro_envio_regua",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "17_d12_if_optin": {
+      "main": [
+        [
+          {
+            "node": "releitura_optin_d12",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "normaliza_releitura_d12",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "18_d12_whatsapp_prova_social": {
+      "main": [
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "prepara_erro_envio_regua",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "19_d16_if_isencao": {
+      "main": [
+        [
+          {
+            "node": "20_d16_email_isencao",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "20_d16_email_isencao": {
+      "main": [
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "prepara_erro_envio_regua",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "21_d20_if_optin": {
+      "main": [
+        [
+          {
+            "node": "releitura_optin_d20",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "normaliza_releitura_d20",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "22_d20_whatsapp_ultima_tentativa": {
+      "main": [
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "prepara_erro_envio_regua",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "23_d25_email_expiracao": {
+      "main": [
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "prepara_erro_envio_regua",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "24_d30_if_escalona": {
+      "main": [
+        [
+          {
+            "node": "25a_token_rdstation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "27_d30_atualiza_status_perdido",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02b_le_email_status": {
+      "main": [
+        [
+          {
+            "node": "02_le_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "26_d30_atualiza_status_escalonado": {
+      "main": [
+        [
+          {
+            "node": "wait_throttle_4s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "25a_token_rdstation": {
+      "main": [
+        [
+          {
+            "node": "25b_cria_tarefa_rdstation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "25b_cria_tarefa_rdstation": {
+      "main": [
+        [
+          {
+            "node": "26_d30_atualiza_status_escalonado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "busca_token_resend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "99_atualiza_base_funil": {
+      "main": [
+        [
+          {
+            "node": "wait_throttle_4s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wait_throttle_4s": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "busca_token_resend": {
+      "main": [
+        [
+          {
+            "node": "06_switch_dia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normaliza_releitura_d1": {
+      "main": [
+        [
+          {
+            "node": "if_optin_ainda_valido_d1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if_optin_ainda_valido_d1": {
+      "main": [
+        [
+          {
+            "node": "08_d1_whatsapp_confirmacao",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normaliza_releitura_d3": {
+      "main": [
+        [
+          {
+            "node": "if_optin_ainda_valido_d3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if_optin_ainda_valido_d3": {
+      "main": [
+        [
+          {
+            "node": "12_d3_whatsapp_prioritario",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "13_d3_email_fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normaliza_releitura_d5": {
+      "main": [
+        [
+          {
+            "node": "if_optin_ainda_valido_d5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if_optin_ainda_valido_d5": {
+      "main": [
+        [
+          {
+            "node": "15_d5_whatsapp_pergunta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normaliza_releitura_d12": {
+      "main": [
+        [
+          {
+            "node": "if_optin_ainda_valido_d12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if_optin_ainda_valido_d12": {
+      "main": [
+        [
+          {
+            "node": "18_d12_whatsapp_prova_social",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normaliza_releitura_d20": {
+      "main": [
+        [
+          {
+            "node": "if_optin_ainda_valido_d20",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if_optin_ainda_valido_d20": {
+      "main": [
+        [
+          {
+            "node": "22_d20_whatsapp_ultima_tentativa",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prepara_erro_envio_regua": {
+      "main": [
+        [
+          {
+            "node": "notifica_mission_control_regua",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "notifica_mission_control_regua": {
+      "main": [
+        [
+          {
+            "node": "99_atualiza_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
