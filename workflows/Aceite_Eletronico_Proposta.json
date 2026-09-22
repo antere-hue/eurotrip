@@ -1,0 +1,1572 @@
+{
+  "name": "Aceite_Eletronico_Proposta",
+  "nodes": [
+    {
+      "id": "06f79ba0-fd65-4fb1-b6e0-67d037dbcc30",
+      "name": "Aceite Proposta - Exibir (GET)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        192
+      ],
+      "parameters": {
+        "path": "aceite-proposta",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "d708910a-5b16-48fb-96be-c6916e0e9d0f",
+      "notes": "Mesmo path do webhook POST abaixo (nó separado por limitação de método único por Webhook nesta versão do n8n, mesmo padrão já usado no PDVet)."
+    },
+    {
+      "id": "48b3ddc6-591e-4504-8ffb-bee51898b1c1",
+      "name": "Buscar Proposta por Token (GET)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        192
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": 810524007,
+          "cachedResultName": "base_funil_completo"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "token_aceite",
+              "lookupValue": "={{ $json.query.token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Requer o campo novo token_aceite em base_funil_completo — gravado pelo 03_Geração_Proposta (alteração mínima descrita na seção 9.5 do documento). CORRIGIDO: operation='getAll' explícito (não deixar default) + alwaysOutputData=true habilitado — sem isso, quando o filtro não encontra nenhuma linha, o node não emite item nenhum, e o IF seguinte nunca dispara (nem o ramo 'existe' nem o ramo 'não existe').",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "008ac7ba-5390-41d8-bfaf-76ab37ef5286",
+      "name": "Token existe?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        192
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "token-nao-encontrado",
+              "leftValue": "={{ $json.token_aceite }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f5b79b4f-d93a-4591-ab55-143f53481fd3",
+      "name": "Montar HTML: Token Inválido",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const body = `<h1>Link inválido</h1><p>Não encontramos nenhuma proposta associada a este link. Se você acredita que isso é um erro, entre em contato com sua consultora.</p>`;\nconst html = `<!DOCTYPE html><html lang=\"pt-BR\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Confirmação de Proposta — Antere</title><style>body{font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;background:#F7F5F1;color:#1B1E27;margin:0;padding:40px 20px;display:flex;justify-content:center;}.card{background:#fff;max-width:480px;width:100%;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.08);padding:36px 32px;text-align:center;}.brand{color:#3A34D6;font-weight:700;font-size:20px;margin-bottom:24px;}h1{font-size:20px;margin:0 0 12px;}p{color:#5B5F6B;font-size:14px;line-height:1.6;}table{width:100%;text-align:left;font-size:14px;margin:20px 0;border-collapse:collapse;}td{padding:6px 0;border-bottom:1px solid #eee;}td:first-child{color:#5B5F6B;width:40%;}button{background:#3A34D6;color:#fff;border:none;padding:14px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;}button:hover{background:#2c27a8;}.ok{color:#12786B;font-weight:600;}</style></head><body><div class=\"card\"><div class=\"brand\">Antere</div>${body}</div></body></html>`;\nreturn [{ json: { html } }];"
+      }
+    },
+    {
+      "id": "2b246276-389e-4db6-9ef2-5e55883b02bf",
+      "name": "Responder Página (GET)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        192
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "08905bb5-66f2-461c-97dc-04f72ca4406a",
+      "name": "Já foi confirmado antes?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        288
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "ja-confirmado",
+              "leftValue": "={{ $json.aceite_confirmado_em }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "7e0ffe91-52fe-4e22-8cee-8fbcef744832",
+      "name": "Montar HTML: Já Confirmado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        192
+      ],
+      "parameters": {
+        "jsCode": "const body = `<h1>Aceite já confirmado</h1><p class=\"ok\">Este aceite foi confirmado em ${$json.aceite_confirmado_em}.</p><p>Nossa equipe já foi notificada e vai dar sequência à ativação. Se precisar de algo, fale com sua consultora.</p>`;\nconst html = `<!DOCTYPE html><html lang=\"pt-BR\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Confirmação de Proposta — Antere</title><style>body{font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;background:#F7F5F1;color:#1B1E27;margin:0;padding:40px 20px;display:flex;justify-content:center;}.card{background:#fff;max-width:480px;width:100%;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.08);padding:36px 32px;text-align:center;}.brand{color:#3A34D6;font-weight:700;font-size:20px;margin-bottom:24px;}h1{font-size:20px;margin:0 0 12px;}p{color:#5B5F6B;font-size:14px;line-height:1.6;}table{width:100%;text-align:left;font-size:14px;margin:20px 0;border-collapse:collapse;}td{padding:6px 0;border-bottom:1px solid #eee;}td:first-child{color:#5B5F6B;width:40%;}button{background:#3A34D6;color:#fff;border:none;padding:14px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;}button:hover{background:#2c27a8;}.ok{color:#12786B;font-weight:600;}</style></head><body><div class=\"card\"><div class=\"brand\">Antere</div>${body}</div></body></html>`;\nreturn [{ json: { html } }];"
+      }
+    },
+    {
+      "id": "48c03f86-f1ba-464b-b91f-ed90dc9c3cec",
+      "name": "Montar HTML: Formulário de Aceite",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        384
+      ],
+      "parameters": {
+        "jsCode": "const body = `<h1>Confirmação da sua proposta</h1><p>Confira o resumo abaixo antes de confirmar.</p><table><tr><td>Razão Social</td><td>${$json.razao_social || '-'}</td></tr><tr><td>CNPJ</td><td>${$json.cnpj || '-'}</td></tr><tr><td>Produtos</td><td>${$json.produtos_interesse || '-'}</td></tr><tr><td>Valor mensal</td><td>R$ ${$json.valor_proposta || '-'}</td></tr></table><form method=\"POST\" action=\"\"><input type=\"hidden\" name=\"token\" value=\"${$json.token_aceite}\"><button type=\"submit\">Confirmar aceite</button></form>`;\nconst html = `<!DOCTYPE html><html lang=\"pt-BR\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Confirmação de Proposta — Antere</title><style>body{font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;background:#F7F5F1;color:#1B1E27;margin:0;padding:40px 20px;display:flex;justify-content:center;}.card{background:#fff;max-width:480px;width:100%;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.08);padding:36px 32px;text-align:center;}.brand{color:#3A34D6;font-weight:700;font-size:20px;margin-bottom:24px;}h1{font-size:20px;margin:0 0 12px;}p{color:#5B5F6B;font-size:14px;line-height:1.6;}table{width:100%;text-align:left;font-size:14px;margin:20px 0;border-collapse:collapse;}td{padding:6px 0;border-bottom:1px solid #eee;}td:first-child{color:#5B5F6B;width:40%;}button{background:#3A34D6;color:#fff;border:none;padding:14px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;}button:hover{background:#2c27a8;}.ok{color:#12786B;font-weight:600;}</style></head><body><div class=\"card\"><div class=\"brand\">Antere</div>${body}</div></body></html>`;\nreturn [{ json: { html } }];"
+      },
+      "notes": "CORRIGIDO: action do form trocado para vazio (submete para a própria URL atual) — funciona tanto em Test URL (/webhook-test/...) quanto em Production URL (/webhook/...) sem hardcode, diferente da versão anterior que só funcionaria em produção."
+    },
+    {
+      "id": "876bc3e0-0ec4-45fc-a590-cdc8f4ed1189",
+      "name": "Aceite Proposta - Confirmar (POST)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        752
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aceite-proposta",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "28171bce-b0a6-4c90-a7e6-f3e0fa152b28"
+    },
+    {
+      "id": "4447723d-5830-404d-bce7-4e31bd099c6b",
+      "name": "Extrair Token, IP e Timestamp",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        752
+      ],
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || {};\nconst headers = $input.first().json.headers || {};\nconst token = body.token || '';\n// Confirmar nome exato do header de IP real atrás do proxy Cloudfy antes de confiar neste valor.\nconst ip = headers['x-forwarded-for'] || headers['x-real-ip'] || $input.first().json.ip || '';\nconst userAgent = headers['user-agent'] || '';\nreturn [{ json: { token, ip, user_agent: userAgent, timestamp: $now.toISO() } }];"
+      },
+      "notes": "PENDENTE confirmar: nome exato do header de IP real atrás do proxy Cloudfy (assumido x-forwarded-for)."
+    },
+    {
+      "id": "bbc50f64-4c0d-4fc4-89b4-f885c3647ffe",
+      "name": "Revalidar Proposta por Token",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        448,
+        752
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": 810524007,
+          "cachedResultName": "base_funil_completo"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "token_aceite",
+              "lookupValue": "={{ $json.token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Rebusca no momento da confirmação (não confia só na leitura do GET) — evita condição de corrida em cliques quase simultâneos. CORRIGIDO: operation='getAll' explícito (não deixar default) + alwaysOutputData=true habilitado — sem isso, quando o filtro não encontra nenhuma linha, o node não emite item nenhum, e o IF seguinte nunca dispara (nem o ramo 'existe' nem o ramo 'não existe').",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "057071cd-e044-49ad-bf89-5b93873bcb72",
+      "name": "Token válido e ainda não usado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        752
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "token-valido",
+              "leftValue": "={{ $json.token_aceite }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "ainda-nao-confirmado",
+              "leftValue": "={{ $json.aceite_confirmado_em }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "133f4d18-b763-4fae-85c6-4fe57fada7d7",
+      "name": "Monta Log de Aceite",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        656
+      ],
+      "parameters": {
+        "jsCode": "return [{ json: {\n  timestamp: $('Extrair Token, IP e Timestamp').item.json.timestamp,\n  deal_id: $json.lead_id,\n  nome: $json.razao_social,\n  IP: $('Extrair Token, IP e Timestamp').item.json.ip,\n  'user-agent': $('Extrair Token, IP e Timestamp').item.json.user_agent,\n  token: $json.token_aceite,\n  'e-mail': ''\n} }];"
+      }
+    },
+    {
+      "id": "731bd0c9-9e1a-43cc-b44b-16e53e0f9a95",
+      "name": "Gravar Log de Aceite (append-only)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1120,
+        656
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": 1228698383,
+          "cachedResultName": "log_aceites_eletronicos"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Nunca editar/sobrescrever linhas nesta aba — é o registro de evidência estruturada (seção 9.3 do documento). RESOLVIDO: gid real da aba confirmado (1228698383). RESOLVIDO: decisão de não incluir e-mail no log — coluna fica em branco (base_funil_completo não tem esse dado disponível e não será buscado em outro lugar para este fim)."
+    },
+    {
+      "id": "52cc36fb-97a3-45b9-8967-1773f16098d8",
+      "name": "Marcar Aceite na Base (status + data)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        896,
+        848
+      ],
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": 810524007,
+          "cachedResultName": "base_funil_completo"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_id": "={{ $json.lead_id }}",
+            "status_funil": "Aceite Confirmado",
+            "aceite_confirmado_em": "={{ $('Extrair Token, IP e Timestamp').item.json.timestamp }}"
+          },
+          "matchingColumns": [
+            "lead_id"
+          ],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nome_contato",
+              "displayName": "nome_contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "primeiro_nome",
+              "displayName": "primeiro_nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "telefone",
+              "displayName": "telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "origem",
+              "displayName": "origem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_primeiro_contato",
+              "displayName": "data_primeiro_contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp",
+              "displayName": "optin_whatsapp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp_data",
+              "displayName": "optin_whatsapp_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "optin_whatsapp_texto",
+              "displayName": "optin_whatsapp_texto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "razao_social",
+              "displayName": "razao_social",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "cnpj",
+              "displayName": "cnpj",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "cidade",
+              "displayName": "cidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "uf",
+              "displayName": "uf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "qtd_caixas",
+              "displayName": "qtd_caixas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "produtos_interesse",
+              "displayName": "produtos_interesse",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "isencao",
+              "displayName": "isencao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_envio_proposta",
+              "displayName": "data_envio_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_proposta",
+              "displayName": "valor_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "link_pdf",
+              "displayName": "link_pdf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "score_qualificacao",
+              "displayName": "score_qualificacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status_funil",
+              "displayName": "status_funil",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_resposta_proposta",
+              "displayName": "data_resposta_proposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_data",
+              "displayName": "ultimo_toque_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_canal",
+              "displayName": "ultimo_toque_canal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ultimo_toque_dia_regua",
+              "displayName": "ultimo_toque_dia_regua",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_perda",
+              "displayName": "motivo_perda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nutricao_mensal",
+              "displayName": "nutricao_mensal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "consultor_responsavel",
+              "displayName": "consultor_responsavel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_fechamento_comercial",
+              "displayName": "data_fechamento_comercial",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_fechado",
+              "displayName": "valor_fechado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "produtos_contratados",
+              "displayName": "produtos_contratados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_cadastro_sistema_gestao",
+              "displayName": "data_cadastro_sistema_gestao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sistema_gestao_usado",
+              "displayName": "sistema_gestao_usado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_instalacao_ativacao",
+              "displayName": "data_instalacao_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "mrr_mensal",
+              "displayName": "mrr_mensal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_cancelamento",
+              "displayName": "data_cancelamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_cancelamento",
+              "displayName": "motivo_cancelamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "homologado_paygo",
+              "displayName": "homologado_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_solicitacao_integracao",
+              "displayName": "data_solicitacao_integracao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status_integracao_paygo",
+              "displayName": "status_integracao_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_abertura_conta_c6",
+              "displayName": "data_abertura_conta_c6",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sla_ativacao_dias",
+              "displayName": "sla_ativacao_dias",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_ativacao_real",
+              "displayName": "data_ativacao_real",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "motivo_atraso_ativacao",
+              "displayName": "motivo_atraso_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "data_validacao_pos_ativacao",
+              "displayName": "data_validacao_pos_ativacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nf_paygo_recebida_em",
+              "displayName": "nf_paygo_recebida_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_comissao_esperado",
+              "displayName": "valor_comissao_esperado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "valor_comissao_informado_paygo",
+              "displayName": "valor_comissao_informado_paygo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "divergencia_comissao",
+              "displayName": "divergencia_comissao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nf_faturamento_emitida_em",
+              "displayName": "nf_faturamento_emitida_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "token_aceite",
+              "displayName": "token_aceite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "aceite_confirmado_em",
+              "displayName": "aceite_confirmado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Diferente do log: esta linha PODE ser atualizada (é o status atual do funil, não a evidência). Campo aceite_confirmado_em é o que a checagem 'já foi confirmado antes?' usa no GET."
+    },
+    {
+      "id": "49d80955-014b-41e6-940a-cf56886cdfe0",
+      "name": "Buscar Token RD Station",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1120,
+        848
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": 1514838753,
+          "cachedResultName": "tokens"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "rdstation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Mesmo padrão já usado em todo o projeto (aba tokens, service=rdstation)."
+    },
+    {
+      "id": "31f8d24f-307c-44cf-a054-88c6f0adc3d9",
+      "name": "Atualizar Deal RD Station (custom field Aceite Confirmado Em)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1344,
+        848
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.rd.services/crm/v2/deals/{{ $('Marcar Aceite na Base (status + data)').item.json.lead_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ data: { custom_fields: { 'budget-174e': $now.toISO() } } }) }}",
+        "options": {}
+      },
+      "notes": "ATUALIZADO 12/09/2026: tags no RD Station são silenciosamente ignoradas pela API nesta conta (confirmado via GET antes/depois). Tentativa 1 com deal_custom_fields:[{custom_field_id,value}] também teve zero efeito real (testado isoladamente). Formato correto confirmado por teste real: custom_fields:{'budget-174e': valor} — mesma estrutura chave-por-slug usada na LEITURA da API. Campo 'Aceite Confirmado Em' (ID 6aa54bb9417539002943e297, slug 'budget-174e', entity: deal, type: text), criado manualmente na UI do RD Station pelo usuário. Não marca mais Ganho (win) — o Ganho já acontece manualmente no passo 4 do fluxo real. Tag IMPLANTACAO_PENDENTE removida daqui — o Funil de Implantação (passo 8) ainda está em construção.",
+      "retryOnFail": true
+    },
+    {
+      "id": "541493bf-3f38-4c9e-a92f-a43036c91ae8",
+      "name": "Montar HTML: Sucesso",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        608
+      ],
+      "parameters": {
+        "jsCode": "const body = `<h1 class=\"ok\">Aceite confirmado!</h1><p>Obrigado — recebemos sua confirmação com sucesso. Nossa equipe já foi notificada e vai iniciar o processo de ativação. Em breve você vai receber um e-mail com os próximos passos.</p>`;\nconst html = `<!DOCTYPE html><html lang=\"pt-BR\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Confirmação de Proposta — Antere</title><style>body{font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;background:#F7F5F1;color:#1B1E27;margin:0;padding:40px 20px;display:flex;justify-content:center;}.card{background:#fff;max-width:480px;width:100%;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.08);padding:36px 32px;text-align:center;}.brand{color:#3A34D6;font-weight:700;font-size:20px;margin-bottom:24px;}h1{font-size:20px;margin:0 0 12px;}p{color:#5B5F6B;font-size:14px;line-height:1.6;}table{width:100%;text-align:left;font-size:14px;margin:20px 0;border-collapse:collapse;}td{padding:6px 0;border-bottom:1px solid #eee;}td:first-child{color:#5B5F6B;width:40%;}button{background:#3A34D6;color:#fff;border:none;padding:14px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;}button:hover{background:#2c27a8;}.ok{color:#12786B;font-weight:600;}</style></head><body><div class=\"card\"><div class=\"brand\">Antere</div>${body}</div></body></html>`;\nreturn [{ json: { html } }];"
+      }
+    },
+    {
+      "id": "c3a27bc1-c8c0-4417-97c0-6893aa8cdd63",
+      "name": "Responder Página (POST)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1792,
+        704
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "09a0178e-ed13-418b-aa7f-dd3cf1ad3763",
+      "name": "Buscar Deal RD Station (obter organization_id)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1568,
+        800
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.rd.services/crm/v2/deals/{{ $('Marcar Aceite na Base (status + data)').item.json.lead_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Buscar Token RD Station').item.json.access_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "notes": "Negociação não tem organization_id direto no fluxo — precisa buscar o deal pra descobrir a Empresa vinculada, porque os custom fields de implantação (Status Implantação / Implantação Concluída Em) foram criados na entidade Organização, não na Negociação (limitação confirmada: não é possível reassociar um custom field de entidade já criado no RD Station).",
+      "retryOnFail": true
+    },
+    {
+      "id": "b2aacf55-7d7d-48b3-afa3-d4770f122c67",
+      "name": "Atualizar Empresa RD Station (Status Implantação = Pendente)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1792,
+        896
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.rd.services/crm/v2/organizations/{{ $json.data.organization_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Buscar Token RD Station').item.json.access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ data: { custom_fields: { 'bairro-aedf': 'Pendente' } } }) }}",
+        "options": {}
+      },
+      "notes": "Campo 'Status Implantação' (slug real 'bairro-aedf', confirmado por teste real — não pelo nome, o slug é herdado de um campo pré-existente renomeado). Substitui a tag IMPLANTACAO_PENDENTE, que foi testada e confirmada não ter efeito nenhum via API nesta conta (PUT com tags no body não altera o deal). Valor 'Pendente' é apagado/alterado manualmente pela Fernanda quando a implantação estiver concluída — Sub_Detectar_Implantacao_Concluida detecta essa mudança.",
+      "retryOnFail": true
+    },
+    {
+      "id": "ef203f71-208c-4276-af7b-fc4f9a66d690",
+      "name": "Gravar Log Implantacao Pendente",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2016,
+        896
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": 1986041189,
+          "cachedResultName": "log_implantacao_pendente"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "deal_id": "={{ $('Marcar Aceite na Base (status + data)').item.json.lead_id }}",
+            "cnpj": "={{ $('Revalidar Proposta por Token').item.json.cnpj }}",
+            "marcado_em": "={{ $('Extrair Token, IP e Timestamp').item.json.timestamp }}",
+            "concluido": ""
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "deal_id",
+              "displayName": "deal_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "cnpj",
+              "displayName": "cnpj",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "marcado_em",
+              "displayName": "marcado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "concluido",
+              "displayName": "concluido",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Alimenta Sub_Detectar_Implantacao_Concluida. Sempre append (nunca update) — 1 linha por aceite."
+    },
+    {
+      "id": "49de69e6-f368-4535-abcc-33bda5928ca3",
+      "name": "Buscar Token Resend",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1568,
+        1088
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": 1514838753,
+          "cachedResultName": "tokens"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "resend_api"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Mesmo padrão usado em busca_token_resend de Geração de Proposta: aba tokens, service=resend_api, token real fica na coluna signing_secret (não access_token).",
+      "retryOnFail": true
+    },
+    {
+      "id": "c8fbe4c5-d42c-4252-bdce-605c6483414a",
+      "name": "Enviar E-mail: Confirmação de Aceite",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1792,
+        1088
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.signing_secret }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  from: 'Fernanda Spahn <comercial@antere.com.br>',\n  to: [$('Revalidar Proposta por Token').item.json.email],\n  subject: 'Aceite eletrônico da sua proposta comercial',\n  html: `\n    <div style='font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #1B1E27;'>\n      <div style='background-color: #3A34D6; padding: 32px 24px; text-align: center;'>\n        <h1 style='color: #F7F5F1; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;'>Antere</h1>\n        <p style='color: #C7C6F5; margin: 8px 0 0; font-size: 13px; letter-spacing: 0.2px;'>Automação comercial, do caixa ao pagamento</p>\n      </div>\n      <div style='padding: 32px 24px; background-color: #ffffff;'>\n        <p style='font-size: 16px; line-height: 1.6;'>Olá, <strong>${$('Revalidar Proposta por Token').item.json.nome_contato || $('Revalidar Proposta por Token').item.json.razao_social}</strong>,</p>\n        <p style='font-size: 16px; line-height: 1.6;'>Confirmamos o recebimento do seu aceite eletrônico à proposta comercial da Antere, em ${$('Extrair Token, IP e Timestamp').item.json.timestamp}.</p>\n        <p style='font-size: 16px; line-height: 1.6;'>Resumo do que foi aceito:</p>\n        <table style='width: 100%; font-size: 14px; margin: 16px 0; border-collapse: collapse;'>\n          <tr><td style='padding: 6px 0; color: #5B5F6B; width: 40%;'>Razão Social</td><td style='padding: 6px 0;'>${$('Revalidar Proposta por Token').item.json.razao_social}</td></tr>\n          <tr><td style='padding: 6px 0; color: #5B5F6B;'>CNPJ</td><td style='padding: 6px 0;'>${$('Revalidar Proposta por Token').item.json.cnpj}</td></tr>\n          <tr><td style='padding: 6px 0; color: #5B5F6B;'>Valor</td><td style='padding: 6px 0;'>R$ ${$('Revalidar Proposta por Token').item.json.valor_proposta}</td></tr>\n          <tr><td style='padding: 6px 0; color: #5B5F6B;'>Produtos</td><td style='padding: 6px 0;'>${$('Revalidar Proposta por Token').item.json.produtos_interesse}</td></tr>\n        </table>\n        <p style='font-size: 14px; line-height: 1.6; color: #5B5F6B;'>Este e-mail serve como confirmação formal do seu aceite, com validade de registro.</p>\n        <hr style='border: none; border-top: 1px solid #E5E1D8; margin: 24px 0;'>\n        <p style='font-size: 14px; line-height: 1.6;'>Próximo passo: em instantes você vai receber um segundo e-mail com um formulário rápido para finalizarmos os dados técnicos de ativação.</p>\n      </div>\n      <div style='background-color: #F7F5F1; padding: 16px 24px; text-align: center;'>\n        <p style='font-size: 11px; color: #8B8F9C; margin: 0;'>Antere Tecnologia (F. de Carvalho Spahn Consultoria em Tecnologia da Informação LTDA)</p>\n      </div>\n    </div>\n  `,\n  tags: [\n    { name: 'lead_id', value: $('Marcar Aceite na Base (status + data)').item.json.lead_id || 'sem_lead_id' }\n  ]\n} }}",
+        "options": {}
+      },
+      "notes": "Mesma identidade visual e mesmo padrão de chamada Resend usado em 18_email_proposta (Geração de Proposta): from fixo, header indigo #3A34D6, rodapé claro #F7F5F1. Token vem de Buscar Token Resend (signing_secret). Campos reais referenciados: Revalidar Proposta por Token (razao_social, cnpj, valor_proposta, produtos_interesse, email, nome_contato) e Extrair Token, IP e Timestamp (timestamp). Roda em paralelo ao restante do fluxo — não bloqueia nem substitui nada existente."
+    },
+    {
+      "id": "c647db84-42f5-4d15-b402-57f1a083cd6a",
+      "name": "Enviar E-mail: Dados de Implantação",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1792,
+        1280
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.signing_secret }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  from: 'Fernanda Spahn <comercial@antere.com.br>',\n  to: [$('Revalidar Proposta por Token').item.json.email],\n  subject: 'Falta 1 passo: dados de ativação — ' + $('Revalidar Proposta por Token').item.json.razao_social,\n  html: `\n    <div style='font-family:Arial,sans-serif;max-width:560px;margin:0 auto;'>\n      <div style='background:#3A34D6;padding:24px;text-align:center;'>\n        <h1 style='color:#fff;margin:0;font-size:20px;'>Antere</h1>\n      </div>\n      <div style='padding:24px;'>\n        <p>Aceite confirmado com sucesso! Falta um último passo antes da instalação: um formulário\n        rápido (~5 min) com os dados técnicos de ativação.</p>\n        <p><b>Se você vai usar C6 Pay + PIX C6, é ainda mais rápido</b> — não precisa de nenhum dado\n        técnico, só confirmar isso no formulário.</p>\n        <div style='text-align:center;margin:24px 0;'>\n          <a href='https://tally.so/r/MeW5YY?lead_id=${encodeURIComponent($('Marcar Aceite na Base (status + data)').item.json.lead_id || '')}' style='background:#3A34D6;color:#fff;padding:14px 28px;\n          text-decoration:none;border-radius:8px;font-weight:bold;'>Preencher dados de ativação</a>\n        </div>\n        <p style='font-size:13px;color:#5B5F6B;'>Qualquer dúvida durante o preenchimento, o próprio\n        formulário explica onde encontrar cada informação.</p>\n      </div>\n    </div>\n  `,\n  tags: [\n    { name: 'lead_id', value: $('Marcar Aceite na Base (status + data)').item.json.lead_id || 'sem_lead_id' }\n  ]\n} }}",
+        "options": {}
+      },
+      "notes": "Corpo e assunto exatamente como especificado pelo usuário (Passo 3). Link do CTA aponta para o form real de implantação (tally.so/r/MeW5YY). Token vem de Buscar Token Resend (signing_secret). Roda em paralelo ao e-mail de confirmação e ao restante do fluxo já existente — não bloqueia nem substitui nada."
+    },
+    {
+      "id": "eda879dc-ddf1-487e-a59a-f26c049a186c",
+      "name": "Montar HTML: Erro na Confirmação",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        1328
+      ],
+      "parameters": {
+        "jsCode": "const body = `<h1>Não foi possível confirmar</h1><p>Este link não é mais válido — pode já ter sido usado, ou o token não corresponde a nenhuma proposta. Entre em contato com sua consultora se precisar de ajuda.</p>`;\nconst html = `<!DOCTYPE html><html lang=\"pt-BR\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Confirmação de Proposta — Antere</title><style>body{font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;background:#F7F5F1;color:#1B1E27;margin:0;padding:40px 20px;display:flex;justify-content:center;}.card{background:#fff;max-width:480px;width:100%;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.08);padding:36px 32px;text-align:center;}.brand{color:#3A34D6;font-weight:700;font-size:20px;margin-bottom:24px;}h1{font-size:20px;margin:0 0 12px;}p{color:#5B5F6B;font-size:14px;line-height:1.6;}table{width:100%;text-align:left;font-size:14px;margin:20px 0;border-collapse:collapse;}td{padding:6px 0;border-bottom:1px solid #eee;}td:first-child{color:#5B5F6B;width:40%;}button{background:#3A34D6;color:#fff;border:none;padding:14px 28px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;}button:hover{background:#2c27a8;}.ok{color:#12786B;font-weight:600;}</style></head><body><div class=\"card\"><div class=\"brand\">Antere</div>${body}</div></body></html>`;\nreturn [{ json: { html } }];"
+      }
+    }
+  ],
+  "connections": {
+    "Aceite Proposta - Exibir (GET)": {
+      "main": [
+        [
+          {
+            "node": "Buscar Proposta por Token (GET)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Proposta por Token (GET)": {
+      "main": [
+        [
+          {
+            "node": "Token existe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Token existe?": {
+      "main": [
+        [
+          {
+            "node": "Montar HTML: Token Inválido",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Já foi confirmado antes?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar HTML: Token Inválido": {
+      "main": [
+        [
+          {
+            "node": "Responder Página (GET)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Já foi confirmado antes?": {
+      "main": [
+        [
+          {
+            "node": "Montar HTML: Já Confirmado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Montar HTML: Formulário de Aceite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar HTML: Já Confirmado": {
+      "main": [
+        [
+          {
+            "node": "Responder Página (GET)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar HTML: Formulário de Aceite": {
+      "main": [
+        [
+          {
+            "node": "Responder Página (GET)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aceite Proposta - Confirmar (POST)": {
+      "main": [
+        [
+          {
+            "node": "Extrair Token, IP e Timestamp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair Token, IP e Timestamp": {
+      "main": [
+        [
+          {
+            "node": "Revalidar Proposta por Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Revalidar Proposta por Token": {
+      "main": [
+        [
+          {
+            "node": "Token válido e ainda não usado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Token válido e ainda não usado?": {
+      "main": [
+        [
+          {
+            "node": "Monta Log de Aceite",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Marcar Aceite na Base (status + data)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Montar HTML: Erro na Confirmação",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monta Log de Aceite": {
+      "main": [
+        [
+          {
+            "node": "Gravar Log de Aceite (append-only)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar Aceite na Base (status + data)": {
+      "main": [
+        [
+          {
+            "node": "Buscar Token RD Station",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Token RD Station": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Deal RD Station (custom field Aceite Confirmado Em)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Deal RD Station (custom field Aceite Confirmado Em)": {
+      "main": [
+        [
+          {
+            "node": "Montar HTML: Sucesso",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Buscar Deal RD Station (obter organization_id)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Buscar Token Resend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar HTML: Sucesso": {
+      "main": [
+        [
+          {
+            "node": "Responder Página (POST)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Deal RD Station (obter organization_id)": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Empresa RD Station (Status Implantação = Pendente)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Empresa RD Station (Status Implantação = Pendente)": {
+      "main": [
+        [
+          {
+            "node": "Gravar Log Implantacao Pendente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Token Resend": {
+      "main": [
+        [
+          {
+            "node": "Enviar E-mail: Confirmação de Aceite",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Enviar E-mail: Dados de Implantação",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar HTML: Erro na Confirmação": {
+      "main": [
+        [
+          {
+            "node": "Responder Página (POST)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "errorWorkflow": "MAvApEDIanoBGJPE",
+    "availableInMCP": true
+  }
+}
