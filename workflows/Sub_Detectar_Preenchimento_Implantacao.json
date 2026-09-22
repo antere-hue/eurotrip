@@ -274,7 +274,9 @@
             }
           ]
         },
-        "options": {}
+        "options": {
+          "cellFormat": "RAW"
+        }
       },
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -412,7 +414,9 @@
             }
           ]
         },
-        "options": {}
+        "options": {
+          "cellFormat": "RAW"
+        }
       },
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -1050,7 +1054,9 @@
             }
           ]
         },
-        "options": {}
+        "options": {
+          "cellFormat": "RAW"
+        }
       },
       "credentials": {
         "googleSheetsOAuth2Api": {

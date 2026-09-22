@@ -1179,7 +1179,9 @@
           "attemptToConvertTypes": false,
           "convertFieldsToString": true
         },
-        "options": {}
+        "options": {
+          "cellFormat": "RAW"
+        }
       },
       "credentials": {
         "googleSheetsOAuth2Api": {
