@@ -46,17 +46,17 @@
       "typeVersion": 4.5,
       "position": [
         -1360,
-        -160
+        -336
       ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
       },
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000,
       "notes": "Le a aba tokens inteira -- reutilizada tanto para o check do token RD Station quanto para a chave de API do n8n usada em 04a (evita 2 leituras da mesma aba)."
     },
     {
@@ -68,7 +68,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1120,
+        -1360,
         -160
       ],
       "notes": "NAO reusa o limiar de 2 dias do Painel Operacional -- inadequado aqui: o token RD Station e renovado de hora em hora por design, entao sempre estaria a menos de 2 dias da expiracao (falso positivo permanente). Alerta apenas se ja expirado de fato."
@@ -97,17 +97,18 @@
       "typeVersion": 4.5,
       "position": [
         -1360,
-        0
+        160
       ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
       },
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -118,13 +119,12 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1120,
+        -1360,
         0
       ]
     },
     {
       "parameters": {
-        "method": "GET",
         "url": "https://raregoat-n8n.cloudfy.live/api/v1/executions",
         "sendQuery": true,
         "queryParameters": {
@@ -159,8 +159,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -1120,
-        160
+        -1360,
+        336
       ],
       "notes": "Reusa a chave n8n_api_key ja lida por 02a_busca_tokens (mesmo padrao usado em 06_busca_execucoes_n8n do Painel_Operacional_GET)."
     },
@@ -173,8 +173,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -880,
-        160
+        -1120,
+        336
       ],
       "notes": "Conta qualquer execucao (sucesso ou erro) dentro da janela -- o objetivo desta camada e detectar Schedule Trigger parado (execucao zero), nao validar sucesso de negocio (isso ja e coberto pelo Mission Control/Camada 1). Ver ressalva no relatorio sobre esta leitura do Anexo O.9."
     },
@@ -190,8 +190,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -640,
-        0
+        -800,
+        -16
       ]
     },
     {
@@ -203,7 +203,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -400,
+        -576,
         0
       ]
     },
@@ -236,7 +236,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -160,
+        -352,
         0
       ]
     },
@@ -318,8 +318,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        80,
-        -80
+        -96,
+        -16
       ],
       "notes": "PENDENTE DE TESTE (bloqueado por restricao ativa em log_erros_producao ate checagem do historico de versoes). Ver relatorio."
     }
@@ -340,11 +340,6 @@
           },
           {
             "node": "02_check_token_rdstation",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "03_check_base_funil",
             "type": "main",
             "index": 0
           },
@@ -374,7 +369,13 @@
     },
     "03a_busca_base_funil": {
       "main": [
-        []
+        [
+          {
+            "node": "03_check_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "03_check_base_funil": {
@@ -446,6 +447,8 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
   }
 }
