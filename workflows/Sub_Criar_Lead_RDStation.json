@@ -2,6 +2,70 @@
   "name": "Sub_Criar_Lead_RDStation",
   "nodes": [
     {
+      "id": "8c6a571c-a308-42ef-9204-a01c34e67bcf",
+      "name": "Sticky Note da1ddb",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -252,
+        -646
+      ],
+      "parameters": {
+        "content": "## 🌱 Criação de Lead no RD Station\n\nRecebe os dados de um novo contato (chamado por outro processo), verifica se ele já existe no RD Station, cria o contato e a negociação quando necessário, avisa a equipe no Slack em caso de duplicidade, envia o e-mail de boas-vindas e devolve o ID do lead criado.",
+        "width": 2104,
+        "height": 150,
+        "color": 1
+      }
+    },
+    {
+      "id": "202f6292-1193-4804-98f0-751ee47d75fc",
+      "name": "Sticky Note d94983",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -252,
+        -268
+      ],
+      "parameters": {
+        "content": "### 1️⃣ Verificação\n\nBusca o token de acesso e verifica se esse contato já existe no RD Station.",
+        "width": 754,
+        "height": 200,
+        "color": 4
+      }
+    },
+    {
+      "id": "8434ed37-311f-42cc-95e0-609e34e3fe43",
+      "name": "Sticky Note c67191",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        522,
+        -476
+      ],
+      "parameters": {
+        "content": "### 2️⃣ Criação do Lead\n\nCria o contato e a negociação no RD Station (pulando a criação se já existir) e, se for duplicado, avisa a equipe no Slack.",
+        "width": 564,
+        "height": 616,
+        "color": 6
+      }
+    },
+    {
+      "id": "b9e15e89-e9ae-4875-bbf4-5ba3139bb7da",
+      "name": "Sticky Note b7d17f",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1106,
+        -252
+      ],
+      "parameters": {
+        "content": "### 3️⃣ Finalização\n\nEnvia o e-mail de boas-vindas e devolve o ID do lead criado.",
+        "width": 746,
+        "height": 200,
+        "color": 3
+      }
+    },
+    {
       "parameters": {
         "workflowInputs": {
           "values": [
@@ -28,7 +92,7 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -160,
+        -192,
         -208
       ]
     },
@@ -63,7 +127,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        80,
+        16,
         -208
       ],
       "retryOnFail": true,
@@ -72,7 +136,9 @@
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      }
+      },
+      "maxTries": 5,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
@@ -105,11 +171,13 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        320,
-        -208
+        608,
+        -416
       ],
       "retryOnFail": true,
-      "notes": "CORREÇÃO 18/08/2026: removida a busca prévia por e-mail (GET /crm/v2/contacts?filter=email:...) — 'email' não é um filtro RDQL documentado para este endpoint, o que provavelmente causava os erros 500 recorrentes. Este nó cria o contato direto; se o e-mail já existir, o RD Station deve atualizar/mesclar automaticamente em vez de duplicar."
+      "notes": "CORREÇÃO 18/08/2026: removida a busca prévia por e-mail (GET /crm/v2/contacts?filter=email:...) — 'email' não é um filtro RDQL documentado para este endpoint, o que provavelmente causava os erros 500 recorrentes. Este nó cria o contato direto; se o e-mail já existir, o RD Station deve atualizar/mesclar automaticamente em vez de duplicar.",
+      "maxTries": 5,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
@@ -134,7 +202,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {\n  data: {\n    name: $('01_execute_workflow_trigger').item.json.nome + \" - Identificação de Interesse\",\n    stage_id: \"63a0f06e85f086001ce207d0\",\n    contact_ids: [ $json.data.id ],\n    status: \"ongoing\",\n    owner_id: \"63a0f04366d0e60019e9c9d6\",\n    source: $('01_execute_workflow_trigger').item.json.origem\n  }\n} }}",
+        "jsonBody": "={{ {\n  data: {\n    name: $('01_execute_workflow_trigger').item.json.nome + \" - Identificação de Interesse\",\n    stage_id: \"63a0f06e85f086001ce207d0\",\n    contact_ids: [ Array.isArray($json.data) ? $json.data[0].id : $json.data.id ],\n    status: \"ongoing\",\n    owner_id: \"63a0f04366d0e60019e9c9d6\",\n    source: $('01_execute_workflow_trigger').item.json.origem\n  }\n} }}",
         "options": {}
       },
       "id": "1d531e8f-f482-407e-bfd6-526951786b1d",
@@ -142,23 +210,25 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        560,
-        -208
+        784,
+        -192
       ],
       "retryOnFail": true,
-      "notes": "contact_ids agora lê direto $json.data.id, sem o Array.isArray(...) — a resposta de POST /contacts é sempre um objeto único, não uma lista."
+      "notes": "contact_ids agora lê direto $json.data.id, sem o Array.isArray(...) — a resposta de POST /contacts é sempre um objeto único, não uma lista.",
+      "maxTries": 5,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
-        "jsCode": "return {\n  json: {\n    ...$('01_execute_workflow_trigger').item.json,\n    lead_id: $json.data.id,\n  }\n};"
+        "jsCode": "const contatoJaExistia = ($('verifica_contato_existente').item.json.data || []).length > 0;\nreturn {\n  json: {\n    ...$('01_execute_workflow_trigger').item.json,\n    lead_id: $('04_criar_negociacao').item.json.data.id,\n    contato_existia: contatoJaExistia,\n  }\n};"
       },
       "id": "6c14e7f0-a3eb-4f50-a85e-22a26d41af5d",
       "name": "05_extrai_lead_id",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        800,
-        -208
+        992,
+        -192
       ]
     },
     {
@@ -180,7 +250,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {\n  from: \"Fernanda Spahn <comercial@antere.com.br>\",\n  to: [$('05_extrai_lead_id').item.json.email],\n  subject: \"Tecnologia para o seu negócio vender mais — fale com a Antere\",\n  html: `\n    <div style=\"font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #2c2c2a;\">\n      <div style=\"background-color: #085041; padding: 32px 24px; text-align: center;\">\n        <h1 style=\"color: #ffffff; margin: 0; font-size: 22px; font-weight: 500;\">Antere</h1>\n      </div>\n      <div style=\"padding: 32px 24px; background-color: #ffffff;\">\n        <p style=\"font-size: 16px; line-height: 1.6;\">Olá, <strong>${$('05_extrai_lead_id').item.json.nome}</strong>!</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Sou Fernanda Spahn, da Antere. Muito obrigada pelo seu contato — fico feliz em ajudar a levar mais tecnologia para o seu negócio.</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Trabalhamos com uma plataforma completa que integra TEF, Gateway, Link de Pagamento e conta digital C6 Bank — tudo conectado ao seu sistema de vendas.</p>\n        <p style=\"font-size: 15px; line-height: 1.6; color: #5f5e5a;\">Na prática, isso significa:</p>\n        <ul style=\"font-size: 15px; line-height: 1.8; color: #5f5e5a; padding-left: 20px;\">\n          <li>Redução de erros de caixa com captura automática</li>\n          <li>Conciliação que sai de horas para minutos</li>\n          <li>Taxas competitivas e PIX gratuito e ilimitado</li>\n          <li>Implantação em até 10 dias úteis</li>\n        </ul>\n        <p style=\"font-size: 16px; line-height: 1.6; font-weight: bold; margin-top: 24px;\">Falta pouco para você ver sua proposta personalizada.</p>\n        <p style=\"font-size: 15px; line-height: 1.6;\">Leva menos de 2 minutos: preencha alguns dados sobre a sua operação e, em instantes, você recebe uma proposta automática com as condições ideais para o seu negócio.</p>\n        <div style=\"text-align: center; margin: 32px 0;\">\n          <a href=\"https://raregoat-n8n.cloudfy.live/form/proposta?lead_id=${$('05_extrai_lead_id').item.json.lead_id}\" style=\"background-color: #1D9E75; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;\">Quero minha proposta personalizada</a>\n        </div>\n        <p style=\"font-size: 14px; line-height: 1.6; color: #5f5e5a;\">Sem burocracia, sem precisar falar com ninguém — a menos que prefira.</p>\n        <hr style=\"border: none; border-top: 1px solid #d3d1c7; margin: 24px 0;\">\n        <p style=\"font-size: 14px; line-height: 1.6;\">Se preferir um atendimento personalizado, estou à disposição no WhatsApp:</p>\n        <p style=\"font-size: 14px; line-height: 1.6;\">📱 <a href=\"https://wa.me/5511993979324\" style=\"color: #0F6E56;\">(11) 99397-9324</a></p>\n        <p style=\"font-size: 14px; line-height: 1.6; margin-top: 24px;\">Abraço,<br><strong>Fernanda Spahn</strong><br>Consultoria Comercial — Antere</p>\n      </div>\n      <div style=\"background-color: #f1efe8; padding: 16px 24px; text-align: center;\">\n        <p style=\"font-size: 11px; color: #888780; margin: 0;\">Antere Tecnologia (F. de Carvalho Spahn Consultoria em Tecnologia da Informação LTDA)</p>\n        <p style=\"font-size: 11px; color: #888780; margin: 4px 0 0;\">Seus dados serão usados exclusivamente para elaborar sua proposta comercial, conforme a LGPD.</p>\n      </div>\n    </div>\n  `\n} }}",
+        "jsonBody": "={{ {\n  from: \"Fernanda Spahn <comercial@antere.com.br>\",\n  to: [$('05_extrai_lead_id').item.json.email],\n  subject: \"Tecnologia para o seu negócio vender mais — fale com a Antere\",\n  html: `\n    <div style=\"font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #2c2c2a;\">\n      <div style=\"background-color: #085041; padding: 32px 24px; text-align: center;\">\n        <h1 style=\"color: #ffffff; margin: 0; font-size: 22px; font-weight: 500;\">Antere</h1>\n      </div>\n      <div style=\"padding: 32px 24px; background-color: #ffffff;\">\n        <p style=\"font-size: 16px; line-height: 1.6;\">Olá, <strong>${$('05_extrai_lead_id').item.json.nome}</strong>!</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Sou Fernanda Spahn, da Antere. Muito obrigada pelo seu contato — fico feliz em ajudar a levar mais tecnologia para o seu negócio.</p>\n        <p style=\"font-size: 16px; line-height: 1.6;\">Trabalhamos com uma plataforma completa que integra TEF, Gateway, Link de Pagamento e conta digital C6 Bank — tudo conectado ao seu sistema de vendas.</p>\n        <p style=\"font-size: 15px; line-height: 1.6; color: #5f5e5a;\">Na prática, isso significa:</p>\n        <ul style=\"font-size: 15px; line-height: 1.8; color: #5f5e5a; padding-left: 20px;\">\n          <li>Redução de erros de caixa com captura automática</li>\n          <li>Conciliação que sai de horas para minutos</li>\n          <li>Taxas competitivas e PIX gratuito e ilimitado</li>\n          <li>Implantação em até 10 dias úteis</li>\n        </ul>\n        <div style=\"background-color: #E4F5F1; border-left: 4px solid #1D9E75; padding: 16px 20px; margin: 24px 0; border-radius: 6px;\">\n          <p style=\"font-size: 14px; line-height: 1.6; margin: 0 0 10px 0; color: #1B1E27;\">🎉 PIX grátis pelo C6 Bank, sem letra miúda.</p><p style=\"font-size: 14px; line-height: 1.6; margin: 0 0 10px 0; color: #1B1E27;\">Como representantes oficiais do C6, oferecemos a você as condições de adquirência C6 Pay: enquanto a maioria dos bancos já cobra PIX de empresas, no C6 Bank o PIX é sem taxa nenhuma, além de débito a partir de 0,82% e crédito a partir de 1,84% — entre as menores taxas do mercado. E mais: optando por C6 Pay e/ou PIX C6, você fica isento da taxa de adesão da contratação do TEF PayGo.</p><p style=\"font-size: 14px; line-height: 1.6; margin: 0 0 10px 0; color: #1B1E27;\">Já tem PINPad? Você poderá agendar a instalação imediatamente após o cadastro.</p>\n        </div>\n        <p style=\"font-size: 16px; line-height: 1.6; font-weight: bold; margin-top: 24px;\">Falta pouco para você ver sua proposta personalizada.</p>\n        <p style=\"font-size: 15px; line-height: 1.6;\">Leva menos de 2 minutos: preencha alguns dados sobre a sua operação e, em instantes, você recebe uma proposta automática com as condições ideais para o seu negócio.</p>\n        <div style=\"text-align: center; margin: 32px 0;\">\n          <a href=\"https://raregoat-n8n.cloudfy.live/form/proposta?lead_id=${$('05_extrai_lead_id').item.json.lead_id}\" style=\"background-color: #1D9E75; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;\">Quero minha proposta personalizada</a>\n        </div>\n        <p style=\"font-size: 14px; line-height: 1.6; color: #5f5e5a;\">Sem burocracia, sem precisar falar com ninguém — a menos que prefira.</p>\n        <hr style=\"border: none; border-top: 1px solid #d3d1c7; margin: 24px 0;\">\n        <p style=\"font-size: 14px; line-height: 1.6;\">Se preferir um atendimento personalizado, estou à disposição no WhatsApp:</p>\n        <p style=\"font-size: 14px; line-height: 1.6;\">📱 <a href=\"https://wa.me/5511993979324\" style=\"color: #0F6E56;\">(11) 99397-9324</a></p>\n        <p style=\"font-size: 14px; line-height: 1.6; margin-top: 24px;\">Abraço,<br><strong>Fernanda Spahn</strong><br>Consultoria Comercial — Antere</p>\n      </div>\n      <div style=\"background-color: #f1efe8; padding: 16px 24px; text-align: center;\">\n        <p style=\"font-size: 11px; color: #888780; margin: 0;\">Antere Tecnologia (F. de Carvalho Spahn Consultoria em Tecnologia da Informação LTDA)</p>\n        <p style=\"font-size: 11px; color: #888780; margin: 4px 0 0;\">Seus dados serão usados exclusivamente para elaborar sua proposta comercial, conforme a LGPD.</p>\n      </div>\n    </div>\n  `,\n  tags: [ { name: \"lead_id\", value: $('05_extrai_lead_id').item.json.lead_id || \"sem_lead_id\" } ]\n} }}",
         "options": {}
       },
       "id": "7b112153-38a9-4c30-a096-68dc2d4b4ab1",
@@ -188,9 +258,11 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1040,
-        -208
-      ]
+        1424,
+        -192
+      ],
+      "notes": "\n21/09/2026: tag lead_id adicionada (mesmo padrao do 18_email_proposta) para o Resend_Webhook_Status conseguir marcar 'E-mail aberto' no deal.\n21/09/2026: onError=continue. Se o Resend falhar (ex.: cota diaria), o lead ja criado no RD ainda retorna lead_id ao chamador; o campo email_boasvindas_enviado=false sinaliza o nao envio.",
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -221,20 +293,182 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        920,
-        -208
+        1200,
+        -192
       ],
       "id": "rk000000-0000-0000-0000-000000000002",
       "name": "busca_token_resend",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.rd.services/crm/v2/contacts",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filter",
+              "value": "=email:{{ $('01_execute_workflow_trigger').item.json.email }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('02_token_rdstation').item.json.access_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
       },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        224,
+        -208
+      ],
+      "id": "sub-verifica-contato-existente-001",
+      "name": "verifica_contato_existente",
       "retryOnFail": true,
       "maxTries": 5,
       "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "sub-cond-contato-existe-001",
+              "leftValue": "={{ $json.data.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        416,
+        -208
+      ],
+      "id": "sub-if-contato-existe-001",
+      "name": "if_contato_existe"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "vendas-negociacao",
+          "mode": "name"
+        },
+        "text": "=:busts_in_silhouette: *Negociação duplicada em preparação*\nUm contato que já existe no RD Station chegou ao Formulário 2 sem lead_id (via Sub_Criar_Lead_RDStation) — uma nova negociação está sendo criada para ele.\n*Nome:* {{ $('01_execute_workflow_trigger').item.json.nome }}\n*ID do contato (RD Station):* {{ Array.isArray($('verifica_contato_existente').item.json.data) ? $('verifica_contato_existente').item.json.data[0].id : $('verifica_contato_existente').item.json.data.id }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        608,
+        0
+      ],
+      "id": "sub-notifica-slack-duplicidade-001",
+      "name": "notifica_slack_duplicidade",
+      "webhookId": "db216b8b-0f26-4c28-bc6c-9e3f6dc8636f",
+      "credentials": {
+        "slackApi": {
+          "id": "8Qwkl6tupIvuM69K",
+          "name": "Slack - Funil Antere"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// devolve os dados do lead recem-criado para quem chamou este workflow via Execute Workflow -\n// sem isso, o retorno seria a resposta da API do Resend (ultimo no do fluxo), nao o lead_id.\n// 21/09/2026: inclui email_boasvindas_enviado (false quando o Resend falhou, ex.: cota diaria).\nconst resend = $('06_email_boasvindas').first().json || {};\nconst enviado = !!resend.id && !resend.error;\nreturn { json: { ...$('05_extrai_lead_id').item.json, email_boasvindas_enviado: enviado, email_boasvindas_erro: enviado ? '' : String((resend.error && (resend.error.message || resend.error)) || resend.message || 'falha no envio') } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1632,
+        -192
+      ],
+      "id": "sub-retorna-lead-id-node-001",
+      "name": "07_retorna_lead_id"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "sub-cond-notifica-dup-001",
+              "leftValue": "={{ $json.contato_existia }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        -192
+      ],
+      "id": "sub-if-notifica-duplicidade-001",
+      "name": "05b_if_notifica_duplicidade"
+    },
+    {
+      "name": "04b_vincula_fonte_site_institucional",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        888,
+        -48
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Aditivo (21/09/2026): quando origem === 'Lead site institucional', vincula a fonte (source_id) do RD Station ao deal recem-criado.\n// Qualquer outra origem passa direto, sem chamada extra. Erros aqui nao interrompem o fluxo (onError = continue).\nconst items = $input.all();\nconst origem = String($('01_execute_workflow_trigger').first().json.origem || '').trim();\nif (origem !== 'Lead site institucional') return items;\nconst token = $('02_token_rdstation').first().json.access_token;\nconst base = 'https://api.rd.services/crm/v2';\nconst H = { Authorization: 'Bearer ' + token, Accept: 'application/json', 'Content-Type': 'application/json' };\nconst dealId = $('04_criar_negociacao').first().json.data && $('04_criar_negociacao').first().json.data.id;\nif (!dealId) return items;\nlet sourceId = '6ab0f57e1e0b5b0023261503'; // fonte \"Lead site institucional\" criada em 21/09/2026\ntry {\n  const r = await this.helpers.httpRequest({ method: 'GET', url: base + '/sources?limit=100', headers: H, json: true });\n  const norm = x => String(x || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();\n  const hit = ((r && r.data) || []).find(f => norm(f.name) === norm('Lead site institucional'));\n  if (hit && hit.id) sourceId = hit.id;\n} catch (e) { /* mantem o id fixo */ }\nconst put = await this.helpers.httpRequest({ method: 'PUT', url: base + '/deals/' + dealId, headers: H, body: { data: { source_id: sourceId } }, returnFullResponse: true, ignoreHttpStatusErrors: true, json: true });\nreturn items.map(it => ({ json: { ...it.json, fonte_site_institucional: { deal_id: dealId, source_id: sourceId, put_status: put.statusCode } } }));"
+      },
+      "onError": "continueRegularOutput",
+      "notes": "So atua quando origem === 'Lead site institucional' (ref=site_institucional no formulario). Demais origens passam inalteradas.",
+      "id": "b2237573-d804-40f5-b301-e412b08dcf19"
     }
   ],
   "connections": {
@@ -253,7 +487,7 @@
       "main": [
         [
           {
-            "node": "03_criar_contato",
+            "node": "verifica_contato_existente",
             "type": "main",
             "index": 0
           }
@@ -275,7 +509,7 @@
       "main": [
         [
           {
-            "node": "05_extrai_lead_id",
+            "node": "04b_vincula_fonte_site_institucional",
             "type": "main",
             "index": 0
           }
@@ -286,7 +520,7 @@
       "main": [
         [
           {
-            "node": "busca_token_resend",
+            "node": "05b_if_notifica_duplicidade",
             "type": "main",
             "index": 0
           }
@@ -303,9 +537,92 @@
           }
         ]
       ]
+    },
+    "verifica_contato_existente": {
+      "main": [
+        [
+          {
+            "node": "if_contato_existe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if_contato_existe": {
+      "main": [
+        [
+          {
+            "node": "03_criar_contato",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "04_criar_negociacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06_email_boasvindas": {
+      "main": [
+        [
+          {
+            "node": "07_retorna_lead_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05b_if_notifica_duplicidade": {
+      "main": [
+        [
+          {
+            "node": "notifica_slack_duplicidade",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "busca_token_resend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "notifica_slack_duplicidade": {
+      "main": [
+        [
+          {
+            "node": "busca_token_resend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04b_vincula_fonte_site_institucional": {
+      "main": [
+        [
+          {
+            "node": "05_extrai_lead_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "errorWorkflow": "MAvApEDIanoBGJPE",
+    "availableInMCP": true
   }
 }

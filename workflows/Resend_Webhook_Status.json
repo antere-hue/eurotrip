@@ -2,6 +2,70 @@
   "name": "Resend_Webhook_Status",
   "nodes": [
     {
+      "id": "c4c0b25d-4f52-417d-b4e6-41781f73c564",
+      "name": "Sticky - Titulo",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1468,
+        -262
+      ],
+      "parameters": {
+        "width": 2280,
+        "height": 150,
+        "color": 1,
+        "content": "## 🔔 Resend_Webhook_Status\nRecebe o webhook de eventos do Resend (entregue, aberto, bounce, etc.), valida a assinatura, extrai os dados e grava no log correspondente — e quando é abertura de e-mail, também atualiza o campo no RD Station.\n\n**Fluxo:** Entrada & Validação → Classificação do Evento → Gravação & Sincronização RD"
+      }
+    },
+    {
+      "id": "b45f4504-c14e-48b7-82d7-1768574cee10",
+      "name": "Sticky - Etapa 1 Entrada Validacao",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1468,
+        164
+      ],
+      "parameters": {
+        "width": 890,
+        "height": 424,
+        "color": 4,
+        "content": "### 1️⃣ Entrada & Validação\nRecebe o webhook do Resend, busca o segredo de assinatura na planilha e valida se a requisição é legítima. Se inválida, descarta."
+      }
+    },
+    {
+      "id": "55c62ba1-d745-45be-85de-4f63edda6af6",
+      "name": "Sticky - Etapa 2 Classificacao",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -558,
+        116
+      ],
+      "parameters": {
+        "width": 508,
+        "height": 376,
+        "color": 6,
+        "content": "### 2️⃣ Classificação do Evento\nIdentifica o tipo de evento (entrega normal vs. bounce/erro/etc.) e extrai os dados relevantes de cada um."
+      }
+    },
+    {
+      "id": "bced2efe-5930-4674-befd-5c15f17b1cdb",
+      "name": "Sticky - Etapa 3 Gravacao",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -30,
+        -92
+      ],
+      "parameters": {
+        "width": 842,
+        "height": 584,
+        "color": 3,
+        "content": "### 3️⃣ Gravação & Sincronização RD\nGrava o evento na aba correspondente e, se for abertura de e-mail, busca o token e atualiza o campo no RD Station."
+      }
+    },
+    {
       "parameters": {
         "httpMethod": "POST",
         "path": "resend-status",
@@ -51,15 +115,15 @@
         -1168,
         224
       ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000
+      }
     },
     {
       "parameters": {
@@ -167,8 +231,8 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3,
       "position": [
-        -432,
-        144
+        -448,
+        192
       ]
     },
     {
@@ -215,7 +279,7 @@
       "typeVersion": 3.4,
       "position": [
         -176,
-        144
+        176
       ]
     },
     {
@@ -304,17 +368,17 @@
       "typeVersion": 4.5,
       "position": [
         96,
-        144
+        -32
       ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000
+      }
     },
     {
       "parameters": {
@@ -448,15 +512,15 @@
         96,
         352
       ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000
+      }
     },
     {
       "parameters": {},
@@ -487,6 +551,16 @@
                 "type": "string",
                 "operation": "equals"
               }
+            },
+            {
+              "id": "cond-lead-id-presente",
+              "leftValue": "={{ $('6 - Extrair Dados').item.json.lead_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
             }
           ],
           "combinator": "and"
@@ -496,12 +570,12 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        900,
-        300
+        96,
+        176
       ],
       "id": "rd000000-0000-0000-0000-000000000001",
       "name": "11 - Checa Email Aberto",
-      "notes": "Sincronizacao com RD Station (Anexo J.0c) -- fan-out em paralelo com '7 - Google Sheets Append', nao altera a logica existente. So dispara para email.opened."
+      "notes": "Sincronizacao com RD Station (Anexo J.0c) -- fan-out em paralelo com '7 - Google Sheets Append', nao altera a logica existente. So dispara para email.opened.\n21/09/2026: so atualiza o RD quando o evento traz lead_id (e-mails sem tag lead_id geravam PUT /deals/ vazio -> 404)."
     },
     {
       "parameters": {
@@ -532,20 +606,20 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        1120,
-        240
+        352,
+        160
       ],
       "id": "rd000000-0000-0000-0000-000000000002",
       "name": "12 - Busca Token RD Station",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 1000
+      }
     },
     {
       "parameters": {
@@ -572,11 +646,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1340,
-        240
+        592,
+        160
       ],
       "id": "rd000000-0000-0000-0000-000000000003",
       "name": "13 - Atualiza Campo Email Aberto RD Station",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
       "notes": "Custom field 'Email Aberto' (slug email-aberto, id 6a97a37540a345002a388616) na negociacao, criado em 02/09/2026. lead_id = id da negociacao no RD Station (mesmo padrao ja usado em todo o projeto)."
     }
   ],
@@ -709,6 +786,9 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "errorWorkflow": "MAvApEDIanoBGJPE",
+    "availableInMCP": true
   }
 }

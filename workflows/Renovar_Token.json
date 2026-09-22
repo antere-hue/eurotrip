@@ -1,0 +1,304 @@
+{
+  "name": "Renovar Token",
+  "nodes": [
+    {
+      "id": "a8c901a5-3a13-4abc-a469-ddec40005849",
+      "name": "Sticky Note b2fc95",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -380,
+        -310
+      ],
+      "parameters": {
+        "content": "## 🔁 Renovação de Token RD Station\n\nRoda automaticamente em horário programado: busca a credencial/token atual na planilha, pede um token novo para o RD Station e grava o token renovado de volta na planilha, mantendo a integração sempre autenticada sem intervenção manual.",
+        "width": 872,
+        "height": 150,
+        "color": 1
+      }
+    },
+    {
+      "id": "2c388f6e-e663-4c9d-8d14-5551fd116a08",
+      "name": "Sticky Note e53bd4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -380,
+        -140
+      ],
+      "parameters": {
+        "content": "### 1️⃣ Entrada\n\nDispara no horário agendado e busca a linha atual com o token na planilha.",
+        "width": 346,
+        "height": 200,
+        "color": 4
+      }
+    },
+    {
+      "id": "9e95ade6-e841-490c-a311-cdf4ec6f0cf4",
+      "name": "Sticky Note ac3521",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -14,
+        -140
+      ],
+      "parameters": {
+        "content": "### 2️⃣ Renovação\n\nChama o RD Station para gerar um token novo, válido para o próximo período.",
+        "width": 172,
+        "height": 200,
+        "color": 6
+      }
+    },
+    {
+      "id": "ca26b429-734a-48e7-9a40-c55195b317ab",
+      "name": "Sticky Note 2a7080",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        178,
+        -140
+      ],
+      "parameters": {
+        "content": "### 3️⃣ Gravação\n\nSalva o token renovado de volta na planilha, atualizando o registro existente.",
+        "width": 314,
+        "height": 200,
+        "color": 3
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1514838753"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "rdstation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -112,
+        -80
+      ],
+      "id": "bcd9f2ff-ba14-4666-9569-cb21b7877a71",
+      "name": "Get row(s) in sheet",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.rd.services/oauth2/token",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={\"Content-Type\": \"application/x-www-form-urlencoded\"}",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "7e010789-7cfe-4636-bf07-7a9e495c2c21"
+            },
+            {
+              "name": "client_secret",
+              "value": "c1db7dc525b1499f9b0d50975ba9c81f"
+            },
+            {
+              "name": "refresh_token",
+              "value": "={{ $json.refresh_token }}"
+            },
+            {
+              "name": "grant_type",
+              "value": "refresh_token"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        64,
+        -80
+      ],
+      "id": "f22b3758-a02c-40ea-9fb0-30385507f366",
+      "name": "HTTP Request1",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=1514838753"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "access_token": "={{ $json.access_token }}",
+            "refresh_token": "={{ $json.refresh_token }}",
+            "expires_at": "={{$now.plus({ seconds: $json.expires_in }).toISO()}}",
+            "service": "rdstation"
+          },
+          "matchingColumns": [
+            "service"
+          ],
+          "schema": [
+            {
+              "id": "service",
+              "displayName": "service",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "access_token",
+              "displayName": "access_token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "refresh_token",
+              "displayName": "refresh_token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "expires_at",
+              "displayName": "expires_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        272,
+        -80
+      ],
+      "id": "57a6aa56-1061-4135-86b2-d059090a0c80",
+      "name": "Append or update row in sheet1",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -320,
+        -80
+      ],
+      "id": "dc7859ab-a242-41bf-9e71-ea5798e62396",
+      "name": "Login_aut"
+    }
+  ],
+  "connections": {
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Login_aut": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "errorWorkflow": "MAvApEDIanoBGJPE",
+    "availableInMCP": true
+  }
+}

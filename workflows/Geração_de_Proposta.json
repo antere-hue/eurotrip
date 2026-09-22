@@ -2,6 +2,102 @@
   "name": "Geração de Proposta",
   "nodes": [
     {
+      "id": "d729a114-583e-4fce-b84a-af9613c848b2",
+      "name": "Sticky Note c545fb",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1132,
+        -998
+      ],
+      "parameters": {
+        "content": "## 📄 Geração de Proposta Comercial\n\nRecebe o formulário de proposta (criando o lead no RD Station se ainda não existir), valida CNPJ e preço, calcula os valores de gateway de pagamento e taxas, gera o PDF da proposta personalizada, envia por e-mail ao cliente e sincroniza tudo de volta no RD Station, no backend e com a consultora responsável.",
+        "width": 6280,
+        "height": 150,
+        "color": 1
+      }
+    },
+    {
+      "id": "f04a5d2e-673f-45d4-bf16-aceacc27a75b",
+      "name": "Sticky Note 64a40b",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1132,
+        -540
+      ],
+      "parameters": {
+        "content": "### 1️⃣ Entrada & Normalização do Lead\n\nRecebe os dados do formulário, cria o lead no RD Station se necessário e normaliza as informações (incluindo preço personalizado, se houver).",
+        "width": 730,
+        "height": 600,
+        "color": 4
+      }
+    },
+    {
+      "id": "97c81b75-90f2-4c1d-ad9d-37a20d3b97c3",
+      "name": "Sticky Note 124e7f",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -382,
+        -748
+      ],
+      "parameters": {
+        "content": "### 2️⃣ Validação de CNPJ & Preço\n\nValida o CNPJ informado e o valor da proposta; se algo estiver inválido, envia e-mail de revisão manual.",
+        "width": 868,
+        "height": 584,
+        "color": 6
+      }
+    },
+    {
+      "id": "38232ea5-7f18-4f15-8be3-ad93748aab6e",
+      "name": "Sticky Note 05e537",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        506,
+        -796
+      ],
+      "parameters": {
+        "content": "### 3️⃣ Cálculo de Gateway & Taxas\n\nCalcula as taxas do gateway de pagamento (franquia ou C6 Pay) e consolida os valores finais, escalando por e-mail casos que precisam de atenção.",
+        "width": 1852,
+        "height": 632,
+        "color": 6
+      }
+    },
+    {
+      "id": "192da790-5034-4893-8f91-4cb65bde9ba6",
+      "name": "Sticky Note bf85a5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2378,
+        -556
+      ],
+      "parameters": {
+        "content": "### 4️⃣ Geração & Envio do PDF\n\nGera o PDF da proposta a partir do modelo, anexa e envia por e-mail ao cliente.",
+        "width": 1428,
+        "height": 472,
+        "color": 6
+      }
+    },
+    {
+      "id": "200e9504-42b7-49f7-a220-2ed360da597c",
+      "name": "Sticky Note 696879",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3826,
+        -828
+      ],
+      "parameters": {
+        "content": "### 5️⃣ Sincronização Final\n\nAtualiza o RD Station, o backend e avisa a consultora responsável que a proposta foi enviada.",
+        "width": 1322,
+        "height": 920,
+        "color": 3
+      }
+    },
+    {
       "parameters": {
         "formTitle": "Antere — Vamos montar sua proposta personalizada",
         "formDescription": "proposta",
@@ -1313,7 +1409,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "cnpj",
@@ -1322,7 +1419,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "cidade",
@@ -1331,7 +1429,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "uf",
@@ -1340,7 +1439,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "qtd_caixas",
@@ -1349,7 +1449,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "produtos_interesse",
@@ -1358,7 +1459,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "isencao",
@@ -1367,7 +1469,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "data_envio_proposta",
@@ -1376,7 +1479,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "valor_proposta",
@@ -1385,7 +1489,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "link_pdf",
@@ -1394,7 +1499,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "score_qualificacao",
@@ -1413,7 +1519,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "data_resposta_proposta",
@@ -1706,14 +1813,63 @@
               "removed": true
             },
             {
-              "id": "row_number",
-              "displayName": "row_number",
+              "id": "token_aceite",
+              "displayName": "token_aceite",
               "required": false,
               "defaultMatch": false,
               "display": true,
-              "type": "number",
+              "type": "string",
               "canBeUsedToMatch": true,
-              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "aceite_confirmado_em",
+              "displayName": "aceite_confirmado_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "dados_implantacao_preenchido_em",
+              "displayName": "dados_implantacao_preenchido_em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "adquirentes_selecionados",
+              "displayName": "adquirentes_selecionados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "bancos_pix_selecionados",
+              "displayName": "bancos_pix_selecionados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status_funil",
+              "displayName": "status_funil",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
               "removed": true
             },
             {
@@ -1735,6 +1891,17 @@
               "type": "string",
               "canBeUsedToMatch": true,
               "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
             }
           ],
           "attemptToConvertTypes": false,

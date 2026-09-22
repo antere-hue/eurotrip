@@ -2,6 +2,86 @@
   "name": "04_Regua_Followup",
   "nodes": [
     {
+      "id": "ac924ab0-b899-4f61-ae3d-af0e8b098911",
+      "name": "Sticky Note 8dca10",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2972,
+        -902
+      ],
+      "parameters": {
+        "content": "## 🔔 Régua de Follow-up (D1 a D30)\n\nRoda diariamente: lê a base de leads em lotes, calcula há quantos dias cada lead está parado no funil e, para cada dia marcante da régua (D1 a D30), reconfere se o cliente ainda topa receber mensagens e envia o reforço adequado (e-mail ou WhatsApp) — até escalonar o caso na consultora se ninguém responder até D30.",
+        "width": 7448,
+        "height": 150,
+        "color": 1
+      }
+    },
+    {
+      "id": "465b9229-d504-4b11-bb30-d8c376744f61",
+      "name": "Sticky Note 7faffc",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2972,
+        -268
+      ],
+      "parameters": {
+        "content": "### 1️⃣ Carga em Lotes da Base\n\nLê a base de leads em lotes pequenos (para não estourar limites da planilha) e calcula há quantos dias cada lead está parado, filtrando quem está no dia certo de receber um reforço.",
+        "width": 3082,
+        "height": 1752,
+        "color": 4
+      }
+    },
+    {
+      "id": "d1e5b568-f6ca-470e-82e3-dce6ad01aa23",
+      "name": "Sticky Note 9e245c",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        130,
+        -652
+      ],
+      "parameters": {
+        "content": "### 2️⃣ Loop & Roteamento por Dia\n\nPara cada lead filtrado, direciona para o reforço correspondente ao número de dias parado (D1, D3, D5... até D30).",
+        "width": 1372,
+        "height": 2520,
+        "color": 6
+      }
+    },
+    {
+      "id": "595a92d5-d26e-46b9-9cfe-53138bf7952a",
+      "name": "Sticky Note 40f1d8",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1522,
+        -732
+      ],
+      "parameters": {
+        "content": "### 3️⃣ Reforços por Dia (D1 a D30)\n\nPara cada marco da régua, reconfere se o cliente ainda topa receber mensagens e envia o reforço adequado (e-mail ou WhatsApp); em D30 sem resposta, escalona o caso.",
+        "width": 2204,
+        "height": 2820,
+        "color": 6
+      }
+    },
+    {
+      "id": "ad3ec097-6436-47e3-839c-fe5b979b801a",
+      "name": "Sticky Note 403808",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3746,
+        356
+      ],
+      "parameters": {
+        "content": "### 4️⃣ Finalização\n\nEnvia a última tentativa de contato e atualiza o status de cada lead na base.",
+        "width": 730,
+        "height": 424,
+        "color": 3
+      }
+    },
+    {
       "parameters": {
         "rule": {
           "interval": [
@@ -2810,7 +2890,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {\n  \"deal_id\": $('04_calcula_dias_corridos').item.json.lead_id,\n  \"text\": \"Escalonamento automático: lead sem resposta após 30 dias de régua (score >= 50). Contatar em até 4h úteis.\",\n  \"type\": \"call\",\n  \"date\": $now.plus({ hours: 4 }).toISO()\n} }}",
+        "jsonBody": "={{ {\n  \"data\": {\n    \"deal_id\": $('04_calcula_dias_corridos').item.json.lead_id,\n    \"name\": \"Escalonamento automático: lead sem resposta após 30 dias de régua (score >= 50). Contatar em até 4h úteis.\",\n    \"type\": \"call\",\n    \"due_date\": $now.plus({ hours: 4 }).toISO(),\n    \"created_by_id\": \"63a0f04366d0e60019e9c9d6\",\n    \"owner_ids\": [\"63a0f04366d0e60019e9c9d6\"]\n  }\n} }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",

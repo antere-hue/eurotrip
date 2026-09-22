@@ -2,6 +2,86 @@
   "name": "11_Captura_Lote_Planilha",
   "nodes": [
     {
+      "id": "1e901976-bbae-45cb-b3d5-f2ddcfa104ff",
+      "name": "Sticky Note e757af",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1276,
+        -470
+      ],
+      "parameters": {
+        "content": "## 📥 Captura em Lote de Leads da Planilha\n\nRoda periodicamente (ou pode ser disparado manualmente): lê os leads pendentes na planilha, separa o lote do dia dos excedentes (que ficam agendados para depois), cria cada lead no RD Station (ou reenvia o e-mail de boas-vindas quando for o caso), atualiza o status de cada linha na planilha e, quando algo não pode ser resolvido automaticamente, aciona uma revisão manual via Slack e e-mail.",
+        "width": 2676,
+        "height": 150,
+        "color": 1
+      }
+    },
+    {
+      "id": "c9bd1828-3365-4519-8b60-42cf286b5ff4",
+      "name": "Sticky Note 5e7127",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1276,
+        -300
+      ],
+      "parameters": {
+        "content": "### 1️⃣ Entrada & Seleção do Lote\n\nLê os leads pendentes na planilha e separa o lote do dia dos excedentes, que ficam agendados para depois.",
+        "width": 738,
+        "height": 696,
+        "color": 4
+      }
+    },
+    {
+      "id": "77af7dc3-146d-496e-a992-070c6285a9d7",
+      "name": "Sticky Note cadb8b",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -518,
+        -188
+      ],
+      "parameters": {
+        "content": "### 2️⃣ Criação do Lead / Reenvio\n\nPara cada lead do lote, cria o contato no RD Station (ou reenvia o e-mail de boas-vindas quando aplicável).",
+        "width": 666,
+        "height": 768,
+        "color": 6
+      }
+    },
+    {
+      "id": "614068e0-e3e4-413b-a8fb-79569b99568c",
+      "name": "Sticky Note 2764a0",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        168,
+        12
+      ],
+      "parameters": {
+        "content": "### 3️⃣ Atualização de Status & Cota\n\nAtualiza o status de cada linha na planilha, respeitando o limite de uso do Google Sheets (aguarda e tenta de novo se necessário).",
+        "width": 452,
+        "height": 568,
+        "color": 6
+      }
+    },
+    {
+      "id": "aeea638f-d3ef-4452-ac48-e8c85e5261a6",
+      "name": "Sticky Note 93d70c",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        640,
+        280
+      ],
+      "parameters": {
+        "content": "### 4️⃣ Revisão Manual\n\nQuando um caso não pode ser resolvido automaticamente, avisa a equipe no Slack e por e-mail para revisão manual.",
+        "width": 760,
+        "height": 200,
+        "color": 3
+      }
+    },
+    {
       "parameters": {},
       "id": "bf9a499b-18a6-4fe2-a694-9bc6ab524ef6",
       "name": "01_trigger_manual",

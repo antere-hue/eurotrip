@@ -2,6 +2,86 @@
   "name": "WhatsApp_Webhook_Status",
   "nodes": [
     {
+      "id": "543f8991-0ccf-4dab-9af8-b69e844c6045",
+      "name": "Sticky - Titulo",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -716,
+        -486
+      ],
+      "parameters": {
+        "width": 2744,
+        "height": 150,
+        "color": 1,
+        "content": "## 💬 WhatsApp_Webhook_Status\nRecebe e processa os webhooks do WhatsApp Cloud API (Meta): valida a verificação inicial, valida a assinatura de cada evento, e trata separadamente confirmações de status de envio e mensagens recebidas de clientes (opt-out, log e notificação no Slack).\n\n**Fluxo:** Verificação do Webhook (paralelo) │ Entrada & Validação → Roteamento & Processamento → Ações Finais"
+      }
+    },
+    {
+      "id": "fe3f1e60-6848-48d8-948b-cbc926daf491",
+      "name": "Sticky - Verificacao Webhook",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -716,
+        -316
+      ],
+      "parameters": {
+        "width": 1000,
+        "height": 200,
+        "color": 5,
+        "content": "### 🔧 Verificação do Webhook (Meta)\nResponde ao handshake inicial de verificação (GET) que a Meta exige ao configurar o webhook."
+      }
+    },
+    {
+      "id": "734f1b63-12c4-4ca5-ba2b-e0996b4e6a96",
+      "name": "Sticky - Etapa 1 Entrada Validacao",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -716,
+        4
+      ],
+      "parameters": {
+        "width": 898,
+        "height": 200,
+        "color": 4,
+        "content": "### 1️⃣ Entrada & Validação\nRecebe o evento (POST), busca o segredo do app e valida a assinatura. Se inválida, descarta."
+      }
+    },
+    {
+      "id": "f4a54034-1d3a-47e9-af68-bec8a895bec2",
+      "name": "Sticky - Etapa 2 Roteamento",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        202,
+        -28
+      ],
+      "parameters": {
+        "width": 938,
+        "height": 392,
+        "color": 6,
+        "content": "### 2️⃣ Roteamento & Processamento\nSepara status de envio de mensagens recebidas; para mensagens, busca o lead na base e processa opt-out."
+      }
+    },
+    {
+      "id": "184e8da8-5002-4e75-a70c-8ca8dbae11f6",
+      "name": "Sticky - Etapa 3 Acoes Finais",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1160,
+        -252
+      ],
+      "parameters": {
+        "width": 868,
+        "height": 744,
+        "color": 3,
+        "content": "### 3️⃣ Ações Finais\nAtualiza opt-in, grava o log da mensagem, classifica urgência e notifica a equipe no Slack quando precisa de resposta humana."
+      }
+    },
+    {
       "parameters": {
         "path": "whatsapp-status",
         "responseMode": "responseNode",
