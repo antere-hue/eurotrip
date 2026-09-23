@@ -1,6 +1,6 @@
 # Monitor_Propostas_Erros
 
-Workflow `GwoC1YXl5G1LH32u`. **Criado inativo** — os Schedule Triggers só disparam depois de ativado.
+Workflow `GwoC1YXl5G1LH32u`. **Ativo desde 23/09/2026** (publicado pelo editor do n8n); primeira coleta às 08h, primeiro reenvio às 21h.
 
 ## O que faz
 
@@ -36,7 +36,6 @@ Ruído ignorado: razão social começando com `ZZ_` ou contendo "teste".
 - Uma falha do próprio reenvio não vira linha nova: continua na linha original (`tentativas` + 1).
 - Erros do próprio monitor vão para o Mission Control (errorWorkflow).
 
-## Para ativar (Parte C)
+## Monitoramento
 
-1. Ativar o workflow no n8n.
-2. Incluir `Monitor_Propostas_Erros` em `06a_workflows_criticos` do Painel com janela de 12h (o maior intervalo sem rodada é das 21h às 08h).
+Listado em `06a_workflows_criticos` do Painel com janela de 12h (o maior intervalo sem rodada é das 21h às 08h).
