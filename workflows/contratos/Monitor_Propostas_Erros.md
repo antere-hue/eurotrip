@@ -26,6 +26,7 @@ Ruído ignorado: razão social começando com `ZZ_` ou contendo "teste".
 | `resolvido_automaticamente` | `base_funil_completo` mostra "Proposta Enviada" depois do erro (cliente reenviou o formulário, reenvio manual etc.). | Monitor |
 | `substituido` | Havia falha mais recente do mesmo lead (CNPJ/e-mail); só a mais recente é reenviada. | Monitor |
 | `revisao_manual` | Não se resolve com reenvio: proposta **já entregue** e falha depois do envio (reenviar duplicaria a proposta ao cliente), `schema_cache`, `cnpj_invalido`, execução sem dados, ou limite de **3 tentativas / 3 dias** atingido. Gera alerta 🔴 no Painel. | Monitor |
+| `descartado_teste` | Execução de teste registrada à mão para o monitor ignorar (sem alerta, sem reenvio). | Pessoa |
 | `resolvido_manual` (ou qualquer outro valor) | Depois de tratar um caso de revisão manual, **troque o status na planilha** — o alerta 🔴 some na próxima carga do Painel. | Pessoa |
 
 ## Garantias
