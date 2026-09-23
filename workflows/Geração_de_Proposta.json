@@ -710,7 +710,9 @@
         -736
       ],
       "id": "e2e6aa45-0e04-49a7-a038-83b67267754f",
-      "name": "13_email_escalonamento"
+      "name": "13_email_escalonamento",
+      "onError": "continueRegularOutput",
+      "notes": "22/09/2026: onError=continue. E-mail interno de escalonamento de Gateway; falha aqui (ex.: cota do Resend) nao pode bloquear a geracao da proposta do cliente (14_duplicar_template em diante)."
     },
     {
       "parameters": {
@@ -886,7 +888,11 @@
           "id": "kooV1fIIRyDniJLx",
           "name": "Google Drive account 2"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "22/09/2026: retryOnFail (3 tentativas, 2s entre elas) apos ECONNRESET real no upload do PDF ao Google Drive."
     },
     {
       "parameters": {
@@ -1286,10 +1292,10 @@
             "lead_id": "={{ $('11_consolidacao_final').item.json.lead_id }}",
             "status_funil": "Proposta Enviada",
             "data_envio_proposta": "={{ $now.toISO() }}",
-            "razao_social": "={{ $('01_form_trigger').item.json['Razão Social'] }}",
-            "cnpj": "={{ $('01_form_trigger').item.json['CNPJ'] }}",
+            "razao_social": "={{ $('00_normaliza_entrada').item.json['Razão Social'] }}",
+            "cnpj": "={{ $('00_normaliza_entrada').item.json['CNPJ'] }}",
             "qtd_caixas": "={{ $('11_consolidacao_final').item.json.quantidade_pdvs }}",
-            "produtos_interesse": "={{ $('01_form_trigger').item.json['Soluções'].join(', ') }}",
+            "produtos_interesse": "={{ $('00_normaliza_entrada').item.json['Soluções'].join(', ') }}",
             "isencao": "={{ $('11_consolidacao_final').item.json.isencao }}",
             "valor_proposta": "={{ ($('11_consolidacao_final').item.json.mensalidade_personalizada !== null && $('11_consolidacao_final').item.json.mensalidade_personalizada !== undefined) ? Number($('11_consolidacao_final').item.json.mensalidade_personalizada) : ((Number($('11_consolidacao_final').item.json.mensalidade_tef) || 0) + (Number($('11_consolidacao_final').item.json.franquia_gateway) || 0)) }}",
             "link_pdf": "={{ $('17_upload_pdf').item.json.webViewLink }}",
@@ -2086,7 +2092,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// reconstroi o objeto no mesmo formato bruto do form trigger (chaves = rotulos dos campos),\n// sobrescrevendo lead_id com o valor recem-criado pelo Sub_Criar_Lead_RDStation, para que\n// 02_normalizacao_lead (que le por rotulo via pick()) continue funcionando sem alteracao.\nconst original = $('01_form_trigger').item.json;\nreturn {\n  json: {\n    ...original,\n    lead_id: $json.lead_id,\n  }\n};"
+        "jsCode": "// reconstroi o objeto no mesmo formato bruto do form trigger (chaves = rotulos dos campos),\n// sobrescrevendo lead_id com o valor recem-criado pelo Sub_Criar_Lead_RDStation, para que\n// 02_normalizacao_lead (que le por rotulo via pick()) continue funcionando sem alteracao.\nconst original = $('00_normaliza_entrada').item.json;\nreturn {\n  json: {\n    ...original,\n    lead_id: $json.lead_id,\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -2272,7 +2278,7 @@
           "conditions": [
             {
               "id": "r1",
-              "leftValue": "={{ String($('01_form_trigger').first().json.ref || '').trim() }}",
+              "leftValue": "={{ String($('00_normaliza_entrada').first().json.ref || '').trim() }}",
               "rightValue": "site_institucional",
               "operator": {
                 "type": "string",
@@ -2917,6 +2923,173 @@
           "name": "Google Sheets account"
         }
       }
+    },
+    {
+      "id": "28a09763-84e2-4bc6-a5d8-1858fe406641",
+      "name": "01b_webhook_trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1072,
+        -700
+      ],
+      "webhookId": "geracao-proposta-webhook",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "geracao-proposta",
+        "authentication": "none",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "notes": "ADITIVO 22/09/2026 (#135/Parte A): entrada alternativa ao 01_form_trigger para disparo programatico da geracao de proposta. Autenticacao propria via token na aba tokens (nao usa credencial nativa do n8n) - ver 01c/01d. Nunca substitui o Form Trigger, so converge com ele em 00_normaliza_entrada."
+    },
+    {
+      "id": "5b0909f7-1c8d-4a4c-bc02-39f9e22ea7a5",
+      "name": "01c_busca_token_webhook",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -908,
+        -700
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "parameters": {
+        "resource": "sheet",
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "service",
+              "lookupValue": "geracao_proposta_webhook"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "notes": "ADITIVO 22/09/2026 (#135/Parte A): busca o token valido do webhook na aba tokens. alwaysOutputData=true propositalmente: se a linha nao existir ou o Sheets falhar, o item vazio segue para 01d_valida_token, que compara contra undefined e nega o acesso (401) em vez de travar a execucao sem resposta."
+    },
+    {
+      "id": "71c0f850-21f7-4ffb-8528-5cb48918ce7e",
+      "name": "01d_valida_token",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -744,
+        -700
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "gp-valida-token-001",
+              "leftValue": "={{ $('01b_webhook_trigger').item.json.headers['x-webhook-token'] }}",
+              "rightValue": "={{ $('01c_busca_token_webhook').item.json.access_token }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "notes": "ADITIVO 22/09/2026 (#135/Parte A): compara o header X-Webhook-Token do chamador com o access_token gravado na aba tokens (service=geracao_proposta_webhook)."
+    },
+    {
+      "id": "433d807e-ee1e-41e5-a514-24f682176668",
+      "name": "01e_responde_aceito",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -580,
+        -750
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"accepted\", \"message\": \"Proposta em processamento\" } }}",
+        "options": {
+          "responseCode": 202
+        }
+      },
+      "notes": "ADITIVO 22/09/2026 (#135/Parte A): responde 202 imediatamente (fire-and-forget) e, em paralelo, segue para 00_normaliza_entrada. A geracao do PDF/e-mail pode levar mais tempo do que um timeout HTTP razoavel."
+    },
+    {
+      "id": "de31de1b-58f1-4d16-a0a6-527871420978",
+      "name": "01f_responde_nao_autorizado",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -580,
+        -650
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"unauthorized\", \"message\": \"Token invalido ou ausente\" } }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "notes": "ADITIVO 22/09/2026 (#135/Parte A): token invalido/ausente -> 401, nao gera proposta."
+    },
+    {
+      "id": "429ebeeb-c668-4210-bb7a-c49d843762e6",
+      "name": "00_normaliza_entrada",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -940,
+        -464
+      ],
+      "parameters": {
+        "jsCode": "// ponto de entrada unico compartilhado entre 01_form_trigger (submissao normal) e\n// 01b_webhook_trigger (disparo programatico via #135/Parte A). Normaliza para o\n// mesmo formato bruto (chaves = rotulos dos campos) que o resto do pipeline espera,\n// para que os 3 nos que referenciavam $('01_form_trigger') por nome passem a\n// referenciar este no em vez disso. No caminho do webhook o $json corrente e a linha\n// da aba tokens (01c sobrescreve o item), por isso o body e lido direto do 01b.\nconst viaWebhook = $('01b_webhook_trigger').isExecuted;\nconst src = viaWebhook ? $('01b_webhook_trigger').item.json.body : $json;\nreturn { json: src };"
+      },
+      "notes": "ADITIVO 22/09/2026 (#135/Parte A): ponto de convergencia entre Form Trigger e Webhook. injeta_lead_id_criado, 20e_grava_base_funil_proposta e 20f2_if_ref_site_institucional foram redirecionados de $('01_form_trigger') para $('00_normaliza_entrada')."
+    },
+    {
+      "id": "15534f22-2e91-44dd-a1cd-c2f0de958212",
+      "name": "Sticky Note webhook-parte-a",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1132,
+        -800
+      ],
+      "parameters": {
+        "width": 952,
+        "height": 250,
+        "color": 5,
+        "content": "## Entrada Alternativa: Webhook (#135 / Parte A)\n\nRota paralela ao Form Trigger (01_form_trigger) para disparo programatico da geracao de proposta.\n\n**Contrato:** POST JSON, header `X-Webhook-Token`. Token na aba `tokens` (service=geracao_proposta_webhook).\n\nToken valido -> 202 Accepted + segue para 00_normaliza_entrada (entrada unica compartilhada com o Form Trigger).\nToken invalido/ausente -> 401."
+      }
     }
   ],
   "connections": {
@@ -2924,7 +3097,7 @@
       "main": [
         [
           {
-            "node": "checa_lead_id",
+            "node": "00_normaliza_entrada",
             "type": "main",
             "index": 0
           }
@@ -3500,6 +3673,62 @@
     "SYNC_BE_03_grava_be": {
       "main": [
         []
+      ]
+    },
+    "00_normaliza_entrada": {
+      "main": [
+        [
+          {
+            "node": "checa_lead_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "01b_webhook_trigger": {
+      "main": [
+        [
+          {
+            "node": "01c_busca_token_webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "01c_busca_token_webhook": {
+      "main": [
+        [
+          {
+            "node": "01d_valida_token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "01d_valida_token": {
+      "main": [
+        [
+          {
+            "node": "01e_responde_aceito",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "00_normaliza_entrada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "01f_responde_nao_autorizado",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
