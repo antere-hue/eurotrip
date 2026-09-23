@@ -2,23 +2,30 @@
   "name": "Painel_Operacional_GET",
   "nodes": [
     {
-      "parameters": {
-        "httpMethod": "GET",
-        "path": "painel-antere",
-        "responseMode": "responseNode",
-        "options": {}
-      },
+      "id": "55a76574-f3f8-44ec-82b5-28dd6d010a5a",
+      "name": "01_webhook_get",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
         0,
-        0
+        480
       ],
-      "id": "p0000000-0000-0000-0000-000000000001",
-      "name": "01_webhook_get",
+      "parameters": {
+        "path": "painel-antere",
+        "responseMode": "responseNode",
+        "options": {}
+      },
       "webhookId": "painel-antere"
     },
     {
+      "id": "310a4d15-650c-4bc3-b2fe-69ea617cb187",
+      "name": "02a_busca_tokens",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        480
+      ],
       "parameters": {
         "documentId": {
           "__rl": true,
@@ -36,14 +43,6 @@
         },
         "options": {}
       },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
-      "position": [
-        220,
-        0
-      ],
-      "id": "p0000000-0000-0000-0000-000000000013",
-      "name": "02a_busca_tokens",
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
@@ -52,19 +51,27 @@
       }
     },
     {
-      "parameters": {
-        "jsCode": "const tokens = $('02a_busca_tokens').all().map(i => i.json);\nconst painelTokenRow = tokens.find(t => t.service === 'painel_token');\nconst tokenEsperado = painelTokenRow ? painelTokenRow.signing_secret : null;\nconst tokenRecebido = $('01_webhook_get').item.json.query.token || '';\n\nreturn [{\n  json: {\n    token_valido: !!tokenEsperado && tokenRecebido === tokenEsperado\n  }\n}];\n"
-      },
+      "id": "db342d43-21eb-44c5-a1c0-2c0fa269438d",
+      "name": "02b_compara_token",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        440,
-        0
+        448,
+        480
       ],
-      "id": "p0000000-0000-0000-0000-000000000014",
-      "name": "02b_compara_token"
+      "parameters": {
+        "jsCode": "const tokens = $('02a_busca_tokens').all().map(i => i.json);\nconst painelTokenRow = tokens.find(t => t.service === 'painel_token');\nconst tokenEsperado = painelTokenRow ? painelTokenRow.signing_secret : null;\nconst tokenRecebido = $('01_webhook_get').item.json.query.token || '';\n\nreturn [{\n  json: {\n    token_valido: !!tokenEsperado && tokenRecebido === tokenEsperado\n  }\n}];\n"
+      }
     },
     {
+      "id": "5ad46a98-da74-4d26-8d6f-bf56695903fc",
+      "name": "02_valida_token",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        480
+      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -88,34 +95,17 @@
           "combinator": "and"
         },
         "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
+      }
+    },
+    {
+      "id": "d8a2e048-e899-44e0-acc9-d007e78795a1",
+      "name": "03_busca_base_funil",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
       "position": [
-        660,
+        1120,
         0
       ],
-      "id": "p0000000-0000-0000-0000-000000000002",
-      "name": "02_valida_token"
-    },
-    {
-      "parameters": {
-        "respondWith": "text",
-        "responseBody": "Acesso negado",
-        "options": {
-          "responseCode": 401
-        }
-      },
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [
-        900,
-        220
-      ],
-      "id": "p0000000-0000-0000-0000-000000000003",
-      "name": "02c_nega_acesso"
-    },
-    {
       "parameters": {
         "documentId": {
           "__rl": true,
@@ -133,22 +123,36 @@
         },
         "options": {}
       },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
-      "position": [
-        900,
-        -220
-      ],
-      "id": "p0000000-0000-0000-0000-000000000004",
-      "name": "03_busca_base_funil",
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
           "name": "Google Sheets account"
         }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "0b866344-1f79-489d-8e54-568f59b0ca35",
+      "name": "merge_sync",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1344,
+        336
+      ],
+      "parameters": {
+        "numberInputs": 7
       }
     },
     {
+      "id": "e639a382-e690-4663-9b6a-f004c89ea880",
+      "name": "04_busca_log_erros",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1120,
+        192
+      ],
       "parameters": {
         "documentId": {
           "__rl": true,
@@ -166,14 +170,6 @@
         },
         "options": {}
       },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
-      "position": [
-        900,
-        -100
-      ],
-      "id": "p0000000-0000-0000-0000-000000000005",
-      "name": "04_busca_log_erros",
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "FxBskF4AkCQnf6JT",
@@ -182,21 +178,28 @@
       }
     },
     {
-      "parameters": {
-        "jsCode": "return [\n  { json: { id: 'ptiyq22o4yT5lb1q', nome: '01_Captura_Inicial', janela_horas: 25 } },\n  { json: { id: 'EQ3YEDcPysyaFlZp', nome: '03_Geracao_Proposta', janela_horas: 25 } },\n  { json: { id: 'a8P2SlOqAoGIgrYB', nome: '04_Regua_Followup', janela_horas: 25 } },\n  { json: { id: 'qxRPYOrK5nlZ1Owa', nome: 'Resend_Webhook_Status', janela_horas: 48 } },\n  { json: { id: 'l1Ke8AmXHQdkdRl5', nome: 'WhatsApp_Webhook_Status', janela_horas: 48 } },\n  { json: { id: 'piESSqN70HqtsGzK', nome: 'RD Station - Renovar Token', janela_horas: 25 } }\n];\n"
-      },
+      "id": "730339d2-c690-446e-afd1-01347c9120fc",
+      "name": "06a_workflows_criticos",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        900,
-        20
+        896,
+        384
       ],
-      "id": "p0000000-0000-0000-0000-000000000007",
-      "name": "06a_workflows_criticos"
+      "parameters": {
+        "jsCode": "return [\n  { json: { id: 'EQ3YEDcPysyaFlZp', nome: '03_Geracao_Proposta', janela_horas: 25 } },\n  { json: { id: 'a8P2SlOqAoGIgrYB', nome: '04_Regua_Followup', janela_horas: 25 } },\n  { json: { id: 'qxRPYOrK5nlZ1Owa', nome: 'Resend_Webhook_Status', janela_horas: 48 } },\n  { json: { id: 'l1Ke8AmXHQdkdRl5', nome: 'WhatsApp_Webhook_Status', janela_horas: 48 } },\n  { json: { id: 'piESSqN70HqtsGzK', nome: 'RD Station - Renovar Token', janela_horas: 25 } },\n  { json: { id: 'ElNf9FGBFxrFWO2u', nome: 'Sub_Criar_Lead_RDStation', janela_horas: 25 } },\n  { json: { id: 'gmZsaPqnVRPFRFJW', nome: '11_Captura_Lote_Planilha', janela_horas: 25 } },\n  { json: { id: '1HvYeltPfnaB1ePs', nome: 'Sub_Detectar_Ganho_Disparar_Aceite', janela_horas: 2 } },\n  { json: { id: 'szjzdFn0AONlDQA2', nome: 'Aceite_Eletronico_Proposta', janela_horas: null, tipo: 'reativo' } },\n  { json: { id: 'ptiyq22o4yT5lb1q', nome: 'Captura Inicial / Funil do Lead', janela_horas: null, tipo: 'reativo' } },\n  { json: { id: 'BgYIMiBLnhNUCXdR', nome: 'Sub_Detectar_Implantacao_Concluida', janela_horas: 2 } },\n  { json: { id: '5Yg1Zbyh65cRuv4F', nome: 'Sub_Detectar_Preenchimento_Implantacao', janela_horas: 2 } },\n  { json: { id: 'B5wq6qK1bfjBAhtu', nome: 'Regua_Aceite_Nao_Confirmado', janela_horas: 2 } },\n  { json: { id: 'iZiva71PrYmXRwW1', nome: 'Regua_Implantacao_Nao_Preenchida', janela_horas: 2 } },\n  { json: { id: 'woc257xMIYQ2HIMl', nome: 'Digest_Diario_Painel_Operacional', janela_horas: 16 } },\n  { json: { id: '8FyBOYnX9HyHIp7H', nome: 'Resumo_Diario_Clientes_Status', janela_horas: 25 } },\n  { json: { id: 'rux1BR9Q1ydCkG0K', nome: 'Sanity_Checks_Diario', janela_horas: 25 } },\n  { json: { id: 'HDMexoBHwOw9BKz5', nome: 'PDVet_Atendimento_WhatsApp', janela_horas: null, tipo: 'reativo' } },\n  { json: { id: 'ecqILE3fOtqdg1EY', nome: 'Sub_Criar_Lead_PDVet_RDStation', janela_horas: null, tipo: 'reativo' } },\n  { json: { id: 'oKSyJOi70bEdutXr', nome: 'Sub_Escalar_Atendimento_PDVet', janela_horas: null, tipo: 'reativo' } },\n  { json: { id: '3LJBu4tlqmOaTCXu', nome: 'PDVet_Atendimento_Email', janela_horas: null, tipo: 'reativo' } },\n  { json: { id: 'MAvApEDIanoBGJPE', nome: 'Mission_Control_Error_Handler', janela_horas: null, tipo: 'reativo' } },\n  { json: { id: 'KWwlEhuEMcVX5oY4', nome: 'Painel_Operacional_GET', janela_horas: null, tipo: 'reativo' } },\n  { json: { id: 'f4Y42KhHbOFdz8nT', nome: 'Site_Contato_Webhook', janela_horas: null, tipo: 'reativo' } },\n  { json: { id: 'pVIXpm4r4M71YaXz', nome: 'Sub_Enviar_Boas_Vindas', janela_horas: null, tipo: 'reativo' } }\n];"
+      }
     },
     {
+      "id": "c68b85e9-b823-4e8c-8f77-5ad6a65f6413",
+      "name": "06_busca_execucoes_n8n",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1120,
+        384
+      ],
       "parameters": {
-        "method": "GET",
         "url": "https://raregoat-n8n.cloudfy.live/api/v1/executions",
         "sendQuery": true,
         "queryParameters": {
@@ -226,79 +229,204 @@
         },
         "options": {}
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        1140,
-        20
-      ],
-      "id": "p0000000-0000-0000-0000-000000000008",
-      "name": "06_busca_execucoes_n8n",
       "onError": "continueRegularOutput"
     },
     {
-      "parameters": {
-        "mode": "append",
-        "numberInputs": 3
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        1380,
-        -100
-      ],
-      "id": "p0000000-0000-0000-0000-000000000009",
-      "name": "merge_sync"
-    },
-    {
-      "parameters": {
-        "jsCode": "// Coleta bruta de cada fonte (referência explícita, nunca $json cru - dados vêm de branches paralelas)\nconst leads = $('03_busca_base_funil').all().map(i => i.json);\nconst errosLog = $('04_busca_log_erros').all().map(i => i.json);\nconst tokens = $('02a_busca_tokens').all().map(i => i.json);\nconst criticos = $('06a_workflows_criticos').all().map(i => i.json);\nconst execucoes = $('06_busca_execucoes_n8n').all().map(i => i.json);\n\nconst agora = new Date();\n\n// ---------- Seção 2: Saúde da Base ----------\nconst totalLeads = leads.length;\nconst cabecalhoIntegro = totalLeads > 0 && Object.prototype.hasOwnProperty.call(leads[0], 'lead_id');\nconst ultimoLead = totalLeads > 0 ? leads[totalLeads - 1] : null;\nconst ultimoLeadTimestamp = ultimoLead ? (ultimoLead.data_primeiro_contato || null) : null;\n\n// ---------- Token RD Station (usado na Seção 1, card 6, e na Seção 5) ----------\nconst tokenRD = tokens.find(t => t.service === 'rdstation') || null;\nconst rdExpiraEm = (tokenRD && tokenRD.expires_at) ? new Date(tokenRD.expires_at) : null;\nconst rdDiasParaExpirar = (rdExpiraEm && !isNaN(rdExpiraEm)) ? (rdExpiraEm - agora) / (1000 * 60 * 60 * 24) : null;\n\n// ---------- Seção 1: Status dos Workflows Críticos ----------\nconst statusWorkflows = criticos.map((c, idx) => {\n  const resp = execucoes[idx] || {};\n  const lista = resp.data || [];\n  const ultima = lista[0] || null;\n\n  let status, horasDesde, motivo;\n\n  if (!ultima) {\n    status = 'problema';\n    horasDesde = null;\n    motivo = 'nunca executou';\n  } else {\n    const inicio = new Date(ultima.startedAt);\n    horasDesde = (agora - inicio) / (1000 * 60 * 60);\n    const falhou = ultima.status === 'error';\n    const excedeuJanela = horasDesde > c.janela_horas;\n\n    if (falhou || excedeuJanela) {\n      // janela de 25h = severidade vermelha; janela de 48h = severidade amarela\n      status = c.janela_horas <= 25 ? 'problema' : 'atencao';\n      motivo = falhou ? 'última execução falhou' : `não executou nas últimas ${c.janela_horas}h`;\n    } else {\n      status = 'ok';\n      motivo = `última execução há ${horasDesde.toFixed(1)}h`;\n    }\n  }\n\n  // Card do RD Station também reflete a validade do token (pode agravar o status, nunca melhorar)\n  let detalheToken = '';\n  if (c.nome === 'RD Station - Renovar Token') {\n    if (rdDiasParaExpirar === null) {\n      status = 'problema';\n      detalheToken = ' | token RD Station não encontrado na aba tokens';\n    } else if (rdDiasParaExpirar < 0) {\n      status = 'problema';\n      detalheToken = ` | token RD Station expirado há ${Math.abs(rdDiasParaExpirar).toFixed(1)} dias`;\n    } else if (rdDiasParaExpirar < 2) {\n      status = 'problema';\n      detalheToken = ` | token RD Station expira em ${rdDiasParaExpirar.toFixed(1)} dias`;\n    } else {\n      detalheToken = ` | token RD Station expira em ${rdDiasParaExpirar.toFixed(1)} dias`;\n    }\n  }\n\n  return {\n    nome: c.nome,\n    status,\n    motivo: motivo + detalheToken\n  };\n});\n\n// ---------- Seção 3: Funil em Tempo Real ----------\nconst funilEtapas = ['Novo Lead', 'Proposta Enviada', 'Em Follow-up', 'Ganho', 'Perdido'];\nconst funilContagem = funilEtapas.map(etapa => ({\n  etapa,\n  contagem: leads.filter(l => l.status_funil === etapa).length\n}));\n\nconst ultimos5Leads = leads.slice(-5).reverse().map(l => ({\n  nome: l.nome_contato || l.razao_social || '(sem nome)',\n  empresa: l.razao_social || '',\n  status: l.status_funil || '',\n  ultimo_toque: l.ultimo_toque_data || l.data_primeiro_contato || ''\n}));\n\nconst leadCapturadoHoje = leads.some(l => {\n  if (!l.data_primeiro_contato) return false;\n  const d = new Date(l.data_primeiro_contato);\n  return !isNaN(d) && d.toDateString() === agora.toDateString();\n});\n\n// ---------- Seção 4: Log de Erros Recentes ----------\nconst ultimosErros = errosLog.slice(-10).reverse().map(e => ({\n  timestamp: e.timestamp || '',\n  workflow: e.workflow || '',\n  mensagem: e.mensagem_erro || '',\n  link: e.link_execucao || ''\n}));\n\nconst erros24h = errosLog.filter(e => {\n  const t = new Date(e.timestamp);\n  return !isNaN(t) && (agora - t) <= 24 * 60 * 60 * 1000;\n});\n\n// ---------- Seção 5: Alertas Ativos (5 regras, ordenadas por severidade) ----------\nconst alertas = [];\n\n// Regra 1 (🔴): token RD Station expira em menos de 2 dias\nif (rdDiasParaExpirar !== null && rdDiasParaExpirar < 2) {\n  const txt = rdDiasParaExpirar < 0\n    ? `Token RD Station expirado há ${Math.abs(rdDiasParaExpirar).toFixed(1)} dias`\n    : `Token RD Station expira em ${rdDiasParaExpirar.toFixed(1)} dias`;\n  alertas.push({ severidade: 'vermelho', texto: txt });\n}\n\n// Regra 2 (🔴): workflow de janela 25h não executou (ou falhou, ou nunca rodou)\nstatusWorkflows.forEach(w => {\n  const c = criticos.find(x => x.nome === w.nome);\n  if (c && c.janela_horas <= 25 && w.status === 'problema' && w.nome !== 'RD Station - Renovar Token') {\n    alertas.push({ severidade: 'vermelho', texto: `Workflow ${w.nome}: ${w.motivo} (janela de 25h)` });\n  }\n});\n\n// Regra 3 (🔴): cabeçalho da base corrompido\nif (!cabecalhoIntegro) {\n  alertas.push({ severidade: 'vermelho', texto: 'Cabeçalho da base_funil_completo corrompido (coluna A não é lead_id) — possível bug de aba trocada' });\n}\n\n// Regra 4 (🟡): workflow de janela 48h não executou\nstatusWorkflows.forEach(w => {\n  const c = criticos.find(x => x.nome === w.nome);\n  if (c && c.janela_horas > 25 && w.status !== 'ok') {\n    alertas.push({ severidade: 'amarelo', texto: `Workflow ${w.nome}: ${w.motivo} (janela de 48h)` });\n  }\n});\n\n// Regra 5 (🟡): nenhum lead capturado hoje\nif (!leadCapturadoHoje) {\n  alertas.push({ severidade: 'amarelo', texto: 'Nenhum lead capturado hoje' });\n}\n\n// ordena: vermelho antes de amarelo\nalertas.sort((a, b) => (a.severidade === b.severidade ? 0 : a.severidade === 'vermelho' ? -1 : 1));\n\nreturn [{\n  json: {\n    gerado_em: agora.toISOString(),\n    secao1_status_workflows: statusWorkflows,\n    secao2_saude_base: {\n      total_leads: totalLeads,\n      cabecalho_integro: cabecalhoIntegro,\n      ultimo_lead_timestamp: ultimoLeadTimestamp\n    },\n    secao3_funil: {\n      etapas: funilContagem,\n      ultimos_5_leads: ultimos5Leads\n    },\n    secao4_log_erros: {\n      total_erros_24h: erros24h.length,\n      banner_verde: erros24h.length === 0,\n      ultimos_erros: ultimosErros\n    },\n    secao5_alertas: alertas\n  }\n}];\n"
-      },
+      "id": "f1298272-af36-4d1e-8659-729054100f1e",
+      "name": "09_verifica_sucessos_recentes",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1600,
-        -100
+        1120,
+        576
       ],
-      "id": "p0000000-0000-0000-0000-000000000010",
-      "name": "07_consolida_dados"
-    },
-    {
       "parameters": {
-        "jsCode": "const d = $('07_consolida_dados').item.json;\n\nconst CORES = {\n  indigo: '#3A34D6',\n  petroleo: '#12786B',\n  ambar: '#D9822B',\n  vermelho: '#DC2626',\n  warmWhite: '#F7F5F1',\n  grafite: '#1B1E27'\n};\n\nconst SHEET_URL_BASE = 'https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007';\n\nfunction escapeHtml(str) {\n  return String(str == null ? '' : str)\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;');\n}\n\nfunction formatDataHora(iso) {\n  if (!iso) return '—';\n  const dt = new Date(iso);\n  if (isNaN(dt)) return String(iso);\n  return dt.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });\n}\n\nfunction iconeStatus(status) {\n  if (status === 'ok') return '🟢';\n  if (status === 'atencao') return '🟡';\n  return '🔴';\n}\n\n// ---------- Seção 1: Status dos Workflows Críticos ----------\nfunction renderSecao1(statusWorkflows) {\n  const linhas = statusWorkflows.map(w => `\n    <tr>\n      <td>${iconeStatus(w.status)}</td>\n      <td><strong>${escapeHtml(w.nome)}</strong></td>\n      <td>${escapeHtml(w.motivo)}</td>\n    </tr>`).join('');\n\n  return `\n  <section class=\"card\">\n    <h2>Status dos Workflows Críticos</h2>\n    <p class=\"subtitulo\">Algum workflow parou?</p>\n    <table>\n      <thead><tr><th></th><th>Workflow</th><th>Situação</th></tr></thead>\n      <tbody>${linhas}</tbody>\n    </table>\n  </section>`;\n}\n\n// ---------- Seção 2: Saúde da Base ----------\nfunction renderSecao2(saude) {\n  return `\n  <section class=\"card\">\n    <h2>Saúde da Base</h2>\n    <p class=\"subtitulo\">Os dados estão íntegros?</p>\n    <div class=\"indicadores-linha\">\n      <div class=\"indicador\">\n        <span class=\"indicador-icone\">${saude.total_leads > 0 ? '🟢' : '🔴'}</span>\n        <span class=\"indicador-valor\">${saude.total_leads}</span>\n        <span class=\"indicador-label\">leads na base</span>\n      </div>\n      <div class=\"indicador\">\n        <span class=\"indicador-icone\">${saude.cabecalho_integro ? '🟢' : '🔴'}</span>\n        <span class=\"indicador-valor\">${saude.cabecalho_integro ? 'OK' : 'Corrompido'}</span>\n        <span class=\"indicador-label\">cabeçalho (coluna A = lead_id)</span>\n      </div>\n      <div class=\"indicador\">\n        <span class=\"indicador-icone\">🕒</span>\n        <span class=\"indicador-valor\">${formatDataHora(saude.ultimo_lead_timestamp)}</span>\n        <span class=\"indicador-label\">último lead capturado</span>\n      </div>\n    </div>\n  </section>`;\n}\n\n// ---------- Seção 3: Funil em Tempo Real ----------\nfunction renderSecao3(funil) {\n  const maxContagem = Math.max(1, ...funil.etapas.map(e => e.contagem));\n  const miniFunil = funil.etapas.map(e => `\n    <div class=\"funil-etapa\">\n      <div class=\"funil-barra\" style=\"height:${8 + (e.contagem / maxContagem) * 60}px;\"></div>\n      <div class=\"funil-contagem\">${e.contagem}</div>\n      <div class=\"funil-label\">${escapeHtml(e.etapa)}</div>\n    </div>`).join('');\n\n  const linhasLeads = funil.ultimos_5_leads.map(l => `\n    <tr class=\"linha-clicavel\" onclick=\"window.open('${SHEET_URL_BASE}', '_blank')\">\n      <td>${escapeHtml(l.nome)}</td>\n      <td>${escapeHtml(l.empresa)}</td>\n      <td>${escapeHtml(l.status)}</td>\n      <td>${formatDataHora(l.ultimo_toque)}</td>\n    </tr>`).join('') || '<tr><td colspan=\"4\">Nenhum lead na base ainda.</td></tr>';\n\n  return `\n  <section class=\"card\">\n    <h2>Funil em Tempo Real</h2>\n    <p class=\"subtitulo\">Como está o pipeline hoje?</p>\n    <div class=\"mini-funil\">${miniFunil}</div>\n    <table>\n      <thead><tr><th>Nome</th><th>Empresa</th><th>Status</th><th>Último toque</th></tr></thead>\n      <tbody>${linhasLeads}</tbody>\n    </table>\n  </section>`;\n}\n\n// ---------- Seção 4: Log de Erros Recentes ----------\nfunction renderSecao4(log) {\n  const banner = log.banner_verde\n    ? `<div class=\"banner banner-verde\">Nenhum erro nas últimas 24h ✅</div>`\n    : `<div class=\"banner banner-vermelho\">${log.total_erros_24h} erro(s) nas últimas 24h 🚨</div>`;\n\n  const linhas = log.ultimos_erros.map(e => `\n    <tr>\n      <td>${formatDataHora(e.timestamp)}</td>\n      <td>${escapeHtml(e.workflow)}</td>\n      <td>${escapeHtml(e.mensagem)}</td>\n      <td>${e.link ? `<a href=\"${escapeHtml(e.link)}\" target=\"_blank\">Ver execução</a>` : '—'}</td>\n    </tr>`).join('') || '<tr><td colspan=\"4\">Sem registros na aba log_erros_producao.</td></tr>';\n\n  return `\n  <section class=\"card\">\n    <h2>Log de Erros Recentes</h2>\n    <p class=\"subtitulo\">Teve algum erro nas últimas 24h?</p>\n    ${banner}\n    <table>\n      <thead><tr><th>Horário</th><th>Workflow</th><th>Erro</th><th>Execução</th></tr></thead>\n      <tbody>${linhas}</tbody>\n    </table>\n  </section>`;\n}\n\n// ---------- Seção 5: Alertas Ativos ----------\nfunction renderSecao5(alertas) {\n  if (!alertas || alertas.length === 0) return '';\n  const linhas = alertas.map(a => `\n    <li class=\"alerta alerta-${a.severidade}\">\n      ${a.severidade === 'vermelho' ? '🔴' : '🟡'} ${escapeHtml(a.texto)}\n    </li>`).join('');\n\n  return `\n  <section class=\"card\">\n    <h2>Alertas Ativos</h2>\n    <p class=\"subtitulo\">Tem algo que preciso resolver agora?</p>\n    <ul class=\"lista-alertas\">${linhas}</ul>\n  </section>`;\n}\n\nconst html = `<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>Painel Operacional — Funil Antere</title>\n<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap\" rel=\"stylesheet\">\n<style>\n  :root {\n    --indigo: ${CORES.indigo};\n    --petroleo: ${CORES.petroleo};\n    --ambar: ${CORES.ambar};\n    --vermelho: ${CORES.vermelho};\n    --warm-white: ${CORES.warmWhite};\n    --grafite: ${CORES.grafite};\n  }\n  * { box-sizing: border-box; }\n  body {\n    margin: 0;\n    font-family: 'Inter', Arial, sans-serif;\n    background: var(--warm-white);\n    color: var(--grafite);\n  }\n  header {\n    background: var(--indigo);\n    color: #fff;\n    padding: 24px 40px;\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    flex-wrap: wrap;\n    gap: 16px;\n  }\n  header .logo-bloco .logo { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }\n  header .logo-bloco .slogan { font-size: 13px; color: #C7C6F5; margin-top: 2px; }\n  header h1 { font-size: 18px; margin: 0; font-weight: 600; }\n  header .meta { text-align: right; font-size: 13px; color: #E5E3FB; }\n  header button {\n    margin-top: 8px;\n    background: #fff;\n    color: var(--indigo);\n    border: none;\n    padding: 8px 18px;\n    border-radius: 6px;\n    font-weight: 600;\n    cursor: pointer;\n    font-family: inherit;\n  }\n  main {\n    max-width: 1100px;\n    margin: 0 auto;\n    padding: 24px 40px 60px;\n    display: flex;\n    flex-direction: column;\n    gap: 24px;\n  }\n  .card {\n    background: #fff;\n    border: 1px solid #E5E1D8;\n    border-radius: 10px;\n    padding: 20px 24px;\n  }\n  .card h2 { margin: 0 0 4px; font-size: 17px; color: var(--grafite); }\n  .card .subtitulo { margin: 0 0 16px; font-size: 13px; color: #8B8F9C; }\n  table { width: 100%; border-collapse: collapse; font-size: 14px; }\n  thead th {\n    background: var(--indigo);\n    color: #fff;\n    text-align: left;\n    padding: 8px 12px;\n    font-weight: 600;\n    font-size: 12px;\n    text-transform: uppercase;\n    letter-spacing: 0.3px;\n  }\n  tbody td { padding: 8px 12px; border-bottom: 1px solid #EFEDE6; }\n  tbody tr:last-child td { border-bottom: none; }\n  .linha-clicavel { cursor: pointer; }\n  .linha-clicavel:hover { background: #F0EFFB; }\n  .indicadores-linha { display: flex; gap: 24px; flex-wrap: wrap; }\n  .indicador {\n    flex: 1;\n    min-width: 200px;\n    background: var(--warm-white);\n    border-radius: 8px;\n    padding: 16px;\n    text-align: center;\n  }\n  .indicador-icone { font-size: 22px; display: block; }\n  .indicador-valor { font-size: 20px; font-weight: 700; display: block; margin-top: 4px; color: var(--petroleo); }\n  .indicador-label { font-size: 12px; color: #8B8F9C; }\n  .mini-funil {\n    display: flex;\n    align-items: flex-end;\n    gap: 24px;\n    padding: 16px 8px 8px;\n    margin-bottom: 16px;\n    border-bottom: 1px solid #EFEDE6;\n  }\n  .funil-etapa { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }\n  .funil-barra { width: 36px; background: var(--petroleo); border-radius: 4px 4px 0 0; }\n  .funil-contagem { font-weight: 700; font-size: 14px; }\n  .funil-label { font-size: 11px; color: #8B8F9C; text-align: center; }\n  .banner { padding: 10px 16px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-bottom: 16px; }\n  .banner-verde { background: #E4F5F1; color: var(--petroleo); }\n  .banner-vermelho { background: #FBE7E7; color: var(--vermelho); }\n  .lista-alertas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }\n  .alerta { padding: 10px 14px; border-radius: 6px; font-size: 14px; }\n  .alerta-vermelho { background: #FBE7E7; color: var(--vermelho); }\n  .alerta-amarelo { background: #FBF0E0; color: var(--ambar); }\n  a { color: var(--indigo); }\n</style>\n</head>\n<body>\n  <header>\n    <div class=\"logo-bloco\">\n      <div class=\"logo\">Antere</div>\n      <div class=\"slogan\">Automação comercial, do caixa ao pagamento.</div>\n    </div>\n    <h1>Painel Operacional — Funil Antere</h1>\n    <div class=\"meta\">\n      Última atualização: ${formatDataHora(d.gerado_em)}<br>\n      <button onclick=\"location.reload()\">Atualizar</button>\n    </div>\n  </header>\n  <main>\n    ${renderSecao1(d.secao1_status_workflows)}\n    ${renderSecao2(d.secao2_saude_base)}\n    ${renderSecao3(d.secao3_funil)}\n    ${renderSecao4(d.secao4_log_erros)}\n    ${renderSecao5(d.secao5_alertas)}\n  </main>\n</body>\n</html>`;\n\nreturn [{ json: { html } }];\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1820,
-        -100
-      ],
-      "id": "p0000000-0000-0000-0000-000000000011",
-      "name": "08_monta_html"
+        "jsCode": "const key = $('02a_busca_tokens').all().find(t => t.json.service === 'n8n_api_key').json.signing_secret;\nconst errosLog = $('04_busca_log_erros').all().map(i => i.json).filter(e => !(e.workflow || '').startsWith('ZZ_TEST_'));\nconst nomesDistintos = [...new Set(errosLog.map(e => e.workflow).filter(Boolean))];\n\nlet workflowsList = [];\ntry {\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: 'https://raregoat-n8n.cloudfy.live/api/v1/workflows',\n    qs: { limit: 250 },\n    headers: { 'X-N8N-API-KEY': key, 'Accept': 'application/json' },\n    json: true,\n  });\n  workflowsList = resp.data || resp || [];\n} catch (e) {\n  // listagem falhou -> nenhum nome sera resolvido, nenhum erro sera considerado resolvido (default seguro)\n}\n\nconst sucessosPorWorkflow = {};\nfor (const nome of nomesDistintos) {\n  const wf = workflowsList.find(w => w.name === nome);\n  if (!wf) continue; // nome nao encontrado no n8n -> nao verificavel, mantem o erro visivel\n  try {\n    const execResp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: 'https://raregoat-n8n.cloudfy.live/api/v1/executions',\n      qs: { workflowId: wf.id, status: 'success', limit: 1 },\n      headers: { 'X-N8N-API-KEY': key, 'Accept': 'application/json' },\n      json: true,\n    });\n    const execs = execResp.data || execResp || [];\n    if (execs.length > 0) {\n      sucessosPorWorkflow[nome] = execs[0].stoppedAt || execs[0].startedAt || null;\n    }\n  } catch (e) {\n    // consulta de execucoes falhou para este workflow -> nao verificavel, mantem o erro visivel\n  }\n}\n\nreturn [{ json: { sucessos_por_workflow: sucessosPorWorkflow } }];"
+      }
     },
     {
+      "id": "72eab40d-8123-4824-995c-52a092d83f56",
+      "name": "05_busca_log_aceites",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1120,
+        768
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1228698383,
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "507706bd-94f8-4d59-9a60-ca092863f7ef",
+      "name": "02c_nega_acesso",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        896,
+        912
+      ],
       "parameters": {
         "respondWith": "text",
-        "responseBody": "={{ $json.html }}",
+        "responseBody": "Acesso negado",
+        "options": {
+          "responseCode": 401
+        }
+      }
+    },
+    {
+      "id": "f15378ba-f113-4369-a50f-6de711429501",
+      "name": "07_consolida_dados",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        384
+      ],
+      "parameters": {
+        "jsCode": "// Coleta bruta de cada fonte (referência explícita, nunca $json cru - dados vêm de branches paralelas)\nconst leads = $('03_busca_base_funil').all().map(i => i.json);\n// exclui artefatos de teste (workflow_origem/coluna 'workflow' iniciando com ZZ_TEST_) da contagem e do card\nconst sucessosPorWorkflow = $('09_verifica_sucessos_recentes').first().json.sucessos_por_workflow || {};\nconst errosLog = $('04_busca_log_erros').all().map(i => i.json)\n  .filter(e => !(e.workflow || '').startsWith('ZZ_TEST_'))\n  .filter(e => {\n    // erro cujo workflow ja teve execucao com sucesso APOS o timestamp do erro = historico/resolvido, nao exibe\n    const ultimoSucesso = sucessosPorWorkflow[e.workflow];\n    if (!ultimoSucesso) return true;\n    const tErro = new Date(e.timestamp);\n    const tSucesso = new Date(ultimoSucesso);\n    if (isNaN(tErro) || isNaN(tSucesso)) return true;\n    return !(tSucesso > tErro);\n  });\nconst tokens = $('02a_busca_tokens').all().map(i => i.json);\nconst criticos = $('06a_workflows_criticos').all().map(i => i.json);\nconst execucoes = $('06_busca_execucoes_n8n').all().map(i => i.json);\nconst logAceites = $('05_busca_log_aceites').all().map(i => i.json);\n\nconst agora = new Date();\n\n// ---------- Seção 2: Saúde da Base ----------\n// ---------- Fila do lote de leads (aba leads_importados) ----------\nconst leadsImportados = $('11_busca_leads_importados').all().map(i => i.json).filter(r => r && (r.status || r.email));\nconst hojeBR = new Date(agora.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));\nhojeBR.setHours(0, 0, 0, 0);\nconst parseBR = s => { const m = String(s || '').trim().match(/^(\\d{2})\\/(\\d{2})\\/(\\d{4})/); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; };\nconst vencida = r => { const d = parseBR(r.agendado_para); return !d || d <= hojeBR; };\nconst filaNovosHoje = leadsImportados.filter(r => r.status === 'agendado' && vencida(r)).length;\nconst filaReenviosHoje = leadsImportados.filter(r => r.status === 'reenvio_email' && vencida(r)).length;\nconst filaNovo = leadsImportados.filter(r => r.status === 'novo').length;\nconst filaFuturo = leadsImportados.filter(r => ['agendado', 'reenvio_email'].includes(r.status) && !vencida(r)).length;\nconst revisaoManualEmail = leadsImportados.filter(r => r.status === 'revisao_manual_email').length;\nconst filaLeads = { hoje_total: filaNovosHoje + filaReenviosHoje + filaNovo, hoje_novos: filaNovosHoje + filaNovo, hoje_reenvios: filaReenviosHoje, agendados_futuro: filaFuturo, revisao_manual_email: revisaoManualEmail, total_linhas: leadsImportados.length };\n\nconst totalLeads = leads.length;\nconst cabecalhoIntegro = totalLeads > 0 && Object.prototype.hasOwnProperty.call(leads[0], 'lead_id');\nconst ultimoLead = totalLeads > 0 ? leads[totalLeads - 1] : null;\nconst ultimoLeadTimestamp = ultimoLead ? (ultimoLead.data_primeiro_contato || null) : null;\n\n// ---------- Token RD Station (usado na Seção 1, card 6, e na Seção 5) ----------\nconst tokenRD = tokens.find(t => t.service === 'rdstation') || null;\nconst rdExpiraEm = (tokenRD && tokenRD.expires_at) ? new Date(tokenRD.expires_at) : null;\nconst rdDiasParaExpirar = (rdExpiraEm && !isNaN(rdExpiraEm)) ? (rdExpiraEm - agora) / (1000 * 60 * 60 * 24) : null;\n\n// ---------- Seção 1: Status dos Workflows Críticos (agendados) + Seção 1b: Workflows Reativos (informativo) ----------\nconst statusWorkflowsRaw = criticos.map((c, idx) => {\n  const resp = execucoes[idx] || {};\n  const lista = resp.data || [];\n  const ultima = lista[0] || null;\n\n  // Workflows reativos (só rodam por ação externa, ex.: clique do cliente) não têm\n  // \"não executou em Xh\" como alerta - só reportam a última execução, informativamente.\n  if (c.tipo === 'reativo') {\n    if (!ultima) {\n      return { nome: c.nome, tipo: 'reativo', ultima_execucao: null, ultimo_status: null, motivo: 'nunca executou' };\n    }\n    const inicio = new Date(ultima.startedAt);\n    const horasDesde = (agora - inicio) / (1000 * 60 * 60);\n    const falhou = ultima.status === 'error';\n    return {\n      nome: c.nome,\n      tipo: 'reativo',\n      ultima_execucao: ultima.startedAt,\n      ultimo_status: ultima.status,\n      motivo: falhou ? 'última execução falhou' : `última execução há ${horasDesde.toFixed(1)}h`\n    };\n  }\n\n  let status, horasDesde, motivo;\n\n  if (!ultima) {\n    status = 'problema';\n    horasDesde = null;\n    motivo = 'nunca executou';\n  } else {\n    const inicio = new Date(ultima.startedAt);\n    horasDesde = (agora - inicio) / (1000 * 60 * 60);\n    const falhou = ultima.status === 'error';\n    const excedeuJanela = horasDesde > c.janela_horas;\n\n    if (falhou || excedeuJanela) {\n      // janela de 25h ou menos = severidade vermelha; janela de 48h = severidade amarela\n      status = c.janela_horas <= 25 ? 'problema' : 'atencao';\n      motivo = falhou ? 'última execução falhou' : `não executou nas últimas ${c.janela_horas}h`;\n    } else {\n      status = 'ok';\n      motivo = `última execução há ${horasDesde.toFixed(1)}h`;\n    }\n  }\n\n  // Card do RD Station também reflete a validade do token (pode agravar o status, nunca melhorar)\n  let detalheToken = '';\n  if (c.nome === 'RD Station - Renovar Token') {\n    // token RD Station e renovado a cada hora por design (validade de poucas horas, nunca dias) -\n    // so e problema real se ja expirou de fato, nao por estar perto de expirar segundo um limiar de dias\n    if (rdDiasParaExpirar === null) {\n      status = 'problema';\n      detalheToken = ' | token RD Station não encontrado na aba tokens';\n    } else if (rdDiasParaExpirar < 0) {\n      status = 'problema';\n      detalheToken = ` | token RD Station expirado há ${Math.abs(rdDiasParaExpirar * 24).toFixed(1)}h`;\n    } else {\n      detalheToken = ` | token RD Station válido por mais ${(rdDiasParaExpirar * 24).toFixed(1)}h`;\n    }\n  }\n\n  return {\n    nome: c.nome,\n    tipo: 'agendado',\n    status,\n    motivo: motivo + detalheToken\n  };\n});\n\nconst statusWorkflows = statusWorkflowsRaw.filter(w => w.tipo !== 'reativo');\nconst workflowsReativos = statusWorkflowsRaw.filter(w => w.tipo === 'reativo');\n\n// ---------- Seção 1b: Aceite Digital (card informativo, workflow reativo) ----------\nconst confirmacoes24h = logAceites.filter(l => {\n  const t = new Date(l.timestamp);\n  return !isNaN(t) && (agora - t) <= 24 * 60 * 60 * 1000;\n}).length;\nconst confirmacoes7d = logAceites.filter(l => {\n  const t = new Date(l.timestamp);\n  return !isNaN(t) && (agora - t) <= 7 * 24 * 60 * 60 * 1000;\n}).length;\n\nconst secaoAceiteDigital = {\n  workflows: workflowsReativos,\n  total_confirmacoes_registradas: logAceites.length,\n  confirmacoes_24h: confirmacoes24h,\n  confirmacoes_7d: confirmacoes7d\n};\n\n// ---------- Seção 3: Funil em Tempo Real ----------\nconst funilEtapas = ['Novo Lead', 'Proposta Enviada', 'Em Follow-up', 'Ganho', 'Perdido'];\nconst funilContagem = funilEtapas.map(etapa => ({\n  etapa,\n  contagem: leads.filter(l => l.status_funil === etapa).length\n}));\n\nconst ultimos5Leads = leads.slice(-5).reverse().map(l => ({\n  nome: l.nome_contato || l.razao_social || '(sem nome)',\n  empresa: l.razao_social || '',\n  status: l.status_funil || '',\n  ultimo_toque: l.ultimo_toque_data || l.data_primeiro_contato || ''\n}));\n\nconst leadCapturadoHoje = leads.some(l => {\n  if (!l.data_primeiro_contato) return false;\n  const d = new Date(l.data_primeiro_contato);\n  return !isNaN(d) && d.toDateString() === agora.toDateString();\n});\n\n// ---------- Seção 4: Log de Erros Recentes ----------\nconst ultimosErros = errosLog.slice(-10).reverse().map(e => ({\n  timestamp: e.timestamp || '',\n  workflow: e.workflow || '',\n  mensagem: e.mensagem_erro || '',\n  link: e.link_execucao || ''\n}));\n\nconst erros24h = errosLog.filter(e => {\n  const t = new Date(e.timestamp);\n  return !isNaN(t) && (agora - t) <= 24 * 60 * 60 * 1000;\n});\n\n// ---------- Seção 5: Alertas Ativos (5 regras, ordenadas por severidade) ----------\nconst alertas = [];\n\n// Regra 1 (🔴): token RD Station ja expirou de fato (renova a cada hora por design, entao\n// so alerta quando realmente passou do expires_at - nao por estar perto de expirar em dias)\nif (rdDiasParaExpirar !== null && rdDiasParaExpirar < 0) {\n  alertas.push({ severidade: 'vermelho', texto: `Token RD Station expirado há ${Math.abs(rdDiasParaExpirar * 24).toFixed(1)}h` });\n}\n\n// Regra 2 (🔴): workflow de janela 25h não executou (ou falhou, ou nunca rodou)\nstatusWorkflows.forEach(w => {\n  const c = criticos.find(x => x.nome === w.nome);\n  if (c && c.janela_horas <= 25 && w.status === 'problema' && w.nome !== 'RD Station - Renovar Token') {\n    alertas.push({ severidade: 'vermelho', texto: `Workflow ${w.nome}: ${w.motivo} (janela de ${c.janela_horas}h)` });\n  }\n});\n\n// Regra 3 (🔴): cabeçalho da base corrompido\nif (!cabecalhoIntegro) {\n  alertas.push({ severidade: 'vermelho', texto: 'Cabeçalho da base_funil_completo corrompido (coluna A não é lead_id) — possível bug de aba trocada' });\n}\n\n// Regra 4 (🟡): workflow de janela 48h não executou\nstatusWorkflows.forEach(w => {\n  const c = criticos.find(x => x.nome === w.nome);\n  if (c && c.janela_horas > 25 && w.status !== 'ok') {\n    alertas.push({ severidade: 'amarelo', texto: `Workflow ${w.nome}: ${w.motivo} (janela de 48h)` });\n  }\n});\n\n// Regra 7 (🟡): leads com e-mail de boas-vindas em revisão manual (3 tentativas falharam)\nif (revisaoManualEmail > 0) {\n  alertas.push({ severidade: 'amarelo', texto: `${revisaoManualEmail} lead(s) em revisao_manual_email na aba leads_importados (e-mail de boas-vindas falhou 3x)` });\n}\n\n// Regra 5 (🟡): nenhum lead capturado hoje\nif (!leadCapturadoHoje) {\n  alertas.push({ severidade: 'amarelo', texto: 'Nenhum lead capturado hoje' });\n}\n\n// Regra 6 (🔴): workflow reativo com última execução em erro (nunca por \"não rodou\")\nworkflowsReativos.forEach(w => {\n  if (w.ultimo_status === 'error') {\n    alertas.push({ severidade: 'vermelho', texto: `Workflow ${w.nome}: última execução falhou` });\n  }\n});\n\n// ---------- Propostas com falha (Monitor_Propostas_Erros, aba propostas_pendentes_reenvio) ----------\nconst propostasReenvio = $('12_busca_propostas_reenvio').all().map(i => i.json).filter(r => r && r.execution_id);\nconst contaStatusProposta = s => propostasReenvio.filter(r => r.status === s).length;\nconst secaoPropostasReenvio = {\n  pendentes: contaStatusProposta('pendente'),\n  revisao_manual: contaStatusProposta('revisao_manual'),\n  reenviadas_7d: propostasReenvio.filter(r => {\n    const t = new Date(r.ultima_tentativa_em);\n    return r.status === 'reenviado' && !isNaN(t) && (agora - t) <= 7 * 24 * 60 * 60 * 1000;\n  }).length,\n  lista: propostasReenvio\n    .filter(r => r.status === 'pendente' || r.status === 'revisao_manual')\n    .slice(-10).reverse()\n    .map(r => ({ razao_social: r.razao_social, causa: r.causa, status: r.status, erro_em: r.erro_em,\n                 tentativas: r.tentativas, detalhe: r.resultado_ultima_tentativa || r.observacao, execution_id: r.execution_id }))\n};\nif (secaoPropostasReenvio.revisao_manual > 0) {\n  alertas.push({ severidade: 'vermelho', texto: `${secaoPropostasReenvio.revisao_manual} proposta(s) com falha em revisão manual (aba propostas_pendentes_reenvio)` });\n}\nif (secaoPropostasReenvio.pendentes > 0) {\n  alertas.push({ severidade: 'amarelo', texto: `${secaoPropostasReenvio.pendentes} proposta(s) com falha aguardando o reenvio automático das 21h` });\n}\n\n// ordena: vermelho antes de amarelo\nalertas.sort((a, b) => (a.severidade === b.severidade ? 0 : a.severidade === 'vermelho' ? -1 : 1));\n\n\n// ---------- Secao 6: Historico de Erros (30 dias) ----------\nfunction chaveDia(d) {\n  return d.toISOString().slice(0, 10); // YYYY-MM-DD\n}\nconst historicoErros30dMap = {};\nfor (let i = 29; i >= 0; i--) {\n  const dia = new Date(agora);\n  dia.setDate(dia.getDate() - i);\n  historicoErros30dMap[chaveDia(dia)] = 0;\n}\nerrosLog.forEach(e => {\n  const t = new Date(e.timestamp);\n  if (isNaN(t)) return;\n  const chave = chaveDia(t);\n  if (chave in historicoErros30dMap) {\n    historicoErros30dMap[chave] += 1;\n  }\n});\nconst historicoErros30d = Object.entries(historicoErros30dMap).map(([data, contagem]) => ({ data, contagem }));\nconst somaUltimos7 = historicoErros30d.slice(-7).reduce((s, x) => s + x.contagem, 0);\nconst somaAnteriores7 = historicoErros30d.slice(-14, -7).reduce((s, x) => s + x.contagem, 0);\nlet tendencia30d;\nif (somaUltimos7 > somaAnteriores7) tendencia30d = 'subindo';\nelse if (somaUltimos7 < somaAnteriores7) tendencia30d = 'caindo';\nelse tendencia30d = 'estavel';\n\nreturn [{\n  json: {\n    gerado_em: agora.toISOString(),\n    secao6_historico_erros_30d: { dias: historicoErros30d, total_ultimos_7d: somaUltimos7, total_7d_anteriores: somaAnteriores7, tendencia: tendencia30d },\n    secao1_status_workflows: statusWorkflows,\n    secao1b_aceite_digital: secaoAceiteDigital,\n    secao2_saude_base: {\n      total_leads: totalLeads,\n      cabecalho_integro: cabecalhoIntegro,\n      ultimo_lead_timestamp: ultimoLeadTimestamp,\n      fila_leads: filaLeads\n    },\n    secao3_funil: {\n      etapas: funilContagem,\n      ultimos_5_leads: ultimos5Leads\n    },\n    secao4_log_erros: {\n      total_erros_24h: erros24h.length,\n      banner_verde: erros24h.length === 0,\n      ultimos_erros: ultimosErros\n    },\n    secao5_alertas: alertas,\n    secao7_propostas_reenvio: secaoPropostasReenvio\n  }\n}];"
+      }
+    },
+    {
+      "id": "4553aba3-c1b0-4004-a4ea-1d01d3feac01",
+      "name": "08_monta_html",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        384
+      ],
+      "parameters": {
+        "jsCode": "const d = $('07_consolida_dados').item.json;\n\nconst CORES = {\n  indigo: '#3A34D6',\n  petroleo: '#12786B',\n  ambar: '#D9822B',\n  vermelho: '#DC2626',\n  warmWhite: '#F7F5F1',\n  grafite: '#1B1E27'\n};\n\nconst SHEET_URL_BASE = 'https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=810524007';\n\nfunction escapeHtml(str) {\n  return String(str == null ? '' : str)\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;');\n}\n\nfunction formatDataHora(iso) {\n  if (!iso) return '—';\n  const dt = new Date(iso);\n  if (isNaN(dt)) return String(iso);\n  return dt.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });\n}\n\nfunction iconeStatus(status) {\n  if (status === 'ok') return '🟢';\n  if (status === 'atencao') return '🟡';\n  return '🔴';\n}\n\n// ---------- Seção 1: Status dos Workflows Críticos ----------\nfunction renderSecao1(statusWorkflows) {\n  const linhas = statusWorkflows.map(w => `\n    <tr>\n      <td>${iconeStatus(w.status)}</td>\n      <td><strong>${escapeHtml(w.nome)}</strong></td>\n      <td>${escapeHtml(w.motivo)}</td>\n    </tr>`).join('');\n\n  return `\n  <section class=\"card\">\n    <h2>Status dos Workflows Críticos</h2>\n    <p class=\"subtitulo\">Algum workflow parou?</p>\n    <table>\n      <thead><tr><th></th><th>Workflow</th><th>Situação</th></tr></thead>\n      <tbody>${linhas}</tbody>\n    </table>\n  </section>`;\n}\n\n// ---------- Seção 1b: Aceite Digital (informativo - workflow reativo, nunca alerta \"não rodou\") ----------\nfunction renderSecaoAceiteDigital(aceite) {\n  if (!aceite || !aceite.workflows || aceite.workflows.length === 0) return '';\n\n  const linhas = aceite.workflows.map(w => `\n    <tr>\n      <td>${w.ultimo_status === 'error' ? '🔴' : '⚪'}</td>\n      <td><strong>${escapeHtml(w.nome)}</strong></td>\n      <td>${escapeHtml(w.motivo)}</td>\n    </tr>`).join('');\n\n  return `\n  <section class=\"card\">\n    <h2>Workflows Reativos (Aceite Digital, Captura, PDVet, Site e Observabilidade)</h2>\n    <p class=\"subtitulo\">Só rodam por evento externo (clique do cliente, formulário, mensagem no WhatsApp, erro em outro workflow). Não alertamos por \"não rodou\" — só quando a última execução falhou.</p>\n    <table>\n      <thead><tr><th></th><th>Workflow</th><th>Situação</th></tr></thead>\n      <tbody>${linhas}</tbody>\n    </table>\n    <div class=\"indicadores-linha\" style=\"margin-top:16px;\">\n      <div class=\"indicador\">\n        <span class=\"indicador-icone\">✅</span>\n        <span class=\"indicador-valor\">${aceite.confirmacoes_24h}</span>\n        <span class=\"indicador-label\">confirmações nas últimas 24h</span>\n      </div>\n      <div class=\"indicador\">\n        <span class=\"indicador-icone\">✅</span>\n        <span class=\"indicador-valor\">${aceite.confirmacoes_7d}</span>\n        <span class=\"indicador-label\">confirmações nos últimos 7 dias</span>\n      </div>\n      <div class=\"indicador\">\n        <span class=\"indicador-icone\">📋</span>\n        <span class=\"indicador-valor\">${aceite.total_confirmacoes_registradas}</span>\n        <span class=\"indicador-label\">total registrado no log</span>\n      </div>\n    </div>\n  </section>`;\n}\n\n// ---------- Seção 2: Saúde da Base ----------\nfunction renderSecao2(saude) {\n  return `\n  <section class=\"card\">\n    <h2>Saúde da Base</h2>\n    <p class=\"subtitulo\">Os dados estão íntegros?</p>\n    <div class=\"indicadores-linha\">\n      <div class=\"indicador\">\n        <span class=\"indicador-icone\">${saude.total_leads > 0 ? '🟢' : '🔴'}</span>\n        <span class=\"indicador-valor\">${saude.total_leads}</span>\n        <span class=\"indicador-label\">leads na base</span>\n      </div>\n      <div class=\"indicador\">\n        <span class=\"indicador-icone\">${saude.cabecalho_integro ? '🟢' : '🔴'}</span>\n        <span class=\"indicador-valor\">${saude.cabecalho_integro ? 'OK' : 'Corrompido'}</span>\n        <span class=\"indicador-label\">cabeçalho (coluna A = lead_id)</span>\n      </div>\n      <div class=\"indicador\">\n        <span class=\"indicador-icone\">🕒</span>\n        <span class=\"indicador-valor\">${formatDataHora(saude.ultimo_lead_timestamp)}</span>\n        <span class=\"indicador-label\">último lead capturado</span>\n      </div>\n    </div>\n    <p class=\"subtitulo\" style=\"margin-top:16px\">Fila do lote de leads (aba leads_importados)</p>\n    <div class=\"indicadores-linha\">\n      <div class=\"indicador\">\n        <span class=\"indicador-icone\">${(saude.fila_leads && saude.fila_leads.hoje_total > 0) ? '🟡' : '🟢'}</span>\n        <span class=\"indicador-valor\">${saude.fila_leads ? saude.fila_leads.hoje_total : 0}</span>\n        <span class=\"indicador-label\">aguardando hoje (${saude.fila_leads ? saude.fila_leads.hoje_novos : 0} novos + ${saude.fila_leads ? saude.fila_leads.hoje_reenvios : 0} reenvios)</span>\n      </div>\n      <div class=\"indicador\">\n        <span class=\"indicador-icone\">📅</span>\n        <span class=\"indicador-valor\">${saude.fila_leads ? saude.fila_leads.agendados_futuro : 0}</span>\n        <span class=\"indicador-label\">agendados para os próximos dias</span>\n      </div>\n      <div class=\"indicador\">\n        <span class=\"indicador-icone\">${(saude.fila_leads && saude.fila_leads.revisao_manual_email > 0) ? '🔴' : '🟢'}</span>\n        <span class=\"indicador-valor\">${saude.fila_leads ? saude.fila_leads.revisao_manual_email : 0}</span>\n        <span class=\"indicador-label\">em revisão manual (e-mail falhou 3x)</span>\n      </div>\n    </div>\n  </section>`;\n}\n\n// ---------- Seção 3: Funil em Tempo Real ----------\nfunction renderSecao3(funil) {\n  const maxContagem = Math.max(1, ...funil.etapas.map(e => e.contagem));\n  const miniFunil = funil.etapas.map(e => `\n    <div class=\"funil-etapa\">\n      <div class=\"funil-barra\" style=\"height:${8 + (e.contagem / maxContagem) * 60}px;\"></div>\n      <div class=\"funil-contagem\">${e.contagem}</div>\n      <div class=\"funil-label\">${escapeHtml(e.etapa)}</div>\n    </div>`).join('');\n\n  const linhasLeads = funil.ultimos_5_leads.map(l => `\n    <tr class=\"linha-clicavel\" onclick=\"window.open('${SHEET_URL_BASE}', '_blank')\">\n      <td>${escapeHtml(l.nome)}</td>\n      <td>${escapeHtml(l.empresa)}</td>\n      <td>${escapeHtml(l.status)}</td>\n      <td>${formatDataHora(l.ultimo_toque)}</td>\n    </tr>`).join('') || '<tr><td colspan=\"4\">Nenhum lead na base ainda.</td></tr>';\n\n  return `\n  <section class=\"card\">\n    <h2>Funil em Tempo Real</h2>\n    <p class=\"subtitulo\">Como está o pipeline hoje?</p>\n    <div class=\"mini-funil\">${miniFunil}</div>\n    <table>\n      <thead><tr><th>Nome</th><th>Empresa</th><th>Status</th><th>Último toque</th></tr></thead>\n      <tbody>${linhasLeads}</tbody>\n    </table>\n  </section>`;\n}\n\n// ---------- Seção 4: Log de Erros Recentes ----------\nfunction renderSecao4(log) {\n  const banner = log.banner_verde\n    ? `<div class=\"banner banner-verde\">Nenhum erro nas últimas 24h ✅</div>`\n    : `<div class=\"banner banner-vermelho\">${log.total_erros_24h} erro(s) nas últimas 24h 🚨</div>`;\n\n  const linhas = log.ultimos_erros.map(e => `\n    <tr>\n      <td>${formatDataHora(e.timestamp)}</td>\n      <td>${escapeHtml(e.workflow)}</td>\n      <td>${escapeHtml(e.mensagem)}</td>\n      <td>${e.link ? `<a href=\"${escapeHtml(e.link)}\" target=\"_blank\">Ver execução</a>` : '—'}</td>\n    </tr>`).join('') || '<tr><td colspan=\"4\">Sem registros na aba log_erros_producao.</td></tr>';\n\n  return `\n  <section class=\"card\">\n    <h2>Log de Erros Recentes</h2>\n    <p class=\"subtitulo\">Teve algum erro nas últimas 24h?</p>\n    ${banner}\n    <table>\n      <thead><tr><th>Horário</th><th>Workflow</th><th>Erro</th><th>Execução</th></tr></thead>\n      <tbody>${linhas}</tbody>\n    </table>\n  </section>`;\n}\n\n// ---------- Secao 6: Historico de Erros (30 dias) ----------\nfunction renderSecao6(hist) {\n  const dias = hist.dias || [];\n  const max = Math.max(1, ...dias.map(d => d.contagem));\n  const larguraBarra = 18;\n  const gap = 4;\n  const alturaMax = 90;\n  const larguraSvg = dias.length * (larguraBarra + gap);\n  const alturaSvg = alturaMax + 30;\n\n  const barras = dias.map((d, i) => {\n    const h = Math.round((d.contagem / max) * alturaMax);\n    const x = i * (larguraBarra + gap);\n    const y = alturaMax - h;\n    const cor = d.contagem > 0 ? CORES.vermelho : '#E5E1D8';\n    return `<rect x=\"${x}\" y=\"${y}\" width=\"${larguraBarra}\" height=\"${Math.max(h, 1)}\" fill=\"${cor}\" rx=\"2\">` +\n           `<title>${d.data}: ${d.contagem} erro(s)</title></rect>`;\n  }).join('');\n\n  const primeiraData = dias.length ? dias[0].data : '';\n  const ultimaData = dias.length ? dias[dias.length - 1].data : '';\n\n  const tendenciaLabel = { subindo: '📈 subindo', caindo: '📉 caindo', estavel: '➡️ estável' }[hist.tendencia] || hist.tendencia;\n  const tendenciaCor = hist.tendencia === 'subindo' ? CORES.vermelho : (hist.tendencia === 'caindo' ? CORES.petroleo : '#5B5F6B');\n\n  return `\n  <section class=\"card\">\n    <h2>Histórico de Erros (30 dias)</h2>\n    <p class=\"subtitulo\">Contagem de erros por dia — ${escapeHtml(primeiraData)} a ${escapeHtml(ultimaData)}</p>\n    <svg width=\"${larguraSvg}\" height=\"${alturaSvg}\" viewBox=\"0 0 ${larguraSvg} ${alturaSvg}\" style=\"max-width:100%; height:auto;\">\n      ${barras}\n    </svg>\n    <p style=\"font-size:13px; margin-top:8px;\">\n      Últimos 7 dias: <strong>${hist.total_ultimos_7d}</strong> erro(s) ·\n      7 dias anteriores: <strong>${hist.total_7d_anteriores}</strong> ·\n      Tendência: <strong style=\"color:${tendenciaCor};\">${tendenciaLabel}</strong>\n    </p>\n  </section>`;\n}\n\n// ---------- Propostas com falha (Monitor_Propostas_Erros) ----------\nfunction renderSecaoPropostasReenvio(p) {\n  if (!p) return '';\n  const ROTULO_CAUSA = { cota_resend: 'Cota do Resend', rede: 'Rede', rate_limit: 'Rate limit', schema_cache: 'Schema em cache', cnpj_invalido: 'CNPJ inválido', nao_identificada: 'Não identificada' };\n  const urlAba = 'https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=714364179';\n  const linhas = (p.lista || []).map(r => `\n    <tr>\n      <td>${formatDataHora(r.erro_em)}</td>\n      <td>${escapeHtml(r.razao_social || '—')}</td>\n      <td>${escapeHtml(ROTULO_CAUSA[r.causa] || r.causa || '—')}</td>\n      <td>${r.status === 'revisao_manual' ? '🔴 revisão manual' : '🟡 reenvio às 21h'}${Number(r.tentativas) > 0 ? ` (${escapeHtml(r.tentativas)} tentativa(s))` : ''}</td>\n      <td>${escapeHtml(r.detalhe || '')}</td>\n      <td><a href=\"https://raregoat-n8n.cloudfy.live/workflow/EQ3YEDcPysyaFlZp/executions/${escapeHtml(r.execution_id)}\" target=\"_blank\">Ver execução</a></td>\n    </tr>`).join('') || '<tr><td colspan=\"6\">Nenhuma proposta com falha pendente.</td></tr>';\n  return `\n  <section class=\"card\">\n    <h2>Propostas com Falha</h2>\n    <p class=\"subtitulo\">Alguma proposta deixou de chegar ao cliente?</p>\n    <p style=\"font-size:13px;\">\n      Aguardando reenvio: <strong>${p.pendentes}</strong> ·\n      Revisão manual: <strong style=\"color:${p.revisao_manual > 0 ? CORES.vermelho : 'inherit'};\">${p.revisao_manual}</strong> ·\n      Reenviadas nos últimos 7 dias: <strong>${p.reenviadas_7d}</strong> ·\n      <a href=\"${urlAba}\" target=\"_blank\">abrir aba de controle</a>\n    </p>\n    <table>\n      <thead><tr><th>Falhou em</th><th>Empresa</th><th>Causa</th><th>Situação</th><th>Detalhe</th><th>Execução</th></tr></thead>\n      <tbody>${linhas}</tbody>\n    </table>\n  </section>`;\n}\n\n// ---------- Seção 5: Alertas Ativos ----------\nfunction renderSecao5(alertas) {\n  if (!alertas || alertas.length === 0) return '';\n  const linhas = alertas.map(a => `\n    <li class=\"alerta alerta-${a.severidade}\">\n      ${a.severidade === 'vermelho' ? '🔴' : '🟡'} ${escapeHtml(a.texto)}\n    </li>`).join('');\n\n  return `\n  <section class=\"card\">\n    <h2>Alertas Ativos</h2>\n    <p class=\"subtitulo\">Tem algo que preciso resolver agora?</p>\n    <ul class=\"lista-alertas\">${linhas}</ul>\n  </section>`;\n}\n\nconst html = `<!DOCTYPE html>\n<html lang=\"pt-BR\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>Painel Operacional — Funil Antere</title>\n<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap\" rel=\"stylesheet\">\n<style>\n  :root {\n    --indigo: ${CORES.indigo};\n    --petroleo: ${CORES.petroleo};\n    --ambar: ${CORES.ambar};\n    --vermelho: ${CORES.vermelho};\n    --warm-white: ${CORES.warmWhite};\n    --grafite: ${CORES.grafite};\n  }\n  * { box-sizing: border-box; }\n  body {\n    margin: 0;\n    font-family: 'Inter', Arial, sans-serif;\n    background: var(--warm-white);\n    color: var(--grafite);\n  }\n  header {\n    background: var(--indigo);\n    color: #fff;\n    padding: 24px 40px;\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    flex-wrap: wrap;\n    gap: 16px;\n  }\n  header .logo-bloco .logo { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }\n  header .logo-bloco .slogan { font-size: 13px; color: #C7C6F5; margin-top: 2px; }\n  header h1 { font-size: 18px; margin: 0; font-weight: 600; }\n  header .meta { text-align: right; font-size: 13px; color: #E5E3FB; }\n  header button {\n    margin-top: 8px;\n    background: #fff;\n    color: var(--indigo);\n    border: none;\n    padding: 8px 18px;\n    border-radius: 6px;\n    font-weight: 600;\n    cursor: pointer;\n    font-family: inherit;\n  }\n  main {\n    max-width: 1100px;\n    margin: 0 auto;\n    padding: 24px 40px 60px;\n    display: flex;\n    flex-direction: column;\n    gap: 24px;\n  }\n  .card {\n    background: #fff;\n    border: 1px solid #E5E1D8;\n    border-radius: 10px;\n    padding: 20px 24px;\n  }\n  .card h2 { margin: 0 0 4px; font-size: 17px; color: var(--grafite); }\n  .card .subtitulo { margin: 0 0 16px; font-size: 13px; color: #8B8F9C; }\n  table { width: 100%; border-collapse: collapse; font-size: 14px; }\n  thead th {\n    background: var(--indigo);\n    color: #fff;\n    text-align: left;\n    padding: 8px 12px;\n    font-weight: 600;\n    font-size: 12px;\n    text-transform: uppercase;\n    letter-spacing: 0.3px;\n  }\n  tbody td { padding: 8px 12px; border-bottom: 1px solid #EFEDE6; }\n  tbody tr:last-child td { border-bottom: none; }\n  .linha-clicavel { cursor: pointer; }\n  .linha-clicavel:hover { background: #F0EFFB; }\n  .indicadores-linha { display: flex; gap: 24px; flex-wrap: wrap; }\n  .indicador {\n    flex: 1;\n    min-width: 200px;\n    background: var(--warm-white);\n    border-radius: 8px;\n    padding: 16px;\n    text-align: center;\n  }\n  .indicador-icone { font-size: 22px; display: block; }\n  .indicador-valor { font-size: 20px; font-weight: 700; display: block; margin-top: 4px; color: var(--petroleo); }\n  .indicador-label { font-size: 12px; color: #8B8F9C; }\n  .mini-funil {\n    display: flex;\n    align-items: flex-end;\n    gap: 24px;\n    padding: 16px 8px 8px;\n    margin-bottom: 16px;\n    border-bottom: 1px solid #EFEDE6;\n  }\n  .funil-etapa { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }\n  .funil-barra { width: 36px; background: var(--petroleo); border-radius: 4px 4px 0 0; }\n  .funil-contagem { font-weight: 700; font-size: 14px; }\n  .funil-label { font-size: 11px; color: #8B8F9C; text-align: center; }\n  .banner { padding: 10px 16px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-bottom: 16px; }\n  .banner-verde { background: #E4F5F1; color: var(--petroleo); }\n  .banner-vermelho { background: #FBE7E7; color: var(--vermelho); }\n  .lista-alertas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }\n  .alerta { padding: 10px 14px; border-radius: 6px; font-size: 14px; }\n  .alerta-vermelho { background: #FBE7E7; color: var(--vermelho); }\n  .alerta-amarelo { background: #FBF0E0; color: var(--ambar); }\n  a { color: var(--indigo); }\n</style>\n</head>\n<body>\n  <header>\n    <div class=\"logo-bloco\">\n      <div class=\"logo\">Antere</div>\n      <div class=\"slogan\">Automação comercial, do caixa ao pagamento.</div>\n    </div>\n    <h1>Painel Operacional — Funil Antere</h1>\n    <div class=\"meta\">\n      Última atualização: ${formatDataHora(d.gerado_em)}<br>\n      <button onclick=\"location.reload()\">Atualizar</button>\n    </div>\n  </header>\n  <main>\n    ${renderSecao1(d.secao1_status_workflows)}\n    ${renderSecaoAceiteDigital(d.secao1b_aceite_digital)}\n    ${renderSecao2(d.secao2_saude_base)}\n    ${renderSecao3(d.secao3_funil)}\n    ${renderSecao4(d.secao4_log_erros)}\n    ${renderSecaoPropostasReenvio(d.secao7_propostas_reenvio)}\n    ${renderSecao5(d.secao5_alertas)}\n    ${renderSecao6(d.secao6_historico_erros_30d)}\n  </main>\n</body>\n</html>`;\n\nreturn [{ json: { html, dados: d } }];"
+      }
+    },
+    {
+      "id": "679d06a9-eed6-490e-a149-f35e705505a1",
+      "name": "09_responde_webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2016,
+        384
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $('01_webhook_get').item.json.query.format === 'json' ? JSON.stringify($json.dados) : $json.html }}",
         "options": {
           "responseHeaders": {
             "entries": [
               {
                 "name": "Content-Type",
-                "value": "text/html; charset=utf-8"
+                "value": "={{ $('01_webhook_get').item.json.query.format === 'json' ? 'application/json; charset=utf-8' : 'text/html; charset=utf-8' }}"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store, no-cache, must-revalidate, max-age=0"
+              },
+              {
+                "name": "Pragma",
+                "value": "no-cache"
+              },
+              {
+                "name": "Expires",
+                "value": "0"
               }
             ]
           }
         }
-      },
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
+      }
+    },
+    {
+      "name": "11_busca_leads_importados",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
       "position": [
-        2040,
-        -100
+        1120,
+        960
       ],
-      "id": "p0000000-0000-0000-0000-000000000012",
-      "name": "09_responde_webhook"
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 659258119,
+          "mode": "list",
+          "cachedResultName": "leads_importados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=659258119"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Fila do lote de leads (aba leads_importados): agendado / reenvio_email / revisao_manual_email.",
+      "id": "323771a3-57ae-4c3b-b291-8a74a971a5b5"
+    },
+    {
+      "name": "12_busca_propostas_reenvio",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1120,
+        1152
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 714364179,
+          "mode": "list",
+          "cachedResultName": "propostas_pendentes_reenvio",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/edit#gid=714364179"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "ADITIVO 23/09/2026 (Parte B): aba de controle do Monitor_Propostas_Erros (falhas de proposta pendentes de reenvio / em revisao manual). alwaysOutputData: aba vazia nao trava o merge.",
+      "id": "be72c25f-c8ce-4867-8001-e88bb573484c"
     }
   ],
   "connections": {
@@ -352,6 +480,26 @@
             "node": "06a_workflows_criticos",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "09_verifica_sucessos_recentes",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "05_busca_log_aceites",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "11_busca_leads_importados",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "12_busca_propostas_reenvio",
+            "type": "main",
+            "index": 0
           }
         ],
         [
@@ -368,6 +516,17 @@
         [
           {
             "node": "merge_sync",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "merge_sync": {
+      "main": [
+        [
+          {
+            "node": "07_consolida_dados",
             "type": "main",
             "index": 0
           }
@@ -407,13 +566,24 @@
         ]
       ]
     },
-    "merge_sync": {
+    "09_verifica_sucessos_recentes": {
       "main": [
         [
           {
-            "node": "07_consolida_dados",
+            "node": "merge_sync",
             "type": "main",
-            "index": 0
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "05_busca_log_aceites": {
+      "main": [
+        [
+          {
+            "node": "merge_sync",
+            "type": "main",
+            "index": 4
           }
         ]
       ]
@@ -439,9 +609,33 @@
           }
         ]
       ]
+    },
+    "11_busca_leads_importados": {
+      "main": [
+        [
+          {
+            "node": "merge_sync",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "12_busca_propostas_reenvio": {
+      "main": [
+        [
+          {
+            "node": "merge_sync",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
   }
 }

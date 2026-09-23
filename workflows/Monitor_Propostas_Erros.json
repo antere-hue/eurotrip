@@ -1,0 +1,1082 @@
+{
+  "name": "Monitor_Propostas_Erros",
+  "nodes": [
+    {
+      "id": "9854f498-4a22-4697-adc2-267483b091d0",
+      "name": "A01_agenda_coleta",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8-20/2 * * *"
+            }
+          ]
+        }
+      },
+      "notes": "A cada 2h, das 08h as 20h (timezone do workflow: America/Sao_Paulo)."
+    },
+    {
+      "id": "51466fc4-d1db-4ee7-a71d-602a9bfb35ca",
+      "name": "A02_busca_tokens",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "executeOnce": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "6b108e76-60bf-43a9-af13-b2a949aebce6",
+      "name": "A03_lista_execucoes_erro",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "url": "https://raregoat-n8n.cloudfy.live/api/v1/executions?workflowId=EQ3YEDcPysyaFlZp&status=error&limit=100",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-API-KEY",
+              "value": "={{ $('A02_busca_tokens').all().find(t => t.json.service === 'n8n_api_key').json.signing_secret }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "executeOnce": true
+    },
+    {
+      "id": "b6307ced-f875-4e2d-9c47-388482996062",
+      "name": "A04_le_controle",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/propostas_pendentes_reenvio!A:R",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "executeOnce": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "485a11b7-ff7f-4e38-aca6-6ad7691df093",
+      "name": "A05_le_base_funil",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "executeOnce": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "6ddf7d72-4ea1-4793-b317-f157adbc5949",
+      "name": "A06_filtra_novas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// Etapa 1: so execucoes com erro disparadas por formulario/webhook real (mode = webhook; execucoes\n// manuais, de teste e via MCP ficam de fora), das ultimas 26h, ainda nao registradas na aba de controle.\nconst JANELA_H = 26;\nconst lista = $('A03_lista_execucoes_erro').first().json.data || [];\nconst controle = $('A04_le_controle').first().json.values || [];\nconst registradas = new Set(controle.slice(1).map(r => String(r[0] || '')));\nconst limite = Date.now() - JANELA_H * 3600 * 1000;\nreturn lista\n  .filter(e => e.mode === 'webhook' && Date.parse(e.startedAt) >= limite && !registradas.has(String(e.id)))\n  .map(e => ({ json: { execution_id: String(e.id), erro_em: e.startedAt } }));"
+      }
+    },
+    {
+      "id": "fddd686c-9d8c-484e-9a7c-8b1865e0914e",
+      "name": "A07_detalhe_execucao",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1320,
+        0
+      ],
+      "parameters": {
+        "url": "=https://raregoat-n8n.cloudfy.live/api/v1/executions/{{ $json.execution_id }}?includeData=true",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-API-KEY",
+              "value": "={{ $('A02_busca_tokens').all().find(t => t.json.service === 'n8n_api_key').json.signing_secret }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "3b828154-d12a-428f-a8b8-107101a1c80a",
+      "name": "A08_classifica",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const COLS = [\"execution_id\", \"detectado_em\", \"erro_em\", \"razao_social\", \"cnpj\", \"email\", \"lead_id\", \"no_erro\", \"mensagem_erro\", \"causa\", \"status\", \"tentativas\", \"ultima_tentativa_em\", \"resultado_ultima_tentativa\", \"resend_email_id\", \"reenvio_execution_id\", \"observacao\", \"payload_json\"];\nconst ROTULO = {\n  cota_resend: 'Cota diária do Resend',\n  rede: 'Rede / conexão (ECONNRESET)',\n  rate_limit: 'Rate limit',\n  schema_cache: 'Schema em cache (colunas do Sheets)',\n  cnpj_invalido: 'CNPJ inválido',\n  nao_identificada: 'Causa não identificada',\n};\nconst dig = s => String(s || '').replace(/\\D/g, '');\nfunction sucessoPosterior(bf, leadId, cnpj, erroEm) {\n  const hdr = bf[0] || [];\n  const cLead = hdr.indexOf('lead_id'), cCnpj = hdr.indexOf('cnpj');\n  const cStatus = hdr.lastIndexOf('status_funil'), cEnvio = hdr.indexOf('data_envio_proposta');\n  return bf.slice(1).some(l => {\n    const mesmo = (leadId && String(l[cLead] || '') === leadId) || (cnpj && dig(l[cCnpj]) === cnpj);\n    return mesmo && String(l[cStatus] || '') === 'Proposta Enviada' && Date.parse(l[cEnvio] || '') > Date.parse(erroEm);\n  });\n}\n\nconst RETENTAVEL = { cota_resend: true, rede: true, rate_limit: true, nao_identificada: true, schema_cache: false, cnpj_invalido: false };\nfunction classifica(msg, desc, no) {\n  const t = (msg + ' ' + desc).toLowerCase();\n  if (t.includes('daily email sending quota') || (t.includes('quota') && t.includes('email'))) return 'cota_resend';\n  if (t.includes('column names were updated') || t.includes('schema cache')) return 'schema_cache';\n  if (t.includes('too many requests') || t.includes('rate limit') || /\\b429\\b/.test(t)) return 'rate_limit';\n  if (/econnreset|etimedout|econnrefused|socket hang up|eai_again|enotfound|connection to the server was closed|timed out|timeout/.test(t)) return 'rede';\n  if (t.includes('cnpj') || no === '03_valida_cnpj' || no === '04_if_cnpj_ativo') return 'cnpj_invalido';\n  return 'nao_identificada';\n}\nfunction saida(rd, no) { try { return rd[no][0].data.main[0][0].json; } catch (e) { return null; } }\n\nconst controle = $('A04_le_controle').first().json.values || [];\nconst registradas = new Set(controle.slice(1).map(r => String(r[0] || '')));\nconst bf = $('A05_le_base_funil').first().json.values || [];\nconst agora = new Date().toISOString();\n\nconst linhas = [];\nfor (const it of $input.all()) {\n  const d = it.json;\n  if (!d || !d.id || !d.data) continue;\n  const r = d.data.resultData || {};\n  const rd = r.runData || {};\n  const payload = saida(rd, '00_normaliza_entrada') || saida(rd, '01_form_trigger');\n  const razao = String((payload && payload['Razão Social']) || '').trim();\n  // ruido de teste\n  if (/^zz[_ ]/i.test(razao) || /teste/i.test(razao)) continue;\n  // falha de um reenvio feito por este monitor: ja acompanhada na linha original\n  if (payload && payload.reenvio_ref && registradas.has(String(payload.reenvio_ref))) continue;\n  const err = r.error || {};\n  const no = String(r.lastNodeExecuted || (err.node && err.node.name) || '');\n  const msg = String(err.message || '');\n  const desc = String(err.description || '');\n  const norm = saida(rd, '02_normalizacao_lead') || {};\n  // lead_id do lead criado na propria execucao que falhou: sem ele o reenvio criaria lead duplicado\n  const leadId = String(norm.lead_id || (payload && payload.lead_id) || '');\n  const cnpj = dig((payload && payload['CNPJ']) || norm.cnpj);\n  const email = String((payload && payload['E-mail']) || norm.email || '');\n  const envio = saida(rd, '18_email_proposta');\n  const propostaEntregue = !!(envio && envio.id);\n  const causa = classifica(msg, desc, no);\n  let status, obs;\n  if (sucessoPosterior(bf, leadId, cnpj, d.startedAt)) {\n    status = 'resolvido_automaticamente'; obs = 'base_funil_completo mostra Proposta Enviada depois do erro.';\n  } else if (propostaEntregue) {\n    status = 'revisao_manual'; obs = 'Proposta ja entregue ao cliente (18_email_proposta ok); falha depois do envio, em ' + no + '. Nao reenviar.';\n  } else if (!payload) {\n    status = 'revisao_manual'; obs = 'Execucao sem dados de entrada: nao ha o que reenviar.';\n  } else if (!RETENTAVEL[causa]) {\n    status = 'revisao_manual'; obs = 'Causa nao se resolve com reenvio (' + ROTULO[causa] + ').';\n  } else {\n    status = 'pendente'; obs = 'Reenvio automatico as 21h.';\n  }\n  linhas.push({\n    execution_id: String(d.id), detectado_em: agora, erro_em: d.startedAt, razao_social: razao, cnpj, email,\n    lead_id: leadId, no_erro: no, mensagem_erro: (msg + (desc ? ' | ' + desc : '')).slice(0, 500), causa, status,\n    tentativas: 0, ultima_tentativa_em: '', resultado_ultima_tentativa: '', resend_email_id: '', reenvio_execution_id: '',\n    observacao: obs, payload_json: payload ? JSON.stringify({ ...payload, lead_id: leadId }) : '',\n  });\n}\nif (!linhas.length) return [];\n\nconst EMOJI = { pendente: ':hourglass_flowing_sand:', revisao_manual: ':warning:', resolvido_automaticamente: ':white_check_mark:' };\nconst TXT = { pendente: 'pendente, reenvio automatico as 21h', revisao_manual: '*REVISAO MANUAL*', resolvido_automaticamente: 'ja resolvida (proposta enviada depois)' };\nconst texto = ':rotating_light: *Monitor de propostas: ' + linhas.length + ' falha(s) nova(s) em Geracao de Proposta*\\n' +\n  linhas.map(l => EMOJI[l.status] + ' *' + (l.razao_social || '(sem razao social)') + '*: ' + ROTULO[l.causa] + ' em `' + l.no_erro + '`, ' + TXT[l.status] +\n    (l.status === 'revisao_manual' ? '\\n      ' + l.observacao : '') +\n    '\\n      ' + 'https://raregoat-n8n.cloudfy.live/workflow/EQ3YEDcPysyaFlZp/executions/' + l.execution_id).join('\\n');\nreturn [{ json: { total: linhas.length, registros: linhas, valores: linhas.map(l => COLS.map(c => l[c] === undefined ? '' : l[c])), slack_texto: texto } }];"
+      },
+      "notes": "Classifica a causa, decide pendente / revisao_manual / resolvido_automaticamente e monta as linhas da aba de controle e o texto do Slack."
+    },
+    {
+      "id": "88bee7b2-ab9a-4778-9aa1-bd852f7ab0d7",
+      "name": "A09_grava_controle",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1760,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/propostas_pendentes_reenvio!A:R:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: $json.valores }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "executeOnce": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "Grava na aba propostas_pendentes_reenvio (fonte da secao do Painel). Sem onError: se a gravacao falhar, o erro vai para o Mission Control em vez de o Slack anunciar algo que nao ficou registrado."
+    },
+    {
+      "id": "05deb690-2aee-43c9-b6a9-3f3d8e444a0f",
+      "name": "A10_slack_alerta",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        1980,
+        0
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "funil-erros",
+          "mode": "name"
+        },
+        "text": "={{ $('A08_classifica').first().json.slack_texto }}",
+        "otherOptions": {}
+      },
+      "credentials": {
+        "slackApi": {
+          "id": "8Qwkl6tupIvuM69K",
+          "name": "Slack - Funil Antere"
+        }
+      },
+      "webhookId": "d383aa5f-5ee2-417c-8dcc-bea8186f2b78"
+    },
+    {
+      "id": "15ecdbcd-de1e-4874-9306-c48eb545f466",
+      "name": "B01_agenda_reenvio",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        520
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 21 * * *"
+            }
+          ]
+        }
+      },
+      "notes": "21h de Brasilia = 00h UTC, quando a cota diaria do Resend reinicia."
+    },
+    {
+      "id": "710324c6-c14c-489e-b1cf-b1b1ec9b6d02",
+      "name": "B02_busca_tokens",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        220,
+        520
+      ],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs",
+          "mode": "list",
+          "cachedResultName": "Leads Site"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1514838753,
+          "mode": "list",
+          "cachedResultName": "tokens"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "executeOnce": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "343a39cf-7fc7-47bb-8cc6-a1b733fd372c",
+      "name": "B03_le_controle",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        440,
+        520
+      ],
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/propostas_pendentes_reenvio!A:R",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "executeOnce": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "ca5b516a-4dfb-4a72-b94a-cad72326f690",
+      "name": "B04_le_base_funil",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        660,
+        520
+      ],
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/base_funil_completo",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "executeOnce": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "cb06b603-b278-41e5-8f5e-7ede73d85775",
+      "name": "B05_seleciona",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        520
+      ],
+      "parameters": {
+        "jsCode": "const COLS = [\"execution_id\", \"detectado_em\", \"erro_em\", \"razao_social\", \"cnpj\", \"email\", \"lead_id\", \"no_erro\", \"mensagem_erro\", \"causa\", \"status\", \"tentativas\", \"ultima_tentativa_em\", \"resultado_ultima_tentativa\", \"resend_email_id\", \"reenvio_execution_id\", \"observacao\", \"payload_json\"];\nconst ROTULO = {\n  cota_resend: 'Cota diária do Resend',\n  rede: 'Rede / conexão (ECONNRESET)',\n  rate_limit: 'Rate limit',\n  schema_cache: 'Schema em cache (colunas do Sheets)',\n  cnpj_invalido: 'CNPJ inválido',\n  nao_identificada: 'Causa não identificada',\n};\nconst dig = s => String(s || '').replace(/\\D/g, '');\nfunction sucessoPosterior(bf, leadId, cnpj, erroEm) {\n  const hdr = bf[0] || [];\n  const cLead = hdr.indexOf('lead_id'), cCnpj = hdr.indexOf('cnpj');\n  const cStatus = hdr.lastIndexOf('status_funil'), cEnvio = hdr.indexOf('data_envio_proposta');\n  return bf.slice(1).some(l => {\n    const mesmo = (leadId && String(l[cLead] || '') === leadId) || (cnpj && dig(l[cCnpj]) === cnpj);\n    return mesmo && String(l[cStatus] || '') === 'Proposta Enviada' && Date.parse(l[cEnvio] || '') > Date.parse(erroEm);\n  });\n}\n\nconst MAX_TENTATIVAS = 3, MAX_DIAS = 3;\nconst vals = $('B03_le_controle').first().json.values || [];\nconst H = vals[0] || [];\nconst rows = vals.slice(1).map((v, i) => { const o = { linha: i + 2 }; H.forEach((h, j) => { o[h] = v[j] === undefined ? '' : v[j]; }); return o; });\nconst bf = $('B04_le_base_funil').first().json.values || [];\nconst inicio = new Date().toISOString();\nconst pend = rows.filter(r => r.status === 'pendente');\nif (!pend.length) return [];\n// mesmo lead (CNPJ ou e-mail) com mais de uma falha pendente: so a mais recente e reenviada\nconst grupos = {};\nfor (const r of pend) { const k = r.cnpj || r.email || r.execution_id; (grupos[k] = grupos[k] || []).push(r); }\nconst out = [];\nfor (const g of Object.values(grupos)) {\n  g.sort((a, b) => Date.parse(b.erro_em) - Date.parse(a.erro_em));\n  g.forEach((r, i) => {\n    const dias = (Date.now() - Date.parse(r.erro_em)) / 86400000;\n    const tent = Number(r.tentativas || 0);\n    let acao;\n    if (sucessoPosterior(bf, r.lead_id, r.cnpj, r.erro_em)) acao = 'resolver';\n    else if (i > 0) acao = 'substituir';\n    else if (tent >= MAX_TENTATIVAS || dias >= MAX_DIAS) acao = 'escalar';\n    else acao = 'reenviar';\n    out.push({ json: { ...r, acao, substituida_por: i > 0 ? g[0].execution_id : '', inicio_rodada: inicio } });\n  });\n}\nreturn out;"
+      },
+      "notes": "Escolhe o que fazer com cada pendente: reenviar, resolver (ja teve sucesso depois), substituir (ha falha mais recente do mesmo lead) ou escalar (3 tentativas ou 3 dias)."
+    },
+    {
+      "id": "5a12d3c7-44e7-4dfb-a58e-8e2ea1aa0c3a",
+      "name": "B06_loop",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1100,
+        520
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "notes": "Um lead por vez: cada reenvio espera a execucao do Geracao terminar antes do proximo."
+    },
+    {
+      "id": "b6d93df3-335c-41fb-92f6-e505ab151e2b",
+      "name": "B07_if_reenviar",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1320,
+        520
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "mon-if-reenviar-001",
+              "leftValue": "={{ $json.acao }}",
+              "rightValue": "reenviar",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "bc392f4a-2a43-4f18-b035-0c3e0c80aeeb",
+      "name": "B08_post_webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1540,
+        420
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://raregoat-n8n.cloudfy.live/webhook/geracao-proposta",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Webhook-Token",
+              "value": "={{ $('B02_busca_tokens').all().find(t => t.json.service === 'geracao_proposta_webhook').json.access_token }}"
+            },
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ...JSON.parse($json.payload_json), reenvio_ref: $json.execution_id }) }}",
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "notes": "Reenvia pelo webhook da Parte A com o payload original. reenvio_ref marca a execucao nova para ela ser localizada depois e para uma nova falha dela nao virar linha duplicada."
+    },
+    {
+      "id": "1849a757-02bb-4d21-99f5-6dc1d6790a6e",
+      "name": "B09_espera",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1760,
+        420
+      ],
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 90,
+        "unit": "seconds"
+      },
+      "webhookId": "a885474b-42d1-4c88-aab1-5ea7b3371f82",
+      "notes": "O webhook responde 202 antes de gerar a proposta; uma geracao normal leva ~25s."
+    },
+    {
+      "id": "b3d3b721-236b-4ab2-85b3-44bce7c5c1e0",
+      "name": "B10_busca_execucoes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1980,
+        420
+      ],
+      "parameters": {
+        "url": "https://raregoat-n8n.cloudfy.live/api/v1/executions?workflowId=EQ3YEDcPysyaFlZp&includeData=true&limit=10",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-API-KEY",
+              "value": "={{ $('B02_busca_tokens').all().find(t => t.json.service === 'n8n_api_key').json.signing_secret }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "executeOnce": true
+    },
+    {
+      "id": "c1a07320-25ed-48b3-a3a6-144d47fa88dd",
+      "name": "B11_localiza_reenvio",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        420
+      ],
+      "parameters": {
+        "jsCode": "const atual = $('B07_if_reenviar').first().json;\nconst post = $('B08_post_webhook').first().json;\nconst alvo = ($json.data || []).find(e => {\n  try { return e.data.resultData.runData['00_normaliza_entrada'][0].data.main[0][0].json.reenvio_ref === atual.execution_id; }\n  catch (x) { return false; }\n});\nlet emailId = '', statusExec = '', erroExec = '';\nif (alvo) {\n  statusExec = alvo.status;\n  try { emailId = alvo.data.resultData.runData['18_email_proposta'][0].data.main[0][0].json.id || ''; } catch (x) {}\n  const er = alvo.data.resultData.error || {};\n  erroExec = String(er.message || '') + (er.description ? ' | ' + er.description : '');\n}\nreturn [{ json: { ...atual, http_webhook: post.statusCode, reenvio_execution_id: alvo ? String(alvo.id) : '',\n  status_execucao: statusExec, erro_execucao: erroExec, resend_email_id: emailId } }];"
+      }
+    },
+    {
+      "id": "d788b2a8-f855-48ac-b125-0727dbd727c3",
+      "name": "B12_consulta_resend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2420,
+        420
+      ],
+      "parameters": {
+        "url": "=https://api.resend.com/emails/{{ $json.resend_email_id || 'sem-id' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('B02_busca_tokens').all().find(t => t.json.service === 'resend_api').json.signing_secret }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "notes": "Confirmacao independente: o status de entrega vem do Resend, nao da execucao."
+    },
+    {
+      "id": "673464af-1809-4e54-b2a8-b2d82a0c19a9",
+      "name": "B13_decide",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        420
+      ],
+      "parameters": {
+        "jsCode": "const a = $('B11_localiza_reenvio').first().json;\nconst ev = ($json.body && $json.body.last_event) || '';\nlet status = 'pendente', resultado;\nif (a.http_webhook !== 202) resultado = 'webhook respondeu HTTP ' + a.http_webhook;\nelse if (!a.reenvio_execution_id) resultado = 'execucao do reenvio nao localizada em 90s';\nelse if (a.status_execucao !== 'success') resultado = 'reenvio falhou de novo (' + a.status_execucao + '): ' + String(a.erro_execucao).slice(0, 300);\nelse if (!a.resend_email_id) resultado = 'execucao ' + a.reenvio_execution_id + ' terminou sem e-mail de proposta';\nelse if (ev === 'delivered') { status = 'reenviado'; resultado = 'delivered (Resend)'; }\nelse { status = 'reenviado'; resultado = 'enviado; entrega ainda nao confirmada no Resend (last_event=' + (ev || 'desconhecido') + ')'; }\nreturn [{ json: { ...a, status, tentativas: Number(a.tentativas || 0) + 1, ultima_tentativa_em: new Date().toISOString(), resultado_ultima_tentativa: resultado } }];"
+      }
+    },
+    {
+      "id": "d74666a9-e2e2-4331-afaa-61b0d589b007",
+      "name": "B14_monta_sem_reenvio",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        640
+      ],
+      "parameters": {
+        "jsCode": "const a = $json;\nconst MAPA = {\n  resolver: ['resolvido_automaticamente', 'base_funil_completo mostra Proposta Enviada depois do erro'],\n  substituir: ['substituido', 'Ha falha mais recente do mesmo lead (execucao ' + a.substituida_por + '); so ela e reenviada'],\n  escalar: ['revisao_manual', 'Limite atingido (' + Number(a.tentativas || 0) + ' tentativa(s); erro em ' + a.erro_em + '): escalado para revisao manual'],\n};\nconst [status, resultado] = MAPA[a.acao];\nreturn [{ json: { ...a, status, ultima_tentativa_em: new Date().toISOString(), resultado_ultima_tentativa: resultado } }];"
+      }
+    },
+    {
+      "id": "cc81c8e2-d3b8-4fc2-838a-8c3c1bffa13f",
+      "name": "B15_grava_linha",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2860,
+        520
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/propostas_pendentes_reenvio!K{{ $json.linha }}:P{{ $json.linha }}?valueInputOption=RAW",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: [[ $json.status, $json.tentativas, $json.ultima_tentativa_em, $json.resultado_ultima_tentativa, $json.resend_email_id || '', $json.reenvio_execution_id || '' ]] }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "Atualiza so as colunas K:P (status, tentativas, ultima_tentativa_em, resultado, resend_email_id, reenvio_execution_id) da linha do registro."
+    },
+    {
+      "id": "026b35a4-3295-4352-9ce8-9e32eeb4cc9c",
+      "name": "B16_le_controle_final",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1320,
+        780
+      ],
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1hN8tekfac-2MQI4YoR7KuVRdd2YmnlGJM62drLdHtfs/values/propostas_pendentes_reenvio!A:R",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FxBskF4AkCQnf6JT",
+          "name": "Google Sheets account"
+        }
+      },
+      "executeOnce": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "cf1c864f-a57e-421c-b469-d1b3785160c5",
+      "name": "B17_resumo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        780
+      ],
+      "parameters": {
+        "jsCode": "const inicio = $('B05_seleciona').first().json.inicio_rodada;\nconst vals = $json.values || [];\nconst H = vals[0] || [];\nconst rows = vals.slice(1).map(v => { const o = {}; H.forEach((h, j) => { o[h] = v[j] === undefined ? '' : v[j]; }); return o; });\nconst mexidas = rows.filter(r => r.ultima_tentativa_em && r.ultima_tentativa_em >= inicio);\nif (!mexidas.length) return [];\nconst GRUPOS = [\n  ['reenviado', ':white_check_mark: Reenviadas'],\n  ['pendente', ':repeat: Reenvio falhou, nova tentativa amanha'],\n  ['revisao_manual', ':warning: Escaladas para revisao manual'],\n  ['resolvido_automaticamente', ':ballot_box_with_check: Ja resolvidas (proposta enviada depois)'],\n  ['substituido', ':arrow_right_hook: Substituidas por falha mais recente do mesmo lead'],\n];\nlet texto = ':outbox_tray: *Monitor de propostas: resumo do reenvio das 21h (' + mexidas.length + ' registro(s))*';\nfor (const [st, titulo] of GRUPOS) {\n  const g = mexidas.filter(r => r.status === st);\n  if (!g.length) continue;\n  texto += '\\n' + titulo + ':\\n' + g.map(r => '   - *' + (r.razao_social || '(sem razao social)') + '*: ' + r.resultado_ultima_tentativa +\n    (r.reenvio_execution_id ? ' (execucao ' + r.reenvio_execution_id + ')' : '')).join('\\n');\n}\nreturn [{ json: { total: mexidas.length, slack_texto: texto } }];"
+      }
+    },
+    {
+      "id": "60380cc6-f697-46e2-9ea3-c0ec0beec03c",
+      "name": "B18_slack_resumo",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        1760,
+        780
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "funil-erros",
+          "mode": "name"
+        },
+        "text": "={{ $json.slack_texto }}",
+        "otherOptions": {}
+      },
+      "credentials": {
+        "slackApi": {
+          "id": "8Qwkl6tupIvuM69K",
+          "name": "Slack - Funil Antere"
+        }
+      },
+      "webhookId": "4eb48b10-5113-4bb3-b700-b4dc12b0daf0"
+    },
+    {
+      "id": "06579246-0e92-4984-bcf1-f1ad49d17209",
+      "name": "Sticky Etapa 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -60
+      ],
+      "parameters": {
+        "content": "## Etapa 1 - Coleta (a cada 2h, 08h-20h)\nExecucoes com erro do Geracao de Proposta nas ultimas 26h, so as disparadas por formulario/webhook, ainda nao registradas.",
+        "width": 1575,
+        "height": 200,
+        "color": 4
+      }
+    },
+    {
+      "id": "bea13e87-aec1-45fd-8a40-3886f76c1044",
+      "name": "Sticky Etapa 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1525,
+        -60
+      ],
+      "parameters": {
+        "content": "## Etapa 2 - Classificacao e registro\nCausa + status (pendente / revisao_manual / resolvido_automaticamente) gravados na aba propostas_pendentes_reenvio.",
+        "width": 430,
+        "height": 200,
+        "color": 6
+      }
+    },
+    {
+      "id": "c693ec8e-9c0b-4533-88a0-c252be62c16d",
+      "name": "Sticky Etapa 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1965,
+        -60
+      ],
+      "parameters": {
+        "content": "## Etapa 3 - Alerta\n#funil-erros a cada rodada com falha nova. A aba de controle alimenta o Painel.",
+        "width": 235,
+        "height": 200,
+        "color": 3
+      }
+    },
+    {
+      "id": "4acf8f0b-4c2a-43b0-95bd-3450c9525203",
+      "name": "Sticky Etapa 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        360
+      ],
+      "parameters": {
+        "content": "## Etapa 4 - Reenvio automatico (21h)\nPendentes reenviados pelo webhook da Parte A, um por vez, com confirmacao no Resend. Escala para revisao manual apos 3 tentativas ou 3 dias. Resumo no Slack.",
+        "width": 3140,
+        "height": 560,
+        "color": 5
+      }
+    },
+    {
+      "id": "18a1e76e-6eb4-47dd-a4be-ba4d23a2ae83",
+      "name": "Sticky Titulo",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -230
+      ],
+      "parameters": {
+        "content": "# Monitor_Propostas_Erros\nVigia falhas do Geracao de Proposta, classifica a causa, alerta no #funil-erros e reenvia automaticamente as 21h pelo webhook /webhook/geracao-proposta. Controle: aba propostas_pendentes_reenvio.",
+        "width": 3140,
+        "height": 150,
+        "color": 1
+      }
+    }
+  ],
+  "connections": {
+    "A01_agenda_coleta": {
+      "main": [
+        [
+          {
+            "node": "A02_busca_tokens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "A02_busca_tokens": {
+      "main": [
+        [
+          {
+            "node": "A03_lista_execucoes_erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "A03_lista_execucoes_erro": {
+      "main": [
+        [
+          {
+            "node": "A04_le_controle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "A04_le_controle": {
+      "main": [
+        [
+          {
+            "node": "A05_le_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "A05_le_base_funil": {
+      "main": [
+        [
+          {
+            "node": "A06_filtra_novas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "A06_filtra_novas": {
+      "main": [
+        [
+          {
+            "node": "A07_detalhe_execucao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "A07_detalhe_execucao": {
+      "main": [
+        [
+          {
+            "node": "A08_classifica",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "A08_classifica": {
+      "main": [
+        [
+          {
+            "node": "A09_grava_controle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "A09_grava_controle": {
+      "main": [
+        [
+          {
+            "node": "A10_slack_alerta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B01_agenda_reenvio": {
+      "main": [
+        [
+          {
+            "node": "B02_busca_tokens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B02_busca_tokens": {
+      "main": [
+        [
+          {
+            "node": "B03_le_controle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B03_le_controle": {
+      "main": [
+        [
+          {
+            "node": "B04_le_base_funil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B04_le_base_funil": {
+      "main": [
+        [
+          {
+            "node": "B05_seleciona",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B05_seleciona": {
+      "main": [
+        [
+          {
+            "node": "B06_loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B08_post_webhook": {
+      "main": [
+        [
+          {
+            "node": "B09_espera",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B09_espera": {
+      "main": [
+        [
+          {
+            "node": "B10_busca_execucoes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B10_busca_execucoes": {
+      "main": [
+        [
+          {
+            "node": "B11_localiza_reenvio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B11_localiza_reenvio": {
+      "main": [
+        [
+          {
+            "node": "B12_consulta_resend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B12_consulta_resend": {
+      "main": [
+        [
+          {
+            "node": "B13_decide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B13_decide": {
+      "main": [
+        [
+          {
+            "node": "B15_grava_linha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B14_monta_sem_reenvio": {
+      "main": [
+        [
+          {
+            "node": "B15_grava_linha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B15_grava_linha": {
+      "main": [
+        [
+          {
+            "node": "B06_loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B16_le_controle_final": {
+      "main": [
+        [
+          {
+            "node": "B17_resumo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B17_resumo": {
+      "main": [
+        [
+          {
+            "node": "B18_slack_resumo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B06_loop": {
+      "main": [
+        [
+          {
+            "node": "B16_le_controle_final",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "B07_if_reenviar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B07_if_reenviar": {
+      "main": [
+        [
+          {
+            "node": "B08_post_webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "B14_monta_sem_reenvio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "errorWorkflow": "MAvApEDIanoBGJPE",
+    "availableInMCP": true
+  }
+}
