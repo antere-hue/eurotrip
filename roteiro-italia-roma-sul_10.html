@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roma · Nápoles · Amalfi · Puglia — Roteiro Out/2027</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#182430; --paper:#F5F0E3; --paper-2:#EDE6D3; --line:#D8CEB8;
+    --roma:#8C2F1F; --napoli:#2E5C87; --amalfi:#1F7A6B; --puglia:#B4842A;
+    --muted:#5C6A78; --white:#FFFDF8; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-0.01em;margin:0;}
+  a{color:inherit;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .airmail{height:10px;background:repeating-linear-gradient(-45deg,#1F7A6B 0 14px,var(--white) 14px 20px,#8C2F1F 20px 34px,var(--white) 34px 40px);}
+  nav{position:sticky;top:0;z-index:50;background:rgba(245,240,227,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);display:flex;gap:6px;padding:10px 16px;overflow-x:auto;scrollbar-width:none;}
+  nav::-webkit-scrollbar{display:none;}
+  nav a{flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:.06em;padding:8px 14px;border-radius:999px;border:1px solid var(--line);text-decoration:none;color:var(--muted);}
+  nav a:hover{border-color:var(--ink);color:var(--ink);}
+  header.hero{padding:56px 16px 32px;max-width:1080px;margin:0 auto;}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;}
+  h1.title{font-size:clamp(36px,7vw,68px);line-height:1;font-weight:700;}
+  h1.title .sep{color:var(--roma);font-style:italic;font-weight:400;}
+  .lede{max-width:720px;font-size:18px;color:var(--muted);margin-top:18px;}
+  main{max-width:1080px;margin:0 auto;padding:0 16px 80px;}
+  section{margin-top:56px;}
+  section > h2{font-size:clamp(26px,4vw,36px);margin-bottom:8px;}
+  .sub{color:var(--muted);margin:0 0 22px;max-width:760px;}
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));}
+  .card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;}
+  .card h3{font-size:19px;margin-bottom:6px;}
+  .card p,.card li{font-size:14.5px;}
+  .card ul{padding-left:18px;margin:8px 0 0;}
+  .tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1px solid currentColor;margin-bottom:8px;}
+  .t-roma{color:var(--roma);} .t-napoli{color:var(--napoli);} .t-amalfi{color:var(--amalfi);} .t-puglia{color:var(--puglia);}
+  .steps{counter-reset:s;display:grid;gap:12px;}
+  .step{position:relative;background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px 16px 64px;}
+  .step::before{counter-increment:s;content:counter(s);position:absolute;left:18px;top:16px;width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-size:13px;}
+  .step h3{font-size:18px;margin-bottom:4px;}
+  .step p{margin:4px 0 0;font-size:14.5px;}
+  .when{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);}
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 18px;}
+  .flow span{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13.5px;}
+  .flow b{color:var(--muted);font-weight:400;}
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--white);}
+  table{border-collapse:collapse;width:100%;font-size:14px;min-width:620px;}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--paper-2);}
+  tr:last-child td{border-bottom:none;}
+  .day{display:grid;grid-template-columns:96px 1fr;gap:16px;background:var(--white);border:1px solid var(--line);border-left:6px solid var(--c,var(--ink));border-radius:var(--radius);padding:18px 20px;margin-bottom:12px;}
+  .day .n{font-family:'Fraunces',serif;font-size:34px;font-weight:700;line-height:1;color:var(--c);}
+  .day .n small{display:block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:.06em;text-transform:uppercase;}
+  .day h3{font-size:20px;margin-bottom:4px;}
+  .day p{margin:6px 0 0;font-size:14.5px;}
+  .day .move{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--muted);margin-top:8px;}
+  .callout{background:var(--paper-2);border:1px dashed var(--line);border-radius:var(--radius);padding:14px 18px;font-size:14.5px;margin-top:14px;}
+  footer{text-align:center;color:var(--muted);font-size:13px;padding:30px 16px 50px;}
+  @media (max-width:560px){.day{grid-template-columns:1fr;gap:6px;}.step{padding-left:58px;}}
+</style>
+</head>
+<body>
+<div class="airmail"></div>
+<nav>
+  <a href="#radar">Radar de passagens</a>
+  <a href="#fontes">Onde pesquisar</a>
+  <a href="#mapa">Rota</a>
+  <a href="#roteiro">Dia a dia</a>
+  <a href="#variacoes">Variações</a>
+  <a href="#extras">Outras cidades</a>
+  <a href="#transporte">Carro × trem</a>
+  <a href="#checklist">Checklist</a>
+</nav>
+
+<header class="hero">
+  <div class="eyebrow">Itália · outubro de 2027 · 10 dias</div>
+  <h1 class="title">Roma <span class="sep">&amp;</span> o Sul da Itália</h1>
+  <p class="lede">Três noites em Roma, Nápoles e Pompeia, Costa Amalfitana com Capri, e a volta pelo interior: Paestum, Matera e Puglia de carro. Mais um radar de passagens que só avisa quando há voo à venda.</p>
+</header>
+
+<main>
+
+<!-- ================= RADAR ================= -->
+<section id="radar">
+  <h2>Radar de passagens — o workflow</h2>
+  <p class="sub">As companhias abrem a venda cerca de 330 a 360 dias antes do voo. Para outubro de 2027, os voos começam a aparecer no Google Voos entre novembro de 2026 e janeiro de 2027. Até lá, o radar fica em silêncio.</p>
+
+  <div class="flow">
+    <span>⏰ Todo dia, 7h</span><b>→</b>
+    <span>Monta as buscas<br><small>origem × datas × saída</small></span><b>→</b>
+    <span>Google Voos<br><small>via SerpApi</small></span><b>→</b>
+    <span>Tem voo?</span><b>→ não →</b>
+    <span>🔕 Nada é enviado</span>
+  </div>
+  <div class="flow">
+    <span>Tem voo?</span><b>→ sim →</b>
+    <span>1ª vez, nova mínima ou abaixo do alvo?</span><b>→ sim →</b>
+    <span>✉️ E-mail com tabela e link</span>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <h3>Definir os parâmetros</h3>
+      <p class="when">Agora · novembro de 2026</p>
+      <p>Origem (GRU por padrão; dá para incluir GIG, CNF, BSB), saídas de 1, 8 e 15/10/2027, 10 dias de viagem, 2 adultos e preço-alvo total (padrão R$ 10.000 para os dois, ida e volta). Três desenhos de voo são comparados: <strong>ida e volta por Roma</strong>, <strong>chega em Roma e volta por Nápoles</strong> e <strong>chega em Roma e volta por Bari</strong> (open-jaw, que evita voltar até Roma).</p>
+    </div>
+    <div class="step">
+      <h3>Modo sentinela</h3>
+      <p class="when">Até o Google Voos publicar as datas</p>
+      <p>O workflow faz uma única busca por dia, na data de volta mais distante (25/10/2027). Enquanto não vier voo, ele não envia mensagem nenhuma e gasta só 1 busca da cota da SerpApi.</p>
+    </div>
+    <div class="step">
+      <h3>Primeiro alerta e linha de base</h3>
+      <p class="when">Quando os voos aparecerem</p>
+      <p>Na primeira vez que houver voo, o radar passa ao modo completo (9 buscas por dia), envia um e-mail com o menor preço de cada combinação e guarda esses valores como referência. A partir daí, ligue também o “Acompanhar preços” do próprio Google Voos e os alertas do Kayak e do Skyscanner.</p>
+    </div>
+    <div class="step">
+      <h3>Alertas só quando vale a pena</h3>
+      <p class="when">Dezembro de 2026 a julho de 2027</p>
+      <p>Novo e-mail só quando o preço cair pelo menos 3% em relação à mínima registrada, ou quando um preço novo ficar abaixo do alvo. Preço igual ao do dia anterior não gera mensagem.</p>
+    </div>
+    <div class="step">
+      <h3>Comparar antes de comprar</h3>
+      <p class="when">A cada alerta</p>
+      <p>Confira o mesmo voo em pelo menos 3 fontes da lista abaixo: um metabuscador, o site da companhia e um programa de milhas. Para internacional saindo do Brasil, a melhor janela costuma ficar entre 4 e 8 meses antes (fevereiro a junho de 2027). Fique de olho em Black Friday e nas promoções de transferência de pontos com bônus.</p>
+    </div>
+    <div class="step">
+      <h3>Depois da compra</h3>
+      <p class="when">Até 4 meses antes da viagem</p>
+      <p>Desligue o radar (ou ajuste para monitorar remarcação). Reserve trens quando abrirem (Trenitalia e Italo vendem com cerca de 4 meses de antecedência), carro, hotéis com cancelamento grátis e ingressos de Coliseu, Vaticano e Pompeia.</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Arquivo do workflow:</strong> <span class="mono">workflows/Radar_Voos_Italia_Out2027.json</span> (n8n). Antes de ativar: (1) crie uma credencial <em>Query Auth</em> com o parâmetro <span class="mono">api_key</span> e a chave da SerpApi; (2) crie uma credencial <em>Header Auth</em> com <span class="mono">Authorization: Bearer &lt;token Resend&gt;</span>; (3) preencha <span class="mono">EMAIL_DESTINO</span> no topo do nó <span class="mono">02_monta_buscas</span>. O histórico de preços só é salvo com o workflow ativo, não em execução manual. No modo completo são cerca de 270 buscas por mês: acima do plano gratuito da SerpApi. Para ficar no gratuito, rode a cada 3 dias ou reduza datas e saídas.
+  </div>
+</section>
+
+<!-- ================= FONTES ================= -->
+<section id="fontes">
+  <h2>Onde pesquisar passagens</h2>
+  <p class="sub">O Google Voos é a base do radar. Estas são as outras fontes para conferir antes de fechar.</p>
+  <div class="grid">
+    <div class="card">
+      <span class="tag t-napoli">Metabuscadores</span>
+      <h3>Comparam várias lojas</h3>
+      <ul>
+        <li><strong>Google Voos</strong>: calendário e gráfico de preços, alerta “Acompanhar preços”</li>
+        <li><strong>Skyscanner</strong>: busca “mês inteiro” e alerta de preço</li>
+        <li><strong>Kayak</strong>: previsão de preço (comprar ou esperar)</li>
+        <li><strong>Momondo</strong>: costuma achar agências mais baratas</li>
+        <li><strong>Kiwi.com</strong>: combina companhias diferentes (cuidado: conexão sem proteção da companhia)</li>
+        <li><strong>Viajala</strong>: foco em América Latina</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="tag t-roma">Agências online</span>
+      <h3>Lojas brasileiras e globais</h3>
+      <ul>
+        <li><strong>Decolar</strong>: parcelamento em reais</li>
+        <li><strong>MaxMilhas</strong>: passagens emitidas com milhas de terceiros</li>
+        <li><strong>ViajaNet</strong></li>
+        <li><strong>Expedia</strong> e <strong>Booking.com (voos)</strong></li>
+      </ul>
+      <p>Compare sempre o preço final com taxas e bagagem.</p>
+    </div>
+    <div class="card">
+      <span class="tag t-amalfi">Companhias</span>
+      <h3>Site oficial da companhia</h3>
+      <ul>
+        <li><strong>ITA Airways</strong>: voo direto GRU → Roma (FCO)</li>
+        <li><strong>TAP</strong>: via Lisboa ou Porto</li>
+        <li><strong>Iberia</strong> e <strong>Air Europa</strong>: via Madri</li>
+        <li><strong>Air France / KLM</strong>: via Paris ou Amsterdã</li>
+        <li><strong>Lufthansa / Swiss</strong>: via Frankfurt, Munique ou Zurique</li>
+        <li><strong>LATAM</strong>: via hubs europeus parceiros</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="tag t-puglia">Milhas e alertas</span>
+      <h3>Pontos e promoções</h3>
+      <ul>
+        <li><strong>Smiles</strong>, <strong>LATAM Pass</strong>, <strong>Azul Fidelidade</strong></li>
+        <li><strong>TAP Miles&amp;Go</strong>, <strong>Flying Blue</strong>, <strong>Iberia Club (Avios)</strong>, <strong>ITA Volare</strong></li>
+        <li><strong>Seats.aero</strong>: acha disponibilidade de assentos com milhas</li>
+        <li>Bônus de transferência de <strong>Livelo</strong> e <strong>Esfera</strong></li>
+        <li>Blogs de alerta: <strong>Melhores Destinos</strong>, <strong>Passagens Imperdíveis</strong></li>
+        <li>App <strong>Hopper</strong>: congela preço e prevê queda</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MAPA ================= -->
+<section id="mapa">
+  <h2>A rota</h2>
+  <p class="sub">Chegada em Roma e volta por Bari. Trem até Nápoles, ferry e ônibus na Costa Amalfitana, e carro só na parte em que ele ajuda de verdade.</p>
+  <div class="flow">
+    <span class="t-roma">Roma · 3 noites</span><b>→ trem 1h10 →</b>
+    <span class="t-napoli">Nápoles · 1 noite</span><b>→ trem 1h10 →</b>
+    <span class="t-amalfi">Sorrento · 3 noites</span><b>→ ferry →</b>
+    <span class="t-amalfi">Salerno (pega o carro)</span><b>→ 3h →</b>
+    <span class="t-puglia">Matera · 1 noite</span><b>→ 1h30 →</b>
+    <span class="t-puglia">Polignano · 1 noite</span><b>→ 45 min →</b>
+    <span>✈️ Bari</span>
+  </div>
+</section>
+
+<!-- ================= ROTEIRO ================= -->
+<section id="roteiro">
+  <h2>Roteiro dia a dia</h2>
+  <p class="sub">Exemplo com saída do Brasil em 1/10/2027 (sexta), chegada em Roma no dia 2 e voo de volta no dia 11. Os dias se ajustam a qualquer data de outubro.</p>
+
+  <div class="day" style="--c:var(--roma)">
+    <div class="n">1<small>Roma</small></div>
+    <div>
+      <h3>Chegada e Trastevere</h3>
+      <p>Leonardo Express FCO → Termini (32 min). Check-in, descanso e fim de tarde em Trastevere: Santa Maria in Trastevere, jantar com cacio e pepe e supplì.</p>
+      <p class="move">Base: Monti, Centro Storico ou Trastevere</p>
+    </div>
+  </div>
+  <div class="day" style="--c:var(--roma)">
+    <div class="n">2<small>Roma</small></div>
+    <div>
+      <h3>Roma Antiga</h3>
+      <p>Coliseu logo cedo (ingresso com horário marcado), Fórum Romano e Palatino. Tarde a pé: Pantheon, Piazza Navona, Fontana di Trevi, Escadaria da Espanha. Pôr do sol no Gianicolo ou no Giardino degli Aranci.</p>
+    </div>
+  </div>
+  <div class="day" style="--c:var(--roma)">
+    <div class="n">3<small>Roma</small></div>
+    <div>
+      <h3>Vaticano e Borghese</h3>
+      <p>Museus Vaticanos e Capela Sistina na primeira entrada, depois Basílica de São Pedro (subida à cúpula). Castel Sant’Angelo. À tarde, Galeria Borghese (reserva obrigatória) ou o bairro de Testaccio para comer.</p>
+    </div>
+  </div>
+  <div class="day" style="--c:var(--napoli)">
+    <div class="n">4<small>Nápoles</small></div>
+    <div>
+      <h3>Nápoles de verdade</h3>
+      <p>Frecciarossa ou Italo Roma Termini → Napoli Centrale. Spaccanapoli, Via dei Tribunali, Cappella Sansevero (Cristo Velado), Napoli Sotterranea. Pizza na cidade onde ela nasceu e sfogliatella de sobremesa. Fim de tarde no Lungomare e Castel dell’Ovo.</p>
+      <p class="move">Trem 1h10 · reservar com antecedência</p>
+    </div>
+  </div>
+  <div class="day" style="--c:var(--amalfi)">
+    <div class="n">5<small>Pompeia</small></div>
+    <div>
+      <h3>Pompeia → Sorrento</h3>
+      <p>Circumvesuviana até Pompei Scavi (cerca de 40 min). Meio dia nas ruínas (ingresso nominal no site oficial). Opcional: Herculano, menor e mais bem preservada, ou subida ao Vesúvio. Segue no mesmo trem até Sorrento.</p>
+      <p class="move">Circumvesuviana · base 3 noites em Sorrento</p>
+    </div>
+  </div>
+  <div class="day" style="--c:var(--amalfi)">
+    <div class="n">6<small>Capri</small></div>
+    <div>
+      <h3>Ilha de Capri</h3>
+      <p>Ferry Sorrento → Capri (20 a 30 min). Volta da ilha de barco, Gruta Azul se o mar deixar, Anacapri e teleférico do Monte Solaro, Jardins de Augusto e Via Krupp. Limoncello no fim do dia em Sorrento.</p>
+    </div>
+  </div>
+  <div class="day" style="--c:var(--amalfi)">
+    <div class="n">7<small>Amalfi</small></div>
+    <div>
+      <h3>Positano, Amalfi e Ravello</h3>
+      <p>Ferry ou ônibus SITA para Positano, ferry para Amalfi (duomo e ruelas) e ônibus para Ravello: Villa Rufolo e Terrazza dell’Infinito na Villa Cimbrone. Para quem gosta de trilha: Sentiero degli Dei (Bomerano → Positano, cerca de 3h).</p>
+      <p class="move">Nada de carro aqui: estrada estreita, estacionamento raro e caro</p>
+    </div>
+  </div>
+  <div class="day" style="--c:var(--puglia)">
+    <div class="n">8<small>Matera</small></div>
+    <div>
+      <h3>Paestum e Matera</h3>
+      <p>Ferry ou trem até Salerno, retirada do carro. Paestum (templos gregos de 2.500 anos e mozzarella de búfala nas fazendas vizinhas). Segue para Matera e chega ao entardecer, quando os Sassi acendem.</p>
+      <p class="move">Salerno → Paestum 45 min · Paestum → Matera cerca de 2h45 · durma num hotel-caverna</p>
+    </div>
+  </div>
+  <div class="day" style="--c:var(--puglia)">
+    <div class="n">9<small>Puglia</small></div>
+    <div>
+      <h3>Matera → Alberobello → Polignano a Mare</h3>
+      <p>Manhã nos Sassi e igrejas rupestres. Alberobello e seus trulli (1h15). Fim de tarde em Polignano a Mare, à beira do penhasco; se der tempo, Monopoli ao lado.</p>
+      <p class="move">Estacione fora das ZTL (centros históricos)</p>
+    </div>
+  </div>
+  <div class="day" style="--c:var(--puglia)">
+    <div class="n">10<small>Bari</small></div>
+    <div>
+      <h3>Bari e voo de volta</h3>
+      <p>Bari Vecchia de manhã: Basílica de São Nicolau e a rua das senhoras que fazem orecchiette à mão. Devolve o carro no aeroporto (BRI, cerca de 45 min de Polignano) e voa de volta com conexão europeia.</p>
+      <p class="move">Se a volta por Bari sair cara: Frecciarossa Bari → Roma (cerca de 4h) no dia 9 à noite</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= VARIAÇÕES ================= -->
+<section id="variacoes">
+  <h2>Variações do roteiro</h2>
+  <div class="grid">
+    <div class="card">
+      <span class="tag t-napoli">Só trem e barco</span>
+      <h3>Sem dirigir</h3>
+      <p>Roma 3 · Nápoles 2 · Sorrento ou Amalfi 4. Troque Matera e Puglia por Procida ou Ísquia, ou por um dia extra em Nápoles (Museu Arqueológico e Capodimonte). Volta por Nápoles (NAP) ou trem até Roma.</p>
+    </div>
+    <div class="card">
+      <span class="tag t-puglia">Mais Puglia</span>
+      <h3>Interior com calma</h3>
+      <p>Roma 3 · Nápoles e Pompeia 1 · Amalfi 2 · Matera 1 · Puglia 3. Base em Monopoli ou numa masseria, com Ostuni, Locorotondo e Lecce. Volta por Bari ou Brindisi.</p>
+    </div>
+    <div class="card">
+      <span class="tag t-roma">Ida e volta por Roma</span>
+      <h3>Se o open-jaw sair caro</h3>
+      <p>Mesmo roteiro até Sorrento. No dia 8, Sorrento → Nápoles → Roma de trem e dois dias extras: Orvieto ou Civita di Bagnoregio num dia, Tivoli (Villa d’Este e Villa Adriana) no outro.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= EXTRAS ================= -->
+<section id="extras">
+  <h2>Outras cidades que valem a visita</h2>
+  <p class="sub">Para trocar ou acrescentar, de acordo com o meio de transporte.</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Cidade</th><th>Região</th><th>Melhor jeito</th><th>Por quê</th></tr>
+      <tr><td><strong>Orvieto</strong></td><td>Úmbria</td><td>Trem, 1h10 de Roma</td><td>Catedral e cidade sobre a rocha, bate-volta fácil</td></tr>
+      <tr><td><strong>Tivoli</strong></td><td>Lácio</td><td>Trem ou ônibus, 1h</td><td>Villa d’Este e Villa Adriana</td></tr>
+      <tr><td><strong>Caserta</strong></td><td>Campânia</td><td>Trem, 40 min de Nápoles</td><td>Palácio Real, o “Versalhes italiano”</td></tr>
+      <tr><td><strong>Procida</strong></td><td>Campânia</td><td>Ferry de Nápoles</td><td>Casas coloridas, menos turística que Capri</td></tr>
+      <tr><td><strong>Herculano</strong></td><td>Campânia</td><td>Circumvesuviana</td><td>Ruínas mais preservadas que Pompeia</td></tr>
+      <tr><td><strong>Lecce</strong></td><td>Puglia</td><td>Carro ou trem de Bari</td><td>A “Florença do barroco”</td></tr>
+      <tr><td><strong>Ostuni</strong></td><td>Puglia</td><td>Carro</td><td>Cidade branca sobre o mar de oliveiras</td></tr>
+      <tr><td><strong>Tropea</strong></td><td>Calábria</td><td>Carro ou trem</td><td>Praias e falésias; pede +2 dias</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ================= TRANSPORTE ================= -->
+<section id="transporte">
+  <h2>Carro × trem</h2>
+  <div class="grid">
+    <div class="card">
+      <span class="tag t-napoli">Trem</span>
+      <h3>Roma, Nápoles e Costa</h3>
+      <p>Frecciarossa (Trenitalia) e Italo ligam Roma, Nápoles e Salerno em alta velocidade. Na Costa, Circumvesuviana, ferries (Travelmar, NLG, Alilauro) e ônibus SITA. Compre em trenitalia.com, italotreno.com ou Trainline.</p>
+    </div>
+    <div class="card">
+      <span class="tag t-puglia">Carro</span>
+      <h3>Só de Salerno a Bari</h3>
+      <p>Matera, os trulli e o litoral da Puglia são mal servidos de transporte público. Retire em Salerno e devolva em Bari (cobra taxa de devolução em outra cidade; compare em Rentalcars, DiscoverCars e Auto Europe). Seguro com franquia zero.</p>
+    </div>
+    <div class="card">
+      <span class="tag t-roma">Atenção</span>
+      <h3>ZTL e documentos</h3>
+      <p>Zonas de tráfego limitado (ZTL) nos centros históricos rendem multa por câmera, que chega meses depois. Na Itália é exigida a <strong>Permissão Internacional para Dirigir</strong> (PID, emitida pelo Detran) junto com a CNH.</p>
+    </div>
+    <div class="card">
+      <span class="tag t-amalfi">Outubro</span>
+      <h3>O clima</h3>
+      <p>Entre 17 °C e 24 °C, mar ainda morno no começo do mês e bem menos gente que no verão. Os ferries da Costa vão rareando no fim de outubro: prefira a primeira quinzena. Na Europa, o horário de verão termina em 31/10/2027.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CHECKLIST ================= -->
+<section id="checklist">
+  <h2>Checklist</h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Quando</th><th>O quê</th></tr>
+      <tr><td>Nov/2026</td><td>Ativar o radar no n8n; criar alertas no Google Voos assim que as datas abrirem; acompanhar a Black Friday de passagens e milhas</td></tr>
+      <tr><td>Fev–Jun/2027</td><td>Comprar a passagem; reservar hotéis com cancelamento grátis (Roma, Nápoles, Sorrento, Matera, Polignano)</td></tr>
+      <tr><td>Jun/2027</td><td>Passaporte válido até pelo menos 3 meses depois da volta; verificar se o ETIAS já estará em vigor para brasileiros</td></tr>
+      <tr><td>Jun–Jul/2027</td><td>Trens Roma → Nápoles e Sorrento → Salerno; aluguel de carro Salerno → Bari; ingressos de Coliseu, Vaticano, Borghese e Pompeia</td></tr>
+      <tr><td>Ago/2027</td><td>Seguro-viagem com cobertura mínima de € 30 mil (obrigatório no Espaço Schengen); PID no Detran; eSIM</td></tr>
+      <tr><td>Set/2027</td><td>Ferries Sorrento → Capri e Costa; restaurantes concorridos; confirmar horários de outubro</td></tr>
+    </table>
+  </div>
+</section>
+
+</main>
+<footer>Roteiro de planejamento · preços, horários e regras de entrada devem ser confirmados nas fontes oficiais antes da compra.</footer>
+</body>
+</html>

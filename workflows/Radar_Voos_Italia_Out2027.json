@@ -1,0 +1,158 @@
+{
+  "name": "Radar_Voos_Italia_Out2027",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 0 6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "rv000000-0000-0000-0000-000000000001",
+      "name": "01_schedule_trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -800,
+        0
+      ],
+      "notes": "Diário, 7h de Brasília (instância em America/New_York, mesmo ajuste sazonal do Sanity_Checks_Diario). Em modo sentinela gasta 1 busca/dia; em modo completo, ORIGENS x DATAS_IDA x SAIDAS buscas/dia (padrão 9)."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ======================= CONFIGURAÇÃO =======================\n// Ajuste aqui origens, datas, roteiros, passageiros e preço-alvo.\nconst CONFIG = {\n  ORIGENS: ['GRU'],                       // ex.: ['GRU', 'GIG', 'CNF']\n  DATAS_IDA: ['2027-10-01', '2027-10-08', '2027-10-15'],\n  DURACAO_DIAS: 10,                       // voo noturno: chega em ida+1 e volta em ida+10 (10 dias na Itália)\n  // Chegada sempre em Roma; saída por Roma, Nápoles ou Bari (open-jaw)\n  SAIDAS: ['FCO', 'NAP', 'BRI'],\n  ADULTOS: 2,\n  MOEDA: 'BRL',\n  PRECO_ALVO_TOTAL: 10000,                // R$ para TODOS os adultos (ida+volta)\n  QUEDA_MINIMA_PCT: 3,                    // só avisa nova mínima se cair >= 3%\n  EMAIL_DESTINO: 'PREENCHA@seu-email.com',\n  EMAIL_REMETENTE: 'Radar de Voos <comercial@antere.com.br>',\n};\n// ============================================================\n\nif (CONFIG.EMAIL_DESTINO.startsWith('PREENCHA')) {\n  throw new Error('Configure EMAIL_DESTINO no topo do nó 02_monta_buscas antes de ativar o workflow.');\n}\n\nconst addDias = (iso, n) => {\n  const d = new Date(iso + 'T12:00:00Z');\n  d.setUTCDate(d.getUTCDate() + n);\n  return d.toISOString().slice(0, 10);\n};\n\nconst buscas = [];\nfor (const origem of CONFIG.ORIGENS) {\n  for (const ida of CONFIG.DATAS_IDA) {\n    const volta = addDias(ida, CONFIG.DURACAO_DIAS);\n    for (const saida of CONFIG.SAIDAS) {\n      const chave = `${origem}-FCO_${ida}__${saida}-${origem}_${volta}`;\n      const base = {\n        engine: 'google_flights',\n        hl: 'pt-br',\n        gl: 'br',\n        currency: CONFIG.MOEDA,\n        adults: CONFIG.ADULTOS,\n        travel_class: 1,\n      };\n      let query;\n      if (saida === 'FCO') {\n        query = { ...base, type: 1, departure_id: origem, arrival_id: 'FCO', outbound_date: ida, return_date: volta };\n      } else {\n        query = {\n          ...base,\n          type: 3,\n          multi_city_json: JSON.stringify([\n            { departure_id: origem, arrival_id: 'FCO', date: ida },\n            { departure_id: saida, arrival_id: origem, date: volta },\n          ]),\n        };\n      }\n      buscas.push({ chave, origem, ida, volta, saida, query });\n    }\n  }\n}\n\n// Modo sentinela: enquanto o Google Voos ainda não publicou voos para as\n// datas (companhias abrem a venda ~330 dias antes), faz UMA única busca —\n// a de volta mais distante — para economizar cota da SerpApi.\nconst estado = $getWorkflowStaticData('global');\nlet lista = buscas;\nif (!estado.disponivel) {\n  lista = [buscas.slice().sort((a, b) => b.volta.localeCompare(a.volta))[0]];\n}\n\nreturn lista.map(b => ({ json: { ...b, config: CONFIG, modo: estado.disponivel ? 'completo' : 'sentinela' } }));\n"
+      },
+      "id": "rv000000-0000-0000-0000-000000000002",
+      "name": "02_monta_buscas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        0
+      ],
+      "notes": "Toda a configuração da viagem fica no topo deste nó. Static data só persiste em execuções de produção (workflow ativo), não em testes manuais."
+    },
+    {
+      "parameters": {
+        "url": "https://serpapi.com/search.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={{ JSON.stringify($json.query) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1500
+            }
+          },
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 60000
+        }
+      },
+      "id": "rv000000-0000-0000-0000-000000000003",
+      "name": "03_busca_google_voos_serpapi",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -320,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "notes": "SerpApi, engine google_flights. Criar credencial 'Query Auth' com nome do parâmetro api_key e a chave da SerpApi (serpapi.com/manage-api-key). A chave nunca fica no JSON do workflow."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Analisa as respostas da SerpApi (Google Voos).\n// REGRA PRINCIPAL: se não houver voos, não retorna nada -> nenhuma mensagem é enviada.\nconst buscas = $('02_monta_buscas').all();\nconst respostas = $input.all();\nconst estado = $getWorkflowStaticData('global');\nestado.minimos = estado.minimos || {};\nestado.alertados = estado.alertados || {};\n\nconst fmt = v => 'R$ ' + Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 0 });\nconst fmtDur = m => `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}`;\n\nconst encontrados = [];\nrespostas.forEach((r, i) => {\n  const b = buscas[i] ? buscas[i].json : null;\n  if (!b) return;\n  const j = r.json || {};\n  if (j.error) return; // ex.: \"Google Flights hasn't returned any results\" -> sem voos ainda\n  const voos = [...(j.best_flights || []), ...(j.other_flights || [])].filter(f => Number(f.price) > 0);\n  if (!voos.length) return;\n  voos.sort((a, c) => a.price - c.price);\n  const top = voos[0];\n  const trechos = top.flights || [];\n  encontrados.push({\n    ...b,\n    preco: top.price,\n    cias: [...new Set(trechos.map(t => t.airline))].join(' + '),\n    paradas: Math.max(0, trechos.length - 1),\n    duracao: top.total_duration ? fmtDur(top.total_duration) : '-',\n    link: (j.search_metadata && j.search_metadata.google_flights_url) || 'https://www.google.com/travel/flights',\n    nivel: j.price_insights ? j.price_insights.price_level : null,\n    faixa: j.price_insights ? j.price_insights.typical_price_range : null,\n  });\n});\n\n// Nenhum voo publicado ainda -> silêncio total.\nif (!encontrados.length) return [];\n\nconst cfg = buscas[0].json.config;\nconst primeiraVez = !estado.disponivel;\nestado.disponivel = true;\n\nconst alertas = [];\nfor (const e of encontrados) {\n  const anterior = estado.minimos[e.chave];\n  const motivos = [];\n  if (primeiraVez && !anterior) motivos.push('voos publicados');\n  if (anterior && e.preco <= anterior * (1 - cfg.QUEDA_MINIMA_PCT / 100)) motivos.push(`nova mínima (antes ${fmt(anterior)})`);\n  if (e.preco <= cfg.PRECO_ALVO_TOTAL && estado.alertados[e.chave] !== e.preco) motivos.push('abaixo do preço-alvo');\n  if (!anterior || e.preco < anterior) estado.minimos[e.chave] = e.preco;\n  if (motivos.length) {\n    estado.alertados[e.chave] = e.preco;\n    alertas.push({ ...e, motivos });\n  }\n}\n\nif (!alertas.length) return [];\n\nalertas.sort((a, c) => a.preco - c.preco);\nconst nomeSaida = { FCO: 'Roma (FCO)', NAP: 'Nápoles (NAP)', BRI: 'Bari (BRI)' };\nconst linhas = alertas.map(a => `\n  <tr>\n    <td style=\"padding:8px;border-bottom:1px solid #E5E1D8;\">${a.origem} → Roma<br><small>${a.ida}</small></td>\n    <td style=\"padding:8px;border-bottom:1px solid #E5E1D8;\">${nomeSaida[a.saida] || a.saida} → ${a.origem}<br><small>${a.volta}</small></td>\n    <td style=\"padding:8px;border-bottom:1px solid #E5E1D8;\"><strong>${fmt(a.preco)}</strong><br><small>${cfg.ADULTOS} adulto(s)${a.nivel ? ' · nível ' + a.nivel : ''}</small></td>\n    <td style=\"padding:8px;border-bottom:1px solid #E5E1D8;\">${a.cias}<br><small>${a.paradas} parada(s) · ${a.duracao} (ida)</small></td>\n    <td style=\"padding:8px;border-bottom:1px solid #E5E1D8;\"><small>${a.motivos.join('; ')}</small><br><a href=\"${a.link}\">abrir no Google Voos</a></td>\n  </tr>`).join('');\n\nconst melhor = alertas[0];\nconst html = `\n<div style=\"font-family:Arial,Helvetica,sans-serif;max-width:720px;margin:0 auto;color:#182430;\">\n  <div style=\"background:#1F5C4A;padding:18px 22px;\"><h2 style=\"color:#fff;margin:0;font-size:18px;\">✈️ Radar Itália — Outubro 2027</h2></div>\n  <div style=\"padding:20px;border:1px solid #E5E1D8;border-top:none;background:#fff;\">\n    <p style=\"margin-top:0;\">${primeiraVez ? 'O Google Voos começou a mostrar voos para as suas datas.' : 'Há novidade de preço nas suas buscas.'}\n    Melhor opção: <strong>${fmt(melhor.preco)}</strong> (${melhor.cias}).</p>\n    <table style=\"width:100%;font-size:13px;border-collapse:collapse;\">\n      <tr style=\"text-align:left;color:#5C6A78;\"><th style=\"padding:8px;\">Ida</th><th style=\"padding:8px;\">Volta</th><th style=\"padding:8px;\">Preço total</th><th style=\"padding:8px;\">Voo</th><th style=\"padding:8px;\">Motivo</th></tr>\n      ${linhas}\n    </table>\n    <p style=\"font-size:12px;color:#5C6A78;\">Antes de comprar, compare no Skyscanner, Kayak, Momondo, Decolar e nos programas de milhas (Smiles, LATAM Pass, Azul Fidelidade, TAP Miles&amp;Go, Flying Blue). Preço-alvo configurado: ${fmt(cfg.PRECO_ALVO_TOTAL)}.</p>\n  </div>\n</div>`;\n\nreturn [{ json: {\n  from: cfg.EMAIL_REMETENTE,\n  to: [cfg.EMAIL_DESTINO],\n  subject: `✈️ Itália out/2027: ${fmt(melhor.preco)} — ${melhor.origem}→Roma ${melhor.ida}`,\n  html,\n  total_alertas: alertas.length,\n} }];\n"
+      },
+      "id": "rv000000-0000-0000-0000-000000000004",
+      "name": "04_analisa_e_decide",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        0
+      ],
+      "notes": "Sem voos publicados -> retorna 0 itens e o fluxo para aqui (nenhuma mensagem). Com voos: avisa na 1a disponibilidade, em nova mínima (queda >= QUEDA_MINIMA_PCT) ou quando um preço novo fica abaixo do PRECO_ALVO_TOTAL."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ from: $json.from, to: $json.to, subject: $json.subject, html: $json.html }) }}",
+        "options": {}
+      },
+      "id": "rv000000-0000-0000-0000-000000000005",
+      "name": "05_envia_email_resend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        160,
+        0
+      ],
+      "notes": "Credencial 'Header Auth': nome Authorization, valor 'Bearer <token Resend>'. Só executa quando 04 devolve um alerta."
+    }
+  ],
+  "connections": {
+    "01_schedule_trigger": {
+      "main": [
+        [
+          {
+            "node": "02_monta_buscas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02_monta_buscas": {
+      "main": [
+        [
+          {
+            "node": "03_busca_google_voos_serpapi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03_busca_google_voos_serpapi": {
+      "main": [
+        [
+          {
+            "node": "04_analisa_e_decide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04_analisa_e_decide": {
+      "main": [
+        [
+          {
+            "node": "05_envia_email_resend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
